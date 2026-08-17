@@ -1,0 +1,44 @@
+# dependencias
+node_modules/
+.pnpm-store/
+
+# compilacion
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# entorno - NUNCA se versionan
+.env
+.env.local
+.env*.local
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# sistema operativo
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# registros
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# cobertura y pruebas
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# varios
+.turbo/
+.vercel/
+
+# Fotos originales sin procesar: pesadas, no se publican
+apps/web/imagenes-originales/

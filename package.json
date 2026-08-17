@@ -1,0 +1,30 @@
+{
+  "name": "barber-shop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sistema de gestion para barberia con motor de recomendaciones. TCC - Universidad Columbia del Paraguay.",
+  "packageManager": "pnpm@10.12.1",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @barber-shop/web dev",
+    "build": "pnpm --filter @barber-shop/web build",
+    "start": "pnpm --filter @barber-shop/web start",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,css,md,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,css,md,json}\"",
+    "tokens:verificar": "pnpm --filter @barber-shop/ui verificar-contraste",
+    "limpiar": "pnpm -r exec rimraf .next dist node_modules && rimraf node_modules"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "sharp", "unrs-resolver"]
+  }
+}

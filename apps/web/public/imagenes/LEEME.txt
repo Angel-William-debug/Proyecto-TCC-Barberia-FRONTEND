@@ -1,0 +1,16 @@
+Imagenes publicas del sitio.
+
+Todo lo que este aca se sirve desde la raiz:
+    apps/web/public/imagenes/barba.webp  ->  /imagenes/barba.webp
+
+Solo van archivos ya optimizados. Los originales sin procesar viven en
+apps/web/imagenes-originales/, que no se publica ni se versiona.
+
+FOTOS DE LA PORTADA
+-------------------
+    barba.webp   900x1200, 81 KB   perfilado de barba
+    corte.webp   900x1200, 76 KB   corte de pelo
+
+Recortadas 3:4 desde originales de 3200x2133. Si hace falta rehacer un
+encuadre, el script vive en el historial de la conversacion: recorta al alto
+completo y corre la ventana horizontalmente segun donde este la accion.

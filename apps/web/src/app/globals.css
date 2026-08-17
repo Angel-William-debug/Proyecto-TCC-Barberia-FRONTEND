@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+
+/* El sistema de diseno completo: tokens, tema y capa base.
+   Ver Sistema_de_Diseno_Barber_Shop_v1.0.docx */
+@import '@barber-shop/ui/estilos';
+
+/* Tailwind v4 detecta las clases leyendo los archivos fuente. La aplicacion
+   se detecta sola; los paquetes del monorepo hay que declararlos. */
+@source '../../../../packages/ui/src';

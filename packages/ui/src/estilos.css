@@ -1,0 +1,285 @@
+/* ===========================================================================
+   Punto de entrada de estilos del sistema de diseno.
+
+   Se importa una sola vez, desde apps/web/src/app/globals.css.
+
+   `@theme inline` es la clave del tema doble: hace que la utilidad
+   `bg-superficie` compile a `var(--fondo-superficie)` en lugar de al color
+   resuelto. Asi, al cambiar `data-tema` en <html>, todas las utilidades
+   cambian sin recompilar nada.
+   =========================================================================== */
+
+@import './tokens/colores.css';
+@import './tokens/medidas.css';
+
+@theme inline {
+  /* --- Colores. Solo se exponen los semanticos (nivel 2). ------------
+     Los primitivos quedan deliberadamente fuera: si `bg-carbon-900`
+     existiera como utilidad, el tema claro se romperia en cuanto alguien
+     la usara. */
+
+  /* `--color-fondo` y no `--color-base`: este ultimo generaria la utilidad
+     `text-base`, que ya existe en Tailwind como tamano de fuente. */
+  --color-fondo: var(--fondo-base);
+  --color-superficie: var(--fondo-superficie);
+  --color-elevado: var(--fondo-elevado);
+  --color-navegacion: var(--fondo-navegacion);
+
+  --color-principal: var(--texto-principal);
+  --color-secundario: var(--texto-secundario);
+  --color-terciario: var(--texto-terciario);
+  --color-deshabilitado: var(--texto-deshabilitado);
+  --color-sobre-marca: var(--texto-sobre-marca);
+
+  --color-marca: var(--marca);
+  --color-marca-hover: var(--marca-hover);
+  --color-marca-activo: var(--marca-activo);
+
+  --color-exito: var(--exito);
+  --color-advertencia: var(--advertencia);
+  --color-peligro: var(--peligro);
+  --color-info: var(--info);
+
+  --color-borde-sutil: var(--borde-sutil);
+  --color-borde-control: var(--borde-control);
+  --color-borde-foco: var(--borde-foco);
+
+  /* --- Tipografia (seccion 5) --------------------------------------- */
+  --font-display: var(--fuente-display), 'Oswald', system-ui, sans-serif;
+  --font-sans: var(--fuente-interfaz), 'Inter', system-ui, sans-serif;
+  --font-mono: var(--fuente-mono), 'JetBrains Mono', ui-monospace, monospace;
+
+  --text-display-2xl: 3rem;
+  --text-display-2xl--line-height: 3.25rem;
+  --text-display-xl: 2.25rem;
+  --text-display-xl--line-height: 2.5rem;
+  --text-display-lg: 1.875rem;
+  --text-display-lg--line-height: 2.25rem;
+  --text-titulo-1: 1.5rem;
+  --text-titulo-1--line-height: 2rem;
+  --text-titulo-2: 1.25rem;
+  --text-titulo-2--line-height: 1.75rem;
+  --text-titulo-3: 1.125rem;
+  --text-titulo-3--line-height: 1.625rem;
+  --text-cuerpo-lg: 1rem;
+  --text-cuerpo-lg--line-height: 1.5rem;
+  --text-cuerpo: 0.875rem;
+  --text-cuerpo--line-height: 1.25rem;
+  --text-cuerpo-sm: 0.8125rem;
+  --text-cuerpo-sm--line-height: 1.125rem;
+  --text-etiqueta: 0.75rem;
+  --text-etiqueta--line-height: 1rem;
+  --text-titulillo: 0.6875rem;
+  --text-titulillo--line-height: 1rem;
+
+  /* --- Forma --------------------------------------------------------- */
+  --radius-sm: var(--radio-sm);
+  --radius-md: var(--radio-md);
+  --radius-lg: var(--radio-lg);
+  --radius-xl: var(--radio-xl);
+
+  --shadow-1: var(--sombra-1);
+  --shadow-2: var(--sombra-2);
+  --shadow-3: var(--sombra-3);
+  --shadow-4: var(--sombra-4);
+
+  /* --- Movimiento ---------------------------------------------------- */
+  --ease-estandar: var(--curva-estandar);
+  --ease-entrada: var(--curva-entrada);
+  --ease-salida: var(--curva-salida);
+}
+
+/* ===========================================================================
+   Capa base
+   =========================================================================== */
+
+@layer base {
+  html {
+    background-color: var(--fondo-base);
+    color-scheme: dark;
+  }
+
+  html[data-tema='claro'] {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--fondo-base);
+    color: var(--texto-principal);
+    font-family: var(--fuente-interfaz), 'Inter', system-ui, sans-serif;
+    font-size: 0.875rem; /* 14 px: la base es densa a proposito */
+    line-height: 1.25rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Seccion 14.3: la regla de foco se declara UNA vez y no se sobrescribe.
+     `:where()` la deja con especificidad 0, de modo que cualquier componente
+     pueda ajustarla sin recurrir a !important, pero nadie necesita hacerlo. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--borde-foco);
+    outline-offset: 2px;
+    border-radius: var(--radio-sm);
+  }
+
+  /* Nunca se elimina el foco sin reemplazo. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  /* Seccion 5.4: las cifras se alinean en columnas. */
+  .cifra,
+  td[data-numerico='true'],
+  th[data-numerico='true'] {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  /* Seccion 11.4 y criterio WCAG 2.3.3. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ===========================================================================
+   Tablas en móvil (sección 9.5)
+   ===========================================================================
+
+   Por debajo de 768 px la tabla deja de ser una tabla y cada fila se convierte
+   en una tarjeta con sus pares etiqueta/valor. El desplazamiento horizontal se
+   descarta a propósito: obliga a arrastrar para leer una fila y esconde justo
+   la columna de estado, que suele ser la que se busca.
+
+   La etiqueta sale de `data-etiqueta`, que pone el componente `Td`. El marcado
+   sigue siendo una tabla real, de modo que un lector de pantalla la recorre
+   igual y no se pierde ninguna semántica.
+   =========================================================================== */
+
+/* Estas reglas van DELIBERADAMENTE fuera de toda capa.
+ *
+ * Tailwind v4 declara el orden `theme, base, components, utilities`, y en la
+ * cascada de CSS una capa posterior gana sobre una anterior. Puestas en
+ * `@layer components`, las utilidades de la fila —`h-12`, `sticky`— vencían a
+ * estas reglas: las celdas pasaban a ser flex pero la fila conservaba su alto
+ * fijo y el encabezado seguía visible, así que todo se encimaba.
+ *
+ * El CSS sin capa gana sobre TODO lo que está en capas. Es exactamente lo que
+ * hace falta acá y evita tener que ensuciar cada regla con !important. */
+
+@media (max-width: 767px) {
+  table[data-tarjetas='true'],
+  table[data-tarjetas='true'] tbody {
+    display: block;
+    width: 100%;
+  }
+
+  /* El encabezado se oculta a la vista. La semántica no depende de él: los
+     componentes declaran los roles ARIA de forma explícita, justamente porque
+     cambiar `display` en una tabla le quita los roles implícitos. */
+  table[data-tarjetas='true'] thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  table[data-tarjetas='true'] tbody tr {
+    display: block;
+    height: auto;
+    margin-bottom: var(--espacio-3);
+    padding: var(--espacio-1);
+    border: 1px solid var(--borde-sutil);
+    border-radius: var(--radio-md);
+    background-color: var(--fondo-base);
+  }
+
+  table[data-tarjetas='true'] tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  table[data-tarjetas='true'] tbody td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--espacio-4);
+    width: auto;
+    padding: var(--espacio-2);
+    text-align: right;
+  }
+
+  table[data-tarjetas='true'] tbody td::before {
+    content: attr(data-etiqueta);
+    flex-shrink: 0;
+    color: var(--texto-terciario);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1rem;
+    text-align: left;
+  }
+
+  /* La fila del estado vacío ocupa todo el ancho y no lleva etiqueta. */
+  table[data-tarjetas='true'] tbody tr:has(> td[colspan]) {
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+  }
+
+  table[data-tarjetas='true'] tbody td[colspan] {
+    display: block;
+    padding: 0;
+    text-align: left;
+  }
+
+  table[data-tarjetas='true'] tbody td[colspan]::before {
+    content: none;
+  }
+}
+
+/* ===========================================================================
+   Utilidades propias
+   =========================================================================== */
+
+@layer utilities {
+  /* Enlace de salto para lectores de pantalla y navegacion por teclado. */
+  .solo-lectores {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .solo-lectores:focus-visible {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  /* Seccion 5.3: el texto de lectura no supera los 75 caracteres. */
+  .medida-lectura {
+    max-width: 68ch;
+  }
+}

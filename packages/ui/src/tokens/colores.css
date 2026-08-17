@@ -1,0 +1,138 @@
+/* ===========================================================================
+   Seccion 4 del Sistema de Diseno Barber Shop.
+
+   Nivel 1: primitivos. Describen el color, no su funcion. NINGUN componente
+   los usa directamente.
+   Nivel 2: semanticos. Describen el rol. Es lo unico que consumen los
+   componentes, y es lo que cambia entre tema oscuro y claro.
+
+   Nota sobre los nombres: los tokens semanticos de estado se llaman
+   `--marca`, `--exito`, `--advertencia`, `--peligro` e `--info`, SIN el
+   prefijo `--color-`. Tailwind v4 reserva el espacio de nombres `--color-*`
+   para su propio tema; usarlo aqui produciria una definicion circular del
+   tipo `--color-marca: var(--color-marca)`. El prefijo se agrega en
+   `estilos.css` al exponer cada token como utilidad.
+
+   Todos los contrastes fueron verificados con la formula de luminancia
+   relativa de la WCAG 2.1. Ver `pnpm tokens:verificar`.
+   =========================================================================== */
+
+:root {
+  /* --- Nivel 1: primitivos ------------------------------------------- */
+
+  /* Escala Carbon: grises calidos con desviacion hacia el marron. */
+  --carbon-950: #0b0908;
+  --carbon-900: #14110f;
+  --carbon-850: #1a1614;
+  --carbon-800: #1f1b18;
+  --carbon-700: #2b2521;
+  --carbon-600: #3a322c;
+  --carbon-400: #7c7264;
+
+  /* Escala Ambar: dorado de laton, desaturado. Color de marca. */
+  --ambar-50: #fbf4e4;
+  --ambar-100: #f6e6c4;
+  --ambar-200: #edd196;
+  --ambar-300: #e2ba66;
+  --ambar-400: #d6a644;
+  --ambar-500: #c9922b;
+  --ambar-600: #a87621;
+  --ambar-700: #855b19;
+  --ambar-800: #603f11;
+  --ambar-900: #3c270a;
+
+  /* Escala Crema: texto sobre oscuro. No es blanco puro, evita el halo. */
+  --crema-50: #f7f3ec;
+  --crema-100: #ede7dc;
+  --crema-200: #d8d0c4;
+  --crema-300: #bcb3a5;
+  --crema-400: #9c9284;
+  --crema-500: #7c7264;
+
+  --hueso: #faf7f2;
+
+  /* --- Nivel 2: semanticos. Tema oscuro, el predeterminado. ---------- */
+
+  --fondo-base: var(--carbon-900);
+  --fondo-superficie: var(--carbon-800);
+  --fondo-elevado: var(--carbon-700);
+  --fondo-navegacion: var(--carbon-850);
+  --fondo-velo: rgb(11 9 8 / 0.8);
+
+  --texto-principal: var(--crema-50); /* 17.00:1 */
+  --texto-secundario: var(--crema-300); /*  9.07:1 */
+  --texto-terciario: var(--crema-400); /*  6.14:1 */
+  --texto-deshabilitado: var(--crema-500); /*  3.98:1, exento por WCAG 1.4.3 */
+  --texto-sobre-marca: var(--carbon-900); /*  6.83:1 sobre --ambar-500 */
+
+  --marca: var(--ambar-500);
+  --marca-hover: var(--ambar-400);
+  --marca-activo: var(--ambar-600);
+
+  --exito: #4fb287; /*  7.21:1 */
+  --advertencia: #e0a82e; /*  8.78:1 */
+  --peligro: #e2685c; /*  5.70:1 */
+  --info: #6c9bd6; /*  6.53:1 */
+
+  --chip-exito-fondo: #132a20;
+  --chip-advertencia-fondo: #2c2210;
+  --chip-peligro-fondo: #2e1614;
+  --chip-info-fondo: #141f2e;
+  --chip-neutro-fondo: #221e1b;
+  --chip-neutro-texto: var(--crema-300);
+  --chip-marca-fondo: #2a2110;
+  --chip-marca-texto: var(--ambar-400);
+
+  --borde-sutil: var(--carbon-600);
+  --borde-control: var(--carbon-400); /*  3.98:1, cumple 1.4.11 */
+  --borde-foco: var(--ambar-400); /*  8.41:1 */
+
+  /* Secuencia para graficos. Nunca se usan los colores semanticos. */
+  --grafico-1: #c9922b;
+  --grafico-2: #6c9bd6;
+  --grafico-3: #4fb287;
+  --grafico-4: #c4756a;
+  --grafico-5: #9b8ac4;
+  --grafico-6: #7fa8a0;
+}
+
+/* --- Tema claro ------------------------------------------------------
+   Solo se redefine el nivel 2. Los primitivos no cambian nunca.
+   Los tonos semanticos se oscurecen para conservar el contraste sobre
+   fondo blanco. */
+
+[data-tema='claro'] {
+  --fondo-base: #ffffff;
+  --fondo-superficie: var(--hueso);
+  --fondo-elevado: #ffffff;
+  --fondo-navegacion: #ffffff;
+  --fondo-velo: rgb(20 17 15 / 0.55);
+
+  --texto-principal: var(--carbon-900); /* 18.80:1 */
+  --texto-secundario: #5c544b; /*  7.43:1 */
+  --texto-terciario: #6b6257; /*  5.98:1 */
+  --texto-deshabilitado: var(--crema-400);
+  --texto-sobre-marca: #ffffff; /*  5.99:1 sobre --ambar-700 */
+
+  --marca: var(--ambar-700);
+  --marca-hover: var(--ambar-600);
+  --marca-activo: #6e4a14;
+
+  --exito: #1f7a52; /*  4.96:1 */
+  --advertencia: #8a5f14; /*  5.27:1 */
+  --peligro: #b3352e; /*  5.67:1 */
+  --info: #2f4e7a; /*  7.89:1 */
+
+  --chip-exito-fondo: #e6f2ec;
+  --chip-advertencia-fondo: #f7efdd;
+  --chip-peligro-fondo: #f9e9e8;
+  --chip-info-fondo: #e8eef7;
+  --chip-neutro-fondo: #f0ece5;
+  --chip-neutro-texto: #5c544b;
+  --chip-marca-fondo: #f7efdd;
+  --chip-marca-texto: var(--ambar-700);
+
+  --borde-sutil: #e7e1d7;
+  --borde-control: #8f857a;
+  --borde-foco: var(--ambar-700); /*  5.99:1 */
+}

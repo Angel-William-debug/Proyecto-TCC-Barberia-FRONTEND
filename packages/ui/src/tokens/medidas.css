@@ -1,0 +1,61 @@
+/* ===========================================================================
+   Secciones 5, 6 y 12 del Sistema de Diseno: tipografia, espaciado, forma
+   y movimiento.
+
+   Toda medida es multiplo de 4 px. No existen valores intermedios.
+   =========================================================================== */
+
+:root {
+  /* --- Espaciado. Base de 4 px. ------------------------------------- */
+  --espacio-0: 0;
+  --espacio-1: 0.25rem; /*  4 px */
+  --espacio-2: 0.5rem; /*  8 px */
+  --espacio-3: 0.75rem; /* 12 px */
+  --espacio-4: 1rem; /* 16 px */
+  --espacio-5: 1.25rem; /* 20 px */
+  --espacio-6: 1.5rem; /* 24 px */
+  --espacio-8: 2rem; /* 32 px */
+  --espacio-10: 2.5rem; /* 40 px */
+  --espacio-12: 3rem; /* 48 px */
+  --espacio-16: 4rem; /* 64 px */
+  --espacio-20: 5rem; /* 80 px */
+
+  /* --- Radios. Contenidos: la barberia clasica tiene aristas. -------- */
+  --radio-sm: 4px;
+  --radio-md: 8px; /* predeterminado */
+  --radio-lg: 12px;
+  --radio-xl: 16px;
+  --radio-completo: 9999px;
+
+  /* --- Elevacion. Sobre fondo oscuro la jerarquia la da la superficie,
+         no la sombra. --------------------------------------------------- */
+  --sombra-1: none;
+  --sombra-2: 0 1px 3px rgb(0 0 0 / 0.4);
+  --sombra-3: 0 8px 24px rgb(0 0 0 / 0.55);
+  --sombra-4: 0 12px 32px rgb(0 0 0 / 0.65);
+
+  /* --- Iconos -------------------------------------------------------- */
+  --icono-xs: 14px;
+  --icono-sm: 16px; /* predeterminado */
+  --icono-md: 20px;
+  --icono-lg: 24px;
+  --icono-xl: 32px;
+  --icono-2xl: 48px;
+
+  /* --- Movimiento ---------------------------------------------------- */
+  --movimiento-instantaneo: 0ms;
+  --movimiento-rapido: 120ms;
+  --movimiento-normal: 180ms;
+  --movimiento-lento: 240ms;
+  --movimiento-pagina: 300ms;
+
+  --curva-estandar: cubic-bezier(0.2, 0, 0, 1);
+  --curva-entrada: cubic-bezier(0, 0, 0.2, 1);
+  --curva-salida: cubic-bezier(0.4, 0, 1, 1);
+
+  /* --- Estructura de pantalla (seccion 6.5) -------------------------- */
+  --alto-barra-superior: 56px;
+  --ancho-barra-lateral: 264px;
+  --ancho-barra-lateral-colapsada: 64px;
+  --ancho-maximo-contenido: 1440px;
+}

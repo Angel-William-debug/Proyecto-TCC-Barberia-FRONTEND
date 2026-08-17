@@ -1,0 +1,77 @@
+import type { NombreRol, UsuarioSesion } from '@barber-shop/tipos';
+
+import { USUARIO_DEMO } from '../demo/datos';
+import { MODO_DEMO } from '../demo/modo';
+import { clienteServidor } from '../supabase/cliente-servidor';
+
+/**
+ * Resuelve el usuario de la sesion actual con su rol.
+ *
+ * Supabase Auth solo conoce `auth.users`: correo, identificador y metadatos.
+ * El rol y el resto del perfil viven en `public.usuarios`, vinculados por
+ * `auth_uid`. Esta funcion une ambas mitades.
+ *
+ * Devuelve `null` si no hay sesion o si el usuario autenticado no tiene una
+ * fila en `public.usuarios`, que es el caso de alguien dado de alta en Auth
+ * pero todavia no habilitado en el sistema.
+ */
+export async function usuarioActual(): Promise<UsuarioSesion | null> {
+  if (MODO_DEMO) return USUARIO_DEMO;
+
+  const supabase = await clienteServidor();
+
+  // `getUser()` y no `getSession()`: el primero valida el token contra el
+  // servidor de Supabase. El segundo lee la cookie y confia en ella, lo que
+  // en el servidor no es aceptable.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('id_usuario, nombre, email, estado, roles(nombre), profesionales(id_profesional)')
+    .eq('auth_uid', user.id)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  // Un usuario desactivado (CU-001) conserva su cuenta en Auth pero pierde el
+  // acceso. Se trata como si no tuviera sesion.
+  if (!data.estado) return null;
+
+  // PostgREST devuelve la relacion como objeto cuando es uno-a-uno y como
+  // arreglo cuando es uno-a-muchos. El tipo inferido no siempre coincide con
+  // la cardinalidad real, asi que se normalizan ambas formas.
+  const primero = <T>(valor: unknown): T | null =>
+    Array.isArray(valor) ? ((valor[0] as T) ?? null) : ((valor as T) ?? null);
+
+  const rol = primero<{ nombre: string }>(data.roles)?.nombre;
+  if (!rol) return null;
+
+  const profesional = primero<{ id_profesional: number }>(data.profesionales);
+
+  return {
+    idUsuario: data.id_usuario,
+    authUid: user.id,
+    nombre: data.nombre,
+    email: data.email,
+    rol: rol as NombreRol,
+    idProfesional: profesional?.id_profesional ?? null,
+  };
+}
+
+/**
+ * Igual que `usuarioActual()` pero lanza si no hay sesion.
+ *
+ * Se usa en las paginas del panel, donde llegar sin sesion es un error de
+ * enrutamiento: el middleware deberia haber redirigido antes.
+ */
+export async function exigirSesion(): Promise<UsuarioSesion> {
+  const usuario = await usuarioActual();
+  if (!usuario) {
+    throw new Error('No hay una sesion activa.');
+  }
+  return usuario;
+}
