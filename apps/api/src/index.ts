@@ -24,6 +24,8 @@ export {
   crearCliente,
   actualizarCliente,
   desactivarCliente,
+  borrarCliente,
+  restaurarCliente,
 } from './repositorios/clientes';
 
 export {

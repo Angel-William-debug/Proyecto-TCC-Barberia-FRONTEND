@@ -8,6 +8,8 @@
 
 import type {
   AccionAuditoria,
+  AuditoriaTemporal,
+  BorradoLogico,
   Cita,
   Cliente,
   DetalleCita,
@@ -68,14 +70,26 @@ export const MODULOS_POR_ROL: Record<NombreRol, readonly Modulo[]> = {
 // Composiciones de lectura
 // ---------------------------------------------------------------------------
 
-/** Un servicio dentro de una cita, ya resuelto con sus nombres. */
-export interface ServicioDeCita extends DetalleCita {
+/**
+ * Un servicio dentro de una cita, ya resuelto con sus nombres.
+ *
+ * Se omiten `created_at` y `updated_at`: la consulta de la agenda no los pide
+ * porque ninguna pantalla los muestra, y traer columnas que no se usan encarece
+ * cada carga de la agenda sin beneficio.
+ */
+export interface ServicioDeCita extends Omit<DetalleCita, keyof AuditoriaTemporal> {
   servicio: Pick<Servicio, 'id_servicio' | 'nombre'>;
   profesional: Pick<Profesional, 'id_profesional' | 'nombre'>;
 }
 
-/** Una cita lista para mostrarse en la agenda o en su ficha. */
-export interface CitaCompleta extends Cita {
+/**
+ * Una cita lista para mostrarse en la agenda o en su ficha.
+ *
+ * Se omiten las columnas de borrado logico: la consulta ya filtra por ellas,
+ * de modo que `deleted` seria siempre falso y arrastrarlo hasta la vista solo
+ * invita a volver a comprobarlo donde no hace falta.
+ */
+export interface CitaCompleta extends Omit<Cita, keyof BorradoLogico> {
   cliente: Pick<Cliente, 'id_cliente' | 'nombre' | 'telefono'>;
   servicios: ServicioDeCita[];
   /** Suma de `duracion_min` de los detalles. Define el alto del bloque en la agenda. */

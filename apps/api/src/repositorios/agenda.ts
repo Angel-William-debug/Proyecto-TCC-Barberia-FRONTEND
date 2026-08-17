@@ -109,6 +109,7 @@ export async function listarAgenda(filtro: FiltroAgenda): Promise<CitaCompleta[]
   let consulta = supabase
     .from('citas')
     .select(SELECCION_CITA)
+    .eq('deleted', false)
     .gte('fecha_hora', `${filtro.desde}T00:00:00`)
     .lte('fecha_hora', `${filtro.hasta}T23:59:59`)
     .order('fecha_hora', { ascending: true });
@@ -140,6 +141,7 @@ export async function obtenerCita(idCita: number): Promise<CitaCompleta | null> 
     .from('citas')
     .select(SELECCION_CITA)
     .eq('id_cita', idCita)
+    .eq('deleted', false)
     .maybeSingle();
 
   if (error) throw traducirError(error);
@@ -200,6 +202,7 @@ export async function crearCita(entrada: EntradaNuevaCita): Promise<number> {
     .from('servicios')
     .select('id_servicio, duracion_min, precio_base')
     .in('id_servicio', idsServicio)
+    .eq('deleted', false)
     .eq('estado', true);
 
   if (errorCatalogo) throw traducirError(errorCatalogo);

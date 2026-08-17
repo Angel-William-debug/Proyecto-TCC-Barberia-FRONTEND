@@ -45,6 +45,8 @@ export async function listarClientes(filtro: FiltroClientes = {}): Promise<Pagin
   let consulta = supabase
     .from('clientes')
     .select('*', { count: 'exact' })
+    // Lo borrado logicamente no existe para la aplicacion.
+    .eq('deleted', false)
     .order('nombre', { ascending: true })
     .range(desde, desde + porPagina - 1);
 
@@ -89,6 +91,7 @@ export async function obtenerCliente(idCliente: number): Promise<Cliente | null>
     .from('clientes')
     .select('*')
     .eq('id_cliente', idCliente)
+    .eq('deleted', false)
     .maybeSingle();
 
   if (error) throw traducirError(error);
@@ -122,12 +125,11 @@ export async function actualizarCliente(
 }
 
 /**
- * Baja logica (CU-002 A3).
+ * Desactivar NO es lo mismo que borrar.
  *
- * Nunca se borra un cliente: su historial de servicios y sus cobros lo
- * referencian, y ademas se perderia la base sobre la que el motor de
- * recomendaciones aprende. Se marca `estado = false` y deja de aparecer en
- * los listados.
+ * Un cliente desactivado sigue existiendo y se lo puede reactivar: es el que
+ * dejo de venir, o el que pidio no recibir mas recordatorios. Es un estado de
+ * negocio (CU-002 A3), no una baja.
  */
 export async function desactivarCliente(idCliente: number): Promise<void> {
   const supabase = await clienteServidor();
@@ -135,6 +137,46 @@ export async function desactivarCliente(idCliente: number): Promise<void> {
   const { error } = await supabase
     .from('clientes')
     .update({ estado: false })
+    .eq('id_cliente', idCliente);
+
+  if (error) throw traducirError(error);
+}
+
+/**
+ * Borrado logico: el registro deja de existir para la aplicacion.
+ *
+ * Se usa para la ficha cargada por error o duplicada. Nunca se borra de
+ * verdad: el historial de servicios y los cobros lo referencian, y ademas se
+ * perderia la base sobre la que el motor de recomendaciones aprende.
+ *
+ * `deleted_at` lo completa el disparador de la base; aqui solo se marca la
+ * bandera y se deja constancia de quien lo hizo.
+ */
+export async function borrarCliente(idCliente: number, idUsuario: number): Promise<void> {
+  const supabase = await clienteServidor();
+
+  const { error } = await supabase
+    .from('clientes')
+    .update({ deleted: true, deleted_user_id: idUsuario })
+    .eq('id_cliente', idCliente);
+
+  if (error) throw traducirError(error);
+}
+
+/**
+ * Restaura un cliente borrado.
+ *
+ * PUEDE FALLAR, y el fallo es correcto: si mientras estuvo borrado otro
+ * cliente tomo su correo, restaurarlo dejaria dos vigentes con la misma
+ * direccion y el indice unico parcial lo rechaza. `traducirError` convierte
+ * ese rechazo en un mensaje que explica que paso.
+ */
+export async function restaurarCliente(idCliente: number): Promise<void> {
+  const supabase = await clienteServidor();
+
+  const { error } = await supabase
+    .from('clientes')
+    .update({ deleted: false })
     .eq('id_cliente', idCliente);
 
   if (error) throw traducirError(error);

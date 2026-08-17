@@ -69,10 +69,43 @@ export const ROLES = ['administrador', 'recepcionista', 'profesional', 'cliente'
 export type NombreRol = (typeof ROLES)[number];
 
 // ---------------------------------------------------------------------------
+// Columnas transversales
+//
+// Dos grupos de columnas que la base repite en muchas tablas. Se declaran una
+// vez y las interfaces las heredan, de modo que agregar una tercera columna de
+// auditoria se haga en un solo lugar.
+// ---------------------------------------------------------------------------
+
+/** Presente en las 27 tablas. `updated_at` lo mantiene un disparador. */
+export interface AuditoriaTemporal {
+  /** Instante de alta. Lo fija el valor por defecto de la columna. */
+  created_at: string;
+  /** Lo actualiza `fn_set_updated_at()`. Nunca se envia desde la aplicacion. */
+  updated_at: string;
+}
+
+/**
+ * Presente en 14 tablas: las entidades que el usuario da de alta y los
+ * documentos que pueden cargarse por error.
+ *
+ * NO es lo mismo que `estado`. Un servicio con `estado: false` es uno que la
+ * barberia dejo de ofrecer y puede reactivar; uno con `deleted: true` esta
+ * dado de baja. Las dos columnas conviven a proposito.
+ *
+ * `deleted_at` lo completa un disparador; `deleted_user_id` lo envia la
+ * aplicacion con el usuario de la sesion.
+ */
+export interface BorradoLogico {
+  deleted: boolean;
+  deleted_at: string | null;
+  deleted_user_id: number | null;
+}
+
+// ---------------------------------------------------------------------------
 // Tablas
 // ---------------------------------------------------------------------------
 
-export interface Rol {
+export interface Rol extends AuditoriaTemporal {
   id_rol: number;
   nombre: string;
   descripcion: string | null;
@@ -80,7 +113,7 @@ export interface Rol {
 }
 
 /** `usuarios.password_hash` fue eliminada: la credencial vive en `auth.users` (RN-001). */
-export interface Usuario {
+export interface Usuario extends AuditoriaTemporal, BorradoLogico {
   id_usuario: number;
   id_rol: number;
   auth_uid: string | null;
@@ -90,7 +123,7 @@ export interface Usuario {
   estado: boolean;
 }
 
-export interface Cliente {
+export interface Cliente extends AuditoriaTemporal, BorradoLogico {
   id_cliente: number;
   /** Usuario que lo registro, NO el cliente como usuario del sistema. */
   id_usuario_reg: number | null;
@@ -107,7 +140,7 @@ export interface Cliente {
 }
 
 /** En la interfaz se muestra como «Barbero». Ver seccion 13.3 del sistema de diseno. */
-export interface Profesional {
+export interface Profesional extends AuditoriaTemporal, BorradoLogico {
   id_profesional: number;
   id_usuario: number | null;
   nombre: string;
@@ -118,14 +151,14 @@ export interface Profesional {
   estado: boolean;
 }
 
-export interface CategoriaServicio {
+export interface CategoriaServicio extends AuditoriaTemporal, BorradoLogico {
   id_categoria: number;
   nombre: string;
   descripcion: string | null;
   estado: boolean;
 }
 
-export interface Servicio {
+export interface Servicio extends AuditoriaTemporal, BorradoLogico {
   id_servicio: number;
   id_categoria: number;
   nombre: string;
@@ -135,14 +168,14 @@ export interface Servicio {
   estado: boolean;
 }
 
-export interface CategoriaProducto {
+export interface CategoriaProducto extends AuditoriaTemporal, BorradoLogico {
   id_categoria_p: number;
   nombre: string;
   descripcion: string | null;
   estado: boolean;
 }
 
-export interface Producto {
+export interface Producto extends AuditoriaTemporal, BorradoLogico {
   id_producto: number;
   id_categoria_p: number;
   nombre: string;
@@ -164,7 +197,7 @@ export interface Producto {
 }
 
 /** Receta: que productos consume cada servicio y en que cantidad. */
-export interface ServicioProducto {
+export interface ServicioProducto extends AuditoriaTemporal, BorradoLogico {
   id_servicio_producto: number;
   id_servicio: number;
   id_producto: number;
@@ -173,7 +206,7 @@ export interface ServicioProducto {
   estado: boolean;
 }
 
-export interface Cita {
+export interface Cita extends AuditoriaTemporal, BorradoLogico {
   id_cita: number;
   id_cliente: number;
   /** Usuario que gestiona la cita. */
@@ -183,11 +216,9 @@ export interface Cita {
   observaciones: string | null;
   /** Lo calcula el trigger `trg_detalle_cita_after_insert`. No enviarlo al crear. */
   total: number;
-  created_at: string;
-  updated_at: string;
 }
 
-export interface DetalleCita {
+export interface DetalleCita extends AuditoriaTemporal {
   id_detalle: number;
   id_cita: number;
   id_servicio: number;
@@ -197,7 +228,7 @@ export interface DetalleCita {
   subtotal: number;
 }
 
-export interface HistorialServicio {
+export interface HistorialServicio extends AuditoriaTemporal {
   id_historial: number;
   id_cita: number | null;
   id_cliente: number;
@@ -206,10 +237,9 @@ export interface HistorialServicio {
   fecha_realizacion: string;
   costo_cobrado: number;
   observaciones: string | null;
-  created_at: string;
 }
 
-export interface ProductoUtilizado {
+export interface ProductoUtilizado extends AuditoriaTemporal {
   id_uso: number;
   id_historial: number;
   id_producto: number;
@@ -219,13 +249,13 @@ export interface ProductoUtilizado {
   fecha_uso: string;
 }
 
-export interface MetodoPago {
+export interface MetodoPago extends AuditoriaTemporal, BorradoLogico {
   id_metodo: number;
   nombre: string;
   estado: boolean;
 }
 
-export interface CobroCliente {
+export interface CobroCliente extends AuditoriaTemporal, BorradoLogico {
   id_cobro: number;
   id_cita: number;
   id_metodo_pago: number;
@@ -235,17 +265,17 @@ export interface CobroCliente {
   comprobante_url: string | null;
 }
 
-export interface PagoProfesional {
+export interface PagoProfesional extends AuditoriaTemporal {
   id_pago_prof: number;
   id_profesional: number;
   /** UNIQUE: una sola liquidacion por servicio realizado. */
   id_historial: number;
   monto: number;
-  fecha_liquid: string | null;
+  fecha_liquidacion: string | null;
   estado: EstadoComision;
 }
 
-export interface Proveedor {
+export interface Proveedor extends AuditoriaTemporal, BorradoLogico {
   id_proveedor: number;
   nombre: string;
   email: string | null;
@@ -254,7 +284,7 @@ export interface Proveedor {
   estado: boolean;
 }
 
-export interface Pedido {
+export interface Pedido extends AuditoriaTemporal, BorradoLogico {
   id_pedido: number;
   id_proveedor: number;
   id_usuario: number | null;
@@ -264,7 +294,7 @@ export interface Pedido {
   total: number;
 }
 
-export interface DetallePedido {
+export interface DetallePedido extends AuditoriaTemporal {
   id_detalle_pedido: number;
   id_pedido: number;
   id_producto: number;
@@ -273,7 +303,7 @@ export interface DetallePedido {
   subtotal: number;
 }
 
-export interface PagoProveedor {
+export interface PagoProveedor extends AuditoriaTemporal {
   id_pago_prov: number;
   id_pedido: number;
   id_metodo_pago: number;
@@ -282,7 +312,7 @@ export interface PagoProveedor {
   estado: EstadoPagoProveedor;
 }
 
-export interface MovimientoInventario {
+export interface MovimientoInventario extends AuditoriaTemporal {
   id_movimiento: number;
   id_producto: number;
   id_usuario: number | null;
@@ -292,7 +322,7 @@ export interface MovimientoInventario {
   fecha: string;
 }
 
-export interface AlertaStock {
+export interface AlertaStock extends AuditoriaTemporal {
   id_alerta: number;
   id_producto: number;
   stock_actual: number;
@@ -301,7 +331,7 @@ export interface AlertaStock {
   resuelta: boolean;
 }
 
-export interface Notificacion {
+export interface Notificacion extends AuditoriaTemporal {
   id_notificacion: number;
   id_cita: number | null;
   id_usuario: number | null;
@@ -315,7 +345,7 @@ export interface Notificacion {
   intentos: number;
 }
 
-export interface RecomendacionMl {
+export interface RecomendacionMl extends AuditoriaTemporal {
   id_recomendacion: number;
   id_cliente: number;
   id_servicio: number;
@@ -325,7 +355,7 @@ export interface RecomendacionMl {
   fecha_generacion: string;
 }
 
-export interface Auditoria {
+export interface Auditoria extends AuditoriaTemporal {
   id_auditoria: number;
   id_usuario: number | null;
   tabla_afectada: string;
@@ -336,7 +366,7 @@ export interface Auditoria {
 }
 
 /** CU-020. Fila unica: `id_configuracion` siempre vale 1. */
-export interface ConfiguracionSistema {
+export interface ConfiguracionSistema extends AuditoriaTemporal {
   id_configuracion: 1;
   nombre_barberia: string;
   ruc: string | null;
@@ -349,11 +379,10 @@ export interface ConfiguracionSistema {
   /** RN-042: 1440 minutos = 24 horas antes. */
   minutos_antes_recordatorio: number;
   max_reintentos_notif: number;
-  updated_at: string;
 }
 
 /** CU-020. `dia_semana`: 0 = domingo ... 6 = sabado. */
-export interface HorarioAtencion {
+export interface HorarioAtencion extends AuditoriaTemporal, BorradoLogico {
   id_horario: number;
   dia_semana: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   /** Formato HH:mm:ss. */
@@ -425,6 +454,315 @@ export interface VistaValorizacionInventario {
 }
 
 // ---------------------------------------------------------------------------
+// Vistas ampliadas (24). Todas de solo lectura, con security_invoker, y ya
+// filtradas por `not deleted`: lo borrado no aparece.
+// ---------------------------------------------------------------------------
+
+// --- Modulo 1: configuracion -----------------------------------------------
+
+export interface VistaHorarioSemana {
+  id_horario: number;
+  dia_semana: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  nombre_dia: string;
+  hora_apertura: string;
+  hora_cierre: string;
+  activo: boolean;
+  /** Minutos que la barberia abre ese dia. Denominador de la ocupacion. */
+  minutos_abierta: number;
+}
+
+export interface VistaUsuarioPorRol {
+  id_usuario: number;
+  nombre: string;
+  email: string;
+  rol: NombreRol;
+  estado: boolean;
+  created_at: string;
+  id_profesional: number | null;
+  es_barbero: boolean;
+}
+
+// --- Modulo 2: clientes ----------------------------------------------------
+
+export interface VistaClienteResumen {
+  id_cliente: number;
+  nombre: string;
+  telefono: string;
+  email: string | null;
+  fecha_nacimiento: string | null;
+  estado: boolean;
+  created_at: string;
+  cantidad_visitas: number;
+  total_gastado: number;
+  ticket_promedio: number;
+  ultima_visita: string | null;
+  primera_visita: string | null;
+  /** Null si el cliente nunca vino. */
+  dias_sin_venir: number | null;
+}
+
+export interface VistaClienteInactivo {
+  id_cliente: number;
+  nombre: string;
+  telefono: string;
+  email: string | null;
+  cantidad_visitas: number;
+  total_gastado: number;
+  ultima_visita: string;
+  dias_sin_venir: number;
+}
+
+export interface VistaClienteFrecuente {
+  id_cliente: number;
+  nombre: string;
+  telefono: string;
+  cantidad_visitas: number;
+  total_gastado: number;
+  ticket_promedio: number;
+  ultima_visita: string;
+  /** Visitas por mes desde la primera. Indicador de frecuencia del TCC. */
+  visitas_por_mes: number | null;
+}
+
+export interface VistaCumpleanos {
+  id_cliente: number;
+  nombre: string;
+  telefono: string;
+  email: string | null;
+  fecha_nacimiento: string;
+  dia: number;
+  edad: number;
+}
+
+// --- Modulo 3: administracion de datos -------------------------------------
+
+export interface VistaCatalogoServicio {
+  id_servicio: number;
+  nombre: string;
+  descripcion: string | null;
+  categoria: string;
+  duracion_min: number;
+  precio_base: number;
+  estado: boolean;
+  productos_receta: number;
+}
+
+export interface VistaServicioSolicitado {
+  id_servicio: number;
+  nombre: string;
+  categoria: string;
+  precio_base: number;
+  veces_realizado: number;
+  facturado: number;
+  ultima_vez: string | null;
+}
+
+export interface VistaProfesionalResumen {
+  id_profesional: number;
+  nombre: string;
+  especialidad: string | null;
+  tipo: string | null;
+  porcentaje_com: number;
+  estado: boolean;
+  servicios_realizados: number;
+  facturado: number;
+  comision_pendiente: number;
+  comision_liquidada: number;
+  clientes_distintos: number;
+  ultimo_servicio: string | null;
+}
+
+// --- Modulo 4: agenda ------------------------------------------------------
+
+export interface VistaAgendaDia {
+  id_cita: number;
+  fecha_hora: string;
+  dia: string;
+  estado: EstadoCita;
+  total: number;
+  observaciones: string | null;
+  id_cliente: number;
+  nombre_cliente: string;
+  telefono_cliente: string;
+  /** Nombres separados por coma: un turno puede tener varios barberos. */
+  barberos: string | null;
+  servicios: string | null;
+  duracion_total_min: number;
+  fecha_hora_fin: string;
+}
+
+export interface VistaOcupacionBarbero {
+  id_profesional: number;
+  nombre_profesional: string;
+  dia: string;
+  turnos: number;
+  minutos_ocupados: number;
+  facturacion_agendada: number;
+}
+
+export interface VistaProximoTurno {
+  id_cita: number;
+  fecha_hora: string;
+  estado: EstadoCita;
+  nombre_cliente: string;
+  telefono: string;
+  email: string | null;
+  servicios: string | null;
+  /** RN-050: evita mandar el recordatorio dos veces. */
+  recordatorio_enviado: boolean;
+}
+
+export interface VistaCitaCancelada {
+  id_cita: number;
+  fecha_hora: string;
+  dia: string;
+  estado: Extract<EstadoCita, 'cancelado' | 'no_asistio'>;
+  nombre_cliente: string;
+  telefono: string;
+  observaciones: string | null;
+  monto_perdido: number;
+  fecha_cancelacion: string;
+}
+
+// --- Modulo 5: cobros y pagos ----------------------------------------------
+
+export interface VistaCobroDetalle {
+  id_cobro: number;
+  id_cita: number;
+  monto: number;
+  estado: EstadoCobro;
+  fecha_pago: string | null;
+  comprobante_url: string | null;
+  metodo_pago: string;
+  id_cliente: number;
+  nombre_cliente: string;
+  fecha_turno: string;
+  total_turno: number;
+  saldo: number;
+}
+
+export interface VistaCobroPendiente {
+  id_cita: number;
+  fecha_hora: string;
+  nombre_cliente: string;
+  telefono: string;
+  total: number;
+  cobrado: number;
+  saldo: number;
+}
+
+export interface VistaIngresoPorMetodo {
+  id_metodo: number;
+  metodo_pago: string;
+  anio: number;
+  mes: number;
+  cantidad_cobros: number;
+  total: number;
+  promedio: number;
+}
+
+export interface VistaTicketPromedioBarbero {
+  id_profesional: number;
+  nombre_profesional: string;
+  servicios: number;
+  facturado: number;
+  ticket_promedio: number;
+  minimo: number;
+  maximo: number;
+}
+
+export interface VistaComisionLiquidada {
+  id_pago_prof: number;
+  id_profesional: number;
+  nombre_profesional: string;
+  nombre_servicio: string;
+  fecha_realizacion: string;
+  costo_cobrado: number;
+  porcentaje_com: number;
+  comision: number;
+  fecha_liquidacion: string | null;
+}
+
+// --- Modulo 6: inventario y compras ----------------------------------------
+
+export interface VistaInventarioValorizado {
+  id_producto: number;
+  nombre: string;
+  categoria: string;
+  stock_actual: number;
+  stock_minimo: number;
+  stock_maximo: number | null;
+  precio_unitario: number;
+  valor_stock: number;
+  /** Replica la logica de la seccion 10.5 del sistema de diseno. */
+  nivel: 'sin_stock' | 'critico' | 'bajo' | 'disponible' | 'sobrestock';
+}
+
+export interface VistaProductoConsumido {
+  id_producto: number;
+  nombre: string;
+  categoria: string;
+  stock_actual: number;
+  unidad_uso: string | null;
+  veces_usado: number;
+  cantidad_total: number;
+  /** Veces que se completo un servicio con stock insuficiente (CU-007 A1). */
+  usos_con_excepcion: number;
+  ultimo_uso: string | null;
+}
+
+export interface VistaMovimientoDetalle {
+  id_movimiento: number;
+  fecha: string;
+  tipo: TipoMovimiento;
+  cantidad: number;
+  motivo: string | null;
+  id_producto: number;
+  nombre_producto: string;
+  nombre_usuario: string | null;
+}
+
+export interface VistaCompraPorProveedor {
+  id_proveedor: number;
+  nombre: string;
+  telefono: string | null;
+  email: string | null;
+  pedidos: number;
+  recibidos: number;
+  cancelados: number;
+  total_comprado: number;
+  ultimo_pedido: string | null;
+}
+
+// --- Modulo 7: reportes ----------------------------------------------------
+
+export interface VistaResumenMensual {
+  /** Primer dia del mes, aaaa-MM-dd. */
+  mes: string;
+  anio: number;
+  numero_mes: number;
+  turnos: number;
+  completados: number;
+  cancelados: number;
+  clientes_atendidos: number;
+  ingresos: number;
+  comisiones: number;
+}
+
+export interface VistaAuditoriaDetalle {
+  id_auditoria: number;
+  fecha_accion: string;
+  tabla_afectada: string;
+  accion: AccionAuditoria;
+  registro_id: number | null;
+  detalle: string | null;
+  id_usuario: number | null;
+  /** «Sistema» cuando la accion no tiene usuario asociado. */
+  nombre_usuario: string;
+  rol_usuario: NombreRol | null;
+}
+
+// ---------------------------------------------------------------------------
 // Funciones RPC expuestas por la base
 // ---------------------------------------------------------------------------
 
@@ -445,10 +783,19 @@ export interface ResumenKpis {
 // Utilidades de tipos
 // ---------------------------------------------------------------------------
 
-/** Campos que la base genera sola y nunca se envian en un INSERT. */
+/**
+ * Campos que la base genera sola y nunca se envian en un INSERT.
+ *
+ * Incluye las columnas de borrado logico: un registro no nace borrado, y
+ * `deleted_at` lo completa un disparador. Para dar de baja se usa
+ * `borrarLogico()` de la capa de datos, no un insert ni un update crudo.
+ */
 type Generados =
   | 'created_at'
   | 'updated_at'
+  | 'deleted'
+  | 'deleted_at'
+  | 'deleted_user_id'
   | 'fecha_registro'
   | 'fecha_creacion'
   | 'fecha_accion'

@@ -66,6 +66,25 @@ const RESTRICCIONES: Record<string, string> = {
   pedidos_estado_check: 'El estado indicado para el pedido no es valido.',
   usuarios_email_key: 'Ya existe un usuario con ese correo electronico.',
   clientes_email_key: 'Ya existe un cliente con ese correo electronico.',
+
+  // Indices unicos parciales del borrado logico. Chocan en dos situaciones:
+  // al dar de alta con un valor que ya usa un registro vigente, y al RESTAURAR
+  // un registro borrado cuyo valor fue tomado mientras tanto. El segundo caso
+  // desconcierta si el mensaje no lo nombra: el registro que estorba estuvo
+  // invisible todo el tiempo.
+  clientes_email_vigente:
+    'Ese correo ya pertenece a otro cliente. Si esta restaurando un cliente '
+    + 'borrado, primero cambie el correo del que lo esta ocupando.',
+  usuarios_email_vigente:
+    'Ese correo ya pertenece a otro usuario. Si esta restaurando un usuario '
+    + 'borrado, primero cambie el correo del que lo esta ocupando.',
+  servicios_categoria_nombre_vigente:
+    'Ya existe un servicio con ese nombre en la misma categoria.',
+  categorias_servicio_nombre_vigente: 'Ya existe una categoria de servicio con ese nombre.',
+  categorias_producto_nombre_vigente: 'Ya existe una categoria de producto con ese nombre.',
+  metodos_pago_nombre_vigente: 'Ya existe un metodo de pago con ese nombre.',
+  servicio_producto_vigente: 'Ese producto ya esta en la receta de este servicio.',
+  horarios_atencion_dia_vigente: 'Ya existe un horario definido para ese dia.',
   usuarios_email_formato_check: 'El correo electronico no tiene un formato valido.',
   clientes_email_formato_check: 'El correo electronico no tiene un formato valido.',
   proveedores_email_formato_check: 'El correo electronico no tiene un formato valido.',

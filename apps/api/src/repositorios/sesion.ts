@@ -33,12 +33,17 @@ export async function usuarioActual(): Promise<UsuarioSesion | null> {
     .from('usuarios')
     .select('id_usuario, nombre, email, estado, roles(nombre), profesionales(id_profesional)')
     .eq('auth_uid', user.id)
+    // Un usuario borrado no entra. El filtro va en la consulta y no en una
+    // comprobacion posterior: si alguna vez esta funcion cambia de forma, es
+    // menos probable que se pierda una clausula que una linea de codigo suelta.
+    .eq('deleted', false)
     .maybeSingle();
 
   if (error || !data) return null;
 
   // Un usuario desactivado (CU-001) conserva su cuenta en Auth pero pierde el
-  // acceso. Se trata como si no tuviera sesion.
+  // acceso. Distinto de borrado: al desactivado se lo puede reactivar. En los
+  // dos casos se trata como si no tuviera sesion.
   if (!data.estado) return null;
 
   // PostgREST devuelve la relacion como objeto cuando es uno-a-uno y como

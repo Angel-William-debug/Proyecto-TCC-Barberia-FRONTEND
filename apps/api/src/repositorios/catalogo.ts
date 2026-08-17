@@ -48,7 +48,7 @@ export async function listarServicios(filtro: FiltroServicios = {}): Promise<Ser
 
   const supabase = await clienteServidor();
 
-  let consulta = supabase.from('servicios').select('*').order('nombre');
+  let consulta = supabase.from('servicios').select('*').eq('deleted', false).order('nombre');
   if (filtro.categoria) consulta = consulta.eq('id_categoria', Number(filtro.categoria));
   if (filtro.estados?.length === 1) {
     consulta = consulta.eq('estado', filtro.estados[0] === 'activo');
@@ -65,6 +65,7 @@ export async function listarCategoriasServicio(): Promise<CategoriaServicio[]> {
   const { data, error } = await supabase
     .from('categorias_servicio')
     .select('*')
+    .eq('deleted', false)
     .eq('estado', true)
     .order('nombre');
 
@@ -95,7 +96,7 @@ export async function listarProfesionales(
 
   const supabase = await clienteServidor();
 
-  let consulta = supabase.from('profesionales').select('*').order('nombre');
+  let consulta = supabase.from('profesionales').select('*').eq('deleted', false).order('nombre');
   if (filtro.tipo) consulta = consulta.eq('tipo', filtro.tipo);
   if (filtro.estados?.length === 1) {
     consulta = consulta.eq('estado', filtro.estados[0] === 'activo');
@@ -114,6 +115,7 @@ export async function listarMetodosPago(): Promise<MetodoPago[]> {
   const { data, error } = await supabase
     .from('metodos_pago')
     .select('*')
+    .eq('deleted', false)
     .eq('estado', true)
     .order('id_metodo');
 
@@ -146,7 +148,11 @@ export async function listarProductosConNivel(
 
   const supabase = await clienteServidor();
 
-  const { data, error } = await supabase.from('productos').select('*').order('nombre');
+  const { data, error } = await supabase
+    .from('productos')
+    .select('*')
+    .eq('deleted', false)
+    .order('nombre');
   if (error) throw traducirError(error);
 
   // El nivel es un valor derivado, no una columna: se calcula después de traer
@@ -181,6 +187,7 @@ export async function listarHorariosAtencion() {
   const { data, error } = await supabase
     .from('horarios_atencion')
     .select('*')
+    .eq('deleted', false)
     .order('dia_semana');
 
   if (error) throw traducirError(error);

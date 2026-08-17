@@ -70,6 +70,7 @@ export async function listarCobros(filtro: FiltroCobros = {}): Promise<CobroDeLi
        metodos_pago ( nombre ),
        citas ( clientes ( nombre ) )`,
     )
+    .eq('deleted', false)
     .order('fecha_pago', { ascending: false, nullsFirst: false })
     .limit(200);
 
@@ -183,7 +184,12 @@ export async function listarProveedores(filtro: FiltroTabla = {}): Promise<Prove
 
   const supabase = await clienteServidor();
 
-  let consulta = supabase.from('proveedores').select('*').eq('estado', true).order('nombre');
+  let consulta = supabase
+    .from('proveedores')
+    .select('*')
+    .eq('deleted', false)
+    .eq('estado', true)
+    .order('nombre');
   if (filtro.busqueda) consulta = consulta.ilike('nombre', `%${filtro.busqueda}%`);
 
   const { data, error } = await consulta;
@@ -216,6 +222,7 @@ export async function listarPedidos(filtro: FiltroPedidos = {}): Promise<PedidoD
        proveedores ( nombre ),
        detalle_pedido ( id_detalle_pedido )`,
     )
+    .eq('deleted', false)
     .order('fecha_pedido', { ascending: false })
     .limit(200);
 
@@ -360,6 +367,7 @@ export async function listarHorarios(): Promise<HorarioAtencion[]> {
   const { data, error } = await supabase
     .from('horarios_atencion')
     .select('*')
+    .eq('deleted', false)
     .order('dia_semana');
 
   if (error) throw traducirError(error);

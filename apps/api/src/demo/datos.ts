@@ -26,6 +26,29 @@ import type {
   VistaStockCritico,
 } from '@barber-shop/tipos';
 import { nivelStock } from '@barber-shop/tipos';
+import type { AuditoriaTemporal, BorradoLogico } from '@barber-shop/tipos';
+
+// ---------------------------------------------------------------------------
+// Columnas transversales de los registros ficticios
+//
+// Desde las migraciones 10 y 11, toda tabla tiene created_at y updated_at, y
+// catorce tienen ademas las de borrado logico. Repetir cinco campos en cada
+// objeto de este archivo lo volveria ilegible, asi que se agregan con estos
+// dos ayudantes.
+// ---------------------------------------------------------------------------
+
+/** Fecha fija: los datos ficticios no deben cambiar entre dos capturas. */
+const SELLO = '2026-06-01T09:00:00-03:00';
+
+/** Agrega created_at y updated_at. */
+function conFechas<T extends object>(fila: T): T & AuditoriaTemporal {
+  return { ...fila, created_at: SELLO, updated_at: SELLO };
+}
+
+/** Agrega las fechas y marca la fila como vigente, es decir, no borrada. */
+function vigente<T extends object>(fila: T): T & AuditoriaTemporal & BorradoLogico {
+  return { ...conFechas(fila), deleted: false, deleted_at: null, deleted_user_id: null };
+}
 
 // ---------------------------------------------------------------------------
 // Sesión
@@ -72,7 +95,7 @@ export const PROFESIONALES_DEMO: Profesional[] = [
     porcentaje_com: 35,
     estado: true,
   },
-];
+].map(vigente);
 
 export const SERVICIOS_DEMO: Servicio[] = [
   {
@@ -129,7 +152,7 @@ export const SERVICIOS_DEMO: Servicio[] = [
     precio_base: 40000,
     estado: true,
   },
-];
+].map(vigente);
 
 export const METODOS_PAGO_DEMO: MetodoPago[] = [
   { id_metodo: 1, nombre: 'Efectivo', estado: true },
@@ -137,7 +160,7 @@ export const METODOS_PAGO_DEMO: MetodoPago[] = [
   { id_metodo: 3, nombre: 'Tarjeta de débito', estado: true },
   { id_metodo: 4, nombre: 'Tarjeta de crédito', estado: true },
   { id_metodo: 5, nombre: 'Billetera electrónica', estado: true },
-];
+].map(vigente);
 
 // ---------------------------------------------------------------------------
 // Clientes
@@ -161,8 +184,8 @@ const NOMBRES_CLIENTES: Array<[string, string, string | null]> = [
   ['Víctor Hugo Acosta', '0977678901', null],
 ];
 
-export const CLIENTES_DEMO: Cliente[] = NOMBRES_CLIENTES.map(
-  ([nombre, telefono, email], i) => ({
+export const CLIENTES_DEMO: Cliente[] = NOMBRES_CLIENTES.map(([nombre, telefono, email], i) =>
+  vigente({
     id_cliente: i + 1,
     id_usuario_reg: 1,
     nombre,
@@ -195,7 +218,7 @@ const PRODUCTOS_BASE: Array<[string, number, number, number]> = [
 
 export const PRODUCTOS_DEMO: ProductoConNivel[] = PRODUCTOS_BASE.map(
   ([nombre, actual, minimo, precio], i) => {
-    const p: Producto = {
+    const p: Producto = vigente({
       id_producto: i + 1,
       id_categoria_p: 1,
       nombre,
@@ -208,7 +231,7 @@ export const PRODUCTOS_DEMO: ProductoConNivel[] = PRODUCTOS_BASE.map(
       stock_maximo: null,
       stock_actual: actual,
       estado: true,
-    };
+    });
     return { ...p, nivel: nivelStock(actual, minimo, null) };
   },
 );
@@ -354,7 +377,7 @@ export const COMISIONES_DEMO: VistaComisionPendiente[] = [
   },
 ];
 
-export const CONFIGURACION_DEMO: ConfiguracionSistema = {
+export const CONFIGURACION_DEMO: ConfiguracionSistema = conFechas({
   id_configuracion: 1,
   nombre_barberia: 'Barbería San Lorenzo',
   ruc: '80012345-6',
@@ -366,5 +389,4 @@ export const CONFIGURACION_DEMO: ConfiguracionSistema = {
   zona_horaria: 'America/Asuncion',
   minutos_antes_recordatorio: 1440,
   max_reintentos_notif: 3,
-  updated_at: new Date().toISOString(),
-};
+});

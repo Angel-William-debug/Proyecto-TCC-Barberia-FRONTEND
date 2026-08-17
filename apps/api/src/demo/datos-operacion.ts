@@ -10,6 +10,8 @@
  */
 
 import type {
+  AuditoriaTemporal,
+  BorradoLogico,
   AuditoriaDeLista,
   CobroDeLista,
   ComisionDeLista,
@@ -18,6 +20,21 @@ import type {
   PedidoDeLista,
   Proveedor,
 } from '@barber-shop/tipos';
+
+// Las columnas transversales que agregaron las migraciones 10 y 11. Ver la
+// nota equivalente en datos.ts.
+const SELLO = '2026-06-01T09:00:00-03:00';
+
+function vigente<T extends object>(fila: T): T & AuditoriaTemporal & BorradoLogico {
+  return {
+    ...fila,
+    created_at: SELLO,
+    updated_at: SELLO,
+    deleted: false,
+    deleted_at: null,
+    deleted_user_id: null,
+  };
+}
 
 /** Hace `dias` días, a la hora indicada. Devuelve ISO. */
 function haceDias(dias: number, hora = 12, minuto = 0): string {
@@ -212,7 +229,7 @@ export const PROVEEDORES_DEMO: Proveedor[] = [
     direccion: 'Ciudad del Este, Alto Paraná',
     estado: true,
   },
-];
+].map(vigente);
 
 export const PEDIDOS_DEMO: PedidoDeLista[] = [
   {
@@ -379,7 +396,11 @@ export const AUDITORIA_DEMO: AuditoriaDeLista[] = [
 // Horarios de atención (CU-020)
 // ---------------------------------------------------------------------------
 
-export const HORARIOS_DEMO: HorarioAtencion[] = [
+// El arreglo se tipa ANTES del map: sin esa anotacion, `dia_semana` se
+// ensancha a `number` y deja de encajar con el 0..6 que exige la base.
+const HORARIOS_BASE: Array<
+  Omit<HorarioAtencion, keyof AuditoriaTemporal | keyof BorradoLogico>
+> = [
   { id_horario: 1, dia_semana: 0, hora_apertura: '09:00:00', hora_cierre: '13:00:00', activo: false },
   { id_horario: 2, dia_semana: 1, hora_apertura: '08:00:00', hora_cierre: '19:00:00', activo: true },
   { id_horario: 3, dia_semana: 2, hora_apertura: '08:00:00', hora_cierre: '19:00:00', activo: true },
@@ -388,3 +409,5 @@ export const HORARIOS_DEMO: HorarioAtencion[] = [
   { id_horario: 6, dia_semana: 5, hora_apertura: '08:00:00', hora_cierre: '20:00:00', activo: true },
   { id_horario: 7, dia_semana: 6, hora_apertura: '08:00:00', hora_cierre: '18:00:00', activo: true },
 ];
+
+export const HORARIOS_DEMO: HorarioAtencion[] = HORARIOS_BASE.map(vigente);
