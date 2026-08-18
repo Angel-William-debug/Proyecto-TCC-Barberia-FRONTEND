@@ -43,8 +43,16 @@ export const CLAVE_PRIMARIA: Record<TablaEscribible, string> = {
   metodos_pago: 'id_metodo',
 };
 
-/** En modo demostracion no hay base donde escribir. */
-function rechazarSiEsDemo() {
+/**
+ * En modo demostracion no hay base donde escribir.
+ *
+ * Se exporta porque las escrituras que no pasan por `crear`/`actualizar`
+ * -la liquidacion de comisiones, el alta de un turno con su detalle- necesitan
+ * exactamente el mismo guardia. Sin el, esas funciones intentarian abrir un
+ * cliente de Supabase que en modo demostracion no tiene credenciales, y el
+ * usuario recibiria un error de conexion en lugar de la explicacion real.
+ */
+export function rechazarSiEsDemo() {
   if (MODO_DEMO) {
     throw new ErrorAplicacion(
       'El modo demostración es de solo lectura. Para guardar, configure la conexión ' +

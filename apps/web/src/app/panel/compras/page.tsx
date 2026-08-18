@@ -1,8 +1,7 @@
-import { listarPedidos, listarProveedores } from '@barber-shop/api';
+import { listarPedidos, listarProductosConNivel, listarProveedores } from '@barber-shop/api';
 import { ESTADOS_PEDIDO } from '@barber-shop/tipos';
 import {
   BarraFiltros,
-  Boton,
   CampoBusqueda,
   ChipEstado,
   EstadoVacio,
@@ -27,6 +26,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { FormularioOrden } from '@/componentes/formularios/formulario-orden';
 import { FormularioProveedor } from '@/componentes/formularios/formulario-proveedor';
 import { comunes, texto, type Parametros } from '@/lib/filtros';
 
@@ -57,11 +57,16 @@ export default async function PaginaCompras({
   const params = await searchParams;
   const base = comunes(params);
 
-  const [pedidos, proveedoresTodos, proveedores] = await Promise.all([
+  const [pedidos, proveedoresTodos, proveedores, productos] = await Promise.all([
     listarPedidos({ ...base, proveedor: texto(params, 'proveedor') }),
     listarProveedores(),
     listarProveedores({ busqueda: texto(params, 'prov_q') }),
+    listarProductosConNivel({}),
   ]);
+
+  // Fecha del servidor, no del navegador: el formulario la propone como
+  // predeterminada y la barberia opera en una sola zona horaria.
+  const hoy = new Date().toISOString().slice(0, 10);
 
   const enCurso = pedidos.filter((p) => p.estado === 'pedido' || p.estado === 'recibido');
   const comprometido = enCurso.reduce((suma, p) => suma + p.total, 0);
@@ -74,9 +79,15 @@ export default async function PaginaCompras({
           comprometido,
         )} comprometidos`}
         accion={
-          <Boton variante="primario" icono="plus">
-            Nueva orden
-          </Boton>
+          <FormularioOrden
+            proveedores={proveedoresTodos}
+            productos={productos.map((p) => ({
+              id_producto: p.id_producto,
+              nombre: p.nombre,
+              precio_unitario: p.precio_unitario,
+            }))}
+            fechaHoy={hoy}
+          />
         }
       />
 

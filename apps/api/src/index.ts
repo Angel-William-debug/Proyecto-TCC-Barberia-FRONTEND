@@ -72,3 +72,12 @@ export {
   CLAVE_PRIMARIA,
   type TablaEscribible,
 } from './repositorios/escritura';
+
+export {
+  actualizarConfiguracion,
+  liquidarComisiones,
+  crearPedido,
+  type EntradaConfiguracion,
+  type EntradaNuevoPedido,
+  type LineaPedido,
+} from './repositorios/escritura-operaciones';

@@ -117,8 +117,14 @@ export function MarcoPanel({
             <div className="ml-auto flex items-center gap-2">{acciones}</div>
           </header>
 
-          {/* El único elemento que se desplaza */}
-          <main id="contenido" className="flex-1 overflow-y-auto">
+          {/* El único elemento que se desplaza.
+              `relative` no es decorativo: sin el, un descendiente con
+              `position: absolute` y ningun antepasado posicionado toma como
+              bloque contenedor el documento entero, se escapa de este scroller
+              y estira la altura de la pagina. Pasaba con el `<caption>` de las
+              tablas, que lleva `solo-lectores`: la ventana quedaba con DOS
+              barras de desplazamiento y la barra lateral se iba hacia arriba. */}
+          <main id="contenido" className="relative flex-1 overflow-y-auto">
             <div className="mx-auto w-full max-w-[1440px] p-4 sm:p-6">{children}</div>
           </main>
         </div>

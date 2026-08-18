@@ -9,6 +9,7 @@ import { agendaDemo } from '../demo/datos';
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { ErrorAplicacion, traducirError } from '../errores';
+import { rechazarSiEsDemo } from './escritura';
 
 /**
  * Agenda de turnos (CU-006).
@@ -191,6 +192,8 @@ export async function hayConflictoHorario(params: {
  * turnos ya agendados.
  */
 export async function crearCita(entrada: EntradaNuevaCita): Promise<number> {
+  rechazarSiEsDemo();
+
   const supabase = await clienteServidor();
 
   if (entrada.servicios.length === 0) {

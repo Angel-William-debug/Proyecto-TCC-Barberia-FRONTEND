@@ -1,6 +1,5 @@
 import { listarHorarios, listarMetodosPago, obtenerConfiguracion } from '@barber-shop/api';
 import {
-  Boton,
   ChipEstado,
   Tabla,
   TablaCuerpo,
@@ -16,6 +15,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { FormularioConfiguracion } from '@/componentes/formularios/formulario-configuracion';
 
 export const metadata = { title: 'Configuración' };
 
@@ -50,11 +50,7 @@ export default async function PaginaConfiguracion() {
       <EncabezadoVista
         titulo="Configuración"
         descripcion="Datos del establecimiento, horarios y parámetros del sistema"
-        accion={
-          <Boton variante="primario" icono="pencil">
-            Editar
-          </Boton>
-        }
+        accion={config ? <FormularioConfiguracion configuracion={config} /> : undefined}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">

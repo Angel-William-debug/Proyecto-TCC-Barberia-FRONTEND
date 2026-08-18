@@ -1,4 +1,9 @@
-import { listarAgenda, listarProfesionales } from '@barber-shop/api';
+import {
+  listarAgenda,
+  listarClientes,
+  listarProfesionales,
+  listarServicios,
+} from '@barber-shop/api';
 import { ESTADOS_CITA, type EstadoCita } from '@barber-shop/tipos';
 import {
   BarraFiltros,
@@ -24,6 +29,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { FormularioTurno } from '@/componentes/formularios/formulario-turno';
 import { FiltroFecha } from '@/componentes/navegacion/filtro-fecha';
 import { fecha as leerFecha, lista, texto, type Parametros } from '@/lib/filtros';
 
@@ -62,7 +68,7 @@ export default async function PaginaAgenda({
   const estados = lista(params, 'estado') as EstadoCita[] | undefined;
   const barbero = texto(params, 'barbero');
 
-  const [barberos, citas] = await Promise.all([
+  const [barberos, citas, clientes, servicios] = await Promise.all([
     listarProfesionales().catch(() => []),
     listarAgenda({
       desde: dia,
@@ -70,6 +76,10 @@ export default async function PaginaAgenda({
       estados,
       idProfesional: barbero ? Number(barbero) : undefined,
     }),
+    // Sin filtro: el formulario necesita el catalogo completo, no lo que
+    // quedo despues de filtrar la agenda.
+    listarClientes({ porPagina: 500 }).catch(() => null),
+    listarServicios().catch(() => []),
   ]);
 
   const facturado = citas
@@ -82,9 +92,12 @@ export default async function PaginaAgenda({
         titulo="Agenda"
         descripcion={fechaLarga(`${dia}T12:00:00`)}
         accion={
-          <Boton variante="primario" icono="plus">
-            Nuevo turno
-          </Boton>
+          <FormularioTurno
+            clientes={clientes?.datos ?? []}
+            servicios={servicios}
+            profesionales={barberos}
+            fecha={dia}
+          />
         }
       />
 

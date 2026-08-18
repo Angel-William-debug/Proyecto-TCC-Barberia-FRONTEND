@@ -2,7 +2,6 @@ import { comisionesPendientes, listarComisiones, listarProfesionales } from '@ba
 import { ESTADOS_COMISION } from '@barber-shop/tipos';
 import {
   BarraFiltros,
-  Boton,
   CampoBusqueda,
   ChipEstado,
   EstadoVacio,
@@ -26,6 +25,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { PanelLiquidacion } from '@/componentes/formularios/panel-liquidacion';
 import { comunes, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Comisiones' };
@@ -69,9 +69,14 @@ export default async function PaginaComisiones({
         titulo="Comisiones"
         descripcion={`${guaranies(totalPendiente)} pendientes de liquidar`}
         accion={
-          <Boton variante="primario" icono="hand-coins">
-            Liquidar pendientes
-          </Boton>
+          <PanelLiquidacion
+            resumen={resumen.map((r) => ({
+              nombre: r.nombre_profesional,
+              idProfesional: r.id_profesional,
+              servicios: r.cantidad_servicios,
+              total: r.total_comision,
+            }))}
+          />
         }
       />
 
