@@ -23,6 +23,24 @@ export {
 export { Icono, type PropsIcono } from './componentes/icono';
 export { Boton, BotonIcono, type PropsBoton, type PropsBotonIcono } from './componentes/boton';
 export { ChipEstado, PuntoEstado, type PropsChipEstado } from './componentes/chip-estado';
+export {
+  PanelLateral,
+  type PropsPanelLateral,
+  type AnchoPanel,
+} from './componentes/panel-lateral';
+export {
+  CampoSelector,
+  CampoArea,
+  Interruptor,
+  GrupoCampos,
+  FilaCampos,
+  CuerpoFormulario,
+  AvisoFormulario,
+  type OpcionCampo,
+  type PropsCampoSelector,
+  type PropsCampoArea,
+  type PropsInterruptor,
+} from './componentes/campos';
 export { Campo, type PropsCampo } from './componentes/campo';
 export {
   Tarjeta,

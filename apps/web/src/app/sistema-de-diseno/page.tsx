@@ -32,6 +32,7 @@ import {
 } from '@barber-shop/ui';
 
 import { LogoHorizontal, Isotipo } from '@/componentes/marca/logo';
+import { DemoPanel } from '@/componentes/sistema/demo-panel';
 import { SelectorTema } from '@/componentes/sistema/selector-tema';
 
 export const metadata = {
@@ -298,6 +299,20 @@ export default function PaginaSistemaDeDiseno() {
             />
             <Campo etiqueta="Campo deshabilitado" defaultValue="No editable" disabled />
           </div>
+        </Seccion>
+
+        {/* ---------------------------------------------- panel lateral */}
+        <Seccion
+          numero="9.10"
+          titulo="Panel lateral y formularios"
+          descripcion="Todo formulario de alta y edición vive en un panel que entra desde la derecha. Nunca en una página aparte ni en una ventana modal centrada."
+        >
+          <DemoPanel />
+          <p className="text-cuerpo-sm text-terciario medida-lectura mt-6">
+            El encabezado y la barra de acciones quedan fijos; solo se desplaza el cuerpo.
+            El foco entra al primer campo, queda atrapado dentro del panel y vuelve al
+            botón que lo abrió al cerrarse.
+          </p>
         </Seccion>
 
         {/* ---------------------------------------------------- estados */}

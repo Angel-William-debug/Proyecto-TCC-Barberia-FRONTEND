@@ -10,6 +10,8 @@
  */
 
 import type {
+  CategoriaProducto,
+  CategoriaServicio,
   CitaCompleta,
   Cliente,
   ConfiguracionSistema,
@@ -390,3 +392,24 @@ export const CONFIGURACION_DEMO: ConfiguracionSistema = conFechas({
   minutos_antes_recordatorio: 1440,
   max_reintentos_notif: 3,
 });
+
+// ---------------------------------------------------------------------------
+// Categorías
+//
+// Los identificadores coinciden con los que usan SERVICIOS_DEMO y
+// PRODUCTOS_DEMO: sin eso, el formulario de edición abriría con la categoría
+// vacía y parecería un error de guardado.
+// ---------------------------------------------------------------------------
+
+export const CATEGORIAS_SERVICIO_DEMO: CategoriaServicio[] = [
+  { id_categoria: 1, nombre: 'Corte', descripcion: 'Cortes de cabello', estado: true },
+  { id_categoria: 2, nombre: 'Barba', descripcion: 'Perfilado y afeitado', estado: true },
+  { id_categoria: 3, nombre: 'Infantil', descripcion: 'Hasta 12 años', estado: true },
+].map(vigente);
+
+export const CATEGORIAS_PRODUCTO_DEMO: CategoriaProducto[] = [
+  { id_categoria_p: 1, nombre: 'Peinado y fijación', descripcion: null, estado: true },
+  { id_categoria_p: 2, nombre: 'Cuidado de barba', descripcion: null, estado: true },
+  { id_categoria_p: 3, nombre: 'Higiene', descripcion: null, estado: true },
+  { id_categoria_p: 4, nombre: 'Descartables', descripcion: null, estado: true },
+].map(vigente);

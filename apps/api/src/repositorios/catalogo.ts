@@ -1,5 +1,6 @@
 import { nivelStock } from '@barber-shop/tipos';
 import type {
+  CategoriaProducto,
   CategoriaServicio,
   MetodoPago,
   Producto,
@@ -9,6 +10,8 @@ import type {
 } from '@barber-shop/tipos';
 
 import {
+  CATEGORIAS_PRODUCTO_DEMO,
+  CATEGORIAS_SERVICIO_DEMO,
   CONFIGURACION_DEMO,
   METODOS_PAGO_DEMO,
   PRODUCTOS_DEMO,
@@ -60,6 +63,8 @@ export async function listarServicios(filtro: FiltroServicios = {}): Promise<Ser
 }
 
 export async function listarCategoriasServicio(): Promise<CategoriaServicio[]> {
+  if (MODO_DEMO) return CATEGORIAS_SERVICIO_DEMO;
+
   const supabase = await clienteServidor();
 
   const { data, error } = await supabase
@@ -71,6 +76,22 @@ export async function listarCategoriasServicio(): Promise<CategoriaServicio[]> {
 
   if (error) throw traducirError(error);
   return (data ?? []) as CategoriaServicio[];
+}
+
+export async function listarCategoriasProducto(): Promise<CategoriaProducto[]> {
+  if (MODO_DEMO) return CATEGORIAS_PRODUCTO_DEMO;
+
+  const supabase = await clienteServidor();
+
+  const { data, error } = await supabase
+    .from('categorias_producto')
+    .select('*')
+    .eq('deleted', false)
+    .eq('estado', true)
+    .order('nombre');
+
+  if (error) throw traducirError(error);
+  return (data ?? []) as CategoriaProducto[];
 }
 
 export interface FiltroProfesionales extends FiltroTabla {

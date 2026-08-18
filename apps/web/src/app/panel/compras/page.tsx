@@ -27,6 +27,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { FormularioProveedor } from '@/componentes/formularios/formulario-proveedor';
 import { comunes, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Compras' };
@@ -149,11 +150,7 @@ export default async function PaginaCompras({
       <Tarjeta>
         <TarjetaEncabezado
           titulo="Proveedores"
-          accion={
-            <Boton variante="secundario" tamano="sm" icono="plus">
-              Nuevo proveedor
-            </Boton>
-          }
+          accion={<FormularioProveedor />}
         />
 
         <BarraFiltros>
@@ -172,10 +169,11 @@ export default async function PaginaCompras({
             <Th>Teléfono</Th>
             <Th>Correo</Th>
             <Th>Dirección</Th>
+            <Th><span className="solo-lectores">Acciones</span></Th>
           </TablaEncabezado>
           <TablaCuerpo>
             {proveedores.length === 0 ? (
-              <TdCompleta colSpan={4}>
+              <TdCompleta colSpan={5}>
                 <EstadoVacio
                   icono="truck"
                   titulo="No se encontraron proveedores"
@@ -189,6 +187,9 @@ export default async function PaginaCompras({
                   <Td className="font-mono" etiqueta="Teléfono">{p.telefono ?? '—'}</Td>
                   <Td className="text-secundario" etiqueta="Correo">{p.email ?? '—'}</Td>
                   <Td className="text-secundario" etiqueta="Dirección">{p.direccion ?? '—'}</Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    <FormularioProveedor proveedor={p} />
+                  </Td>
                 </Tr>
               ))
             )}

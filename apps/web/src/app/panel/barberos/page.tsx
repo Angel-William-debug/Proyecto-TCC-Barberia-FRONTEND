@@ -1,7 +1,6 @@
 import { listarProfesionales } from '@barber-shop/api';
 import {
   BarraFiltros,
-  Boton,
   CampoBusqueda,
   ChipEstado,
   EstadoVacio,
@@ -22,6 +21,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { FormularioBarbero } from '@/componentes/formularios/formulario-barbero';
 import {
   ETIQUETAS_ACTIVO,
   OPCIONES_ACTIVO,
@@ -66,11 +66,7 @@ export default async function PaginaBarberos({
           'barbero activo',
           'barberos activos',
         )}`}
-        accion={
-          <Boton variante="primario" icono="plus">
-            Registrar barbero
-          </Boton>
-        }
+        accion={<FormularioBarbero />}
       />
 
       <Tarjeta>
@@ -105,10 +101,11 @@ export default async function PaginaBarberos({
             <Th>Tipo</Th>
             <Th numerico>Comisión</Th>
             <Th>Estado</Th>
+            <Th><span className="solo-lectores">Acciones</span></Th>
           </TablaEncabezado>
           <TablaCuerpo>
             {barberos.length === 0 ? (
-              <TdCompleta colSpan={5}>
+              <TdCompleta colSpan={6}>
                 <EstadoVacio
                   icono="scissors"
                   titulo="No se encontraron barberos"
@@ -140,6 +137,9 @@ export default async function PaginaBarberos({
                           : { etiqueta: 'Inactivo', tono: 'neutro', icono: 'ban' }
                       }
                     />
+                  </Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    <FormularioBarbero barbero={b} />
                   </Td>
                 </Tr>
               ))

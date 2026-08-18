@@ -22,6 +22,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { FormularioCliente } from '@/componentes/formularios/formulario-cliente';
 import {
   ETIQUETAS_ACTIVO,
   OPCIONES_ACTIVO,
@@ -54,11 +55,7 @@ export default async function PaginaClientes({
       <EncabezadoVista
         titulo="Clientes"
         descripcion={plural(resultado.total, 'cliente', 'clientes')}
-        accion={
-          <Boton variante="primario" icono="plus">
-            Registrar cliente
-          </Boton>
-        }
+        accion={<FormularioCliente />}
       />
 
       <Tarjeta>
@@ -88,10 +85,11 @@ export default async function PaginaClientes({
             <Th>Correo</Th>
             <Th>Registrado</Th>
             <Th>Estado</Th>
+            <Th><span className="solo-lectores">Acciones</span></Th>
           </TablaEncabezado>
           <TablaCuerpo>
             {resultado.datos.length === 0 ? (
-              <TdCompleta colSpan={5}>
+              <TdCompleta colSpan={6}>
                 <EstadoVacio
                   icono="user-round"
                   titulo="No se encontraron coincidencias"
@@ -113,6 +111,9 @@ export default async function PaginaClientes({
                           : { etiqueta: 'Inactivo', tono: 'neutro', icono: 'ban' }
                       }
                     />
+                  </Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    <FormularioCliente cliente={c} />
                   </Td>
                 </Tr>
               ))

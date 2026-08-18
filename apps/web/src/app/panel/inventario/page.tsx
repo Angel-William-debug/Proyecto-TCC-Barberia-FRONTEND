@@ -1,8 +1,7 @@
-import { listarMovimientos, listarProductosConNivel } from '@barber-shop/api';
+import { listarCategoriasProducto, listarMovimientos, listarProductosConNivel } from '@barber-shop/api';
 import { NIVELES_STOCK, TIPOS_MOVIMIENTO } from '@barber-shop/tipos';
 import {
   BarraFiltros,
-  Boton,
   CampoBusqueda,
   ChipEstado,
   EstadoVacio,
@@ -27,6 +26,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { FormularioProducto } from '@/componentes/formularios/formulario-producto';
 import { comunes, fecha, lista, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Inventario' };
@@ -69,13 +69,14 @@ export default async function PaginaInventario({
   const params = await searchParams;
   const base = comunes(params);
 
-  const [productos, movimientos] = await Promise.all([
+  const [productos, movimientos, categorias] = await Promise.all([
     listarProductosConNivel({ busqueda: base.busqueda, niveles: lista(params, 'nivel') }),
     listarMovimientos({
       tipos: lista(params, 'mov_tipo'),
       desde: fecha(params, 'mov_desde'),
       hasta: fecha(params, 'mov_hasta'),
     }),
+    listarCategoriasProducto().catch(() => []),
   ]);
 
   const criticos = productos.filter(
@@ -97,11 +98,7 @@ export default async function PaginaInventario({
       <EncabezadoVista
         titulo="Inventario"
         descripcion={`${plural(productos.length, 'producto', 'productos')} en el catálogo`}
-        accion={
-          <Boton variante="primario" icono="plus">
-            Registrar movimiento
-          </Boton>
-        }
+        accion={<FormularioProducto categorias={categorias} />}
       />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -158,10 +155,11 @@ export default async function PaginaInventario({
             <Th numerico>Mínimo</Th>
             <Th numerico>Precio unitario</Th>
             <Th>Nivel</Th>
+            <Th><span className="solo-lectores">Acciones</span></Th>
           </TablaEncabezado>
           <TablaCuerpo>
             {productos.length === 0 ? (
-              <TdCompleta colSpan={5}>
+              <TdCompleta colSpan={6}>
                 <EstadoVacio
                   icono="package"
                   titulo="No se encontraron productos"
@@ -181,6 +179,9 @@ export default async function PaginaInventario({
                   <Td numerico etiqueta="Precio unitario">{guaranies(p.precio_unitario)}</Td>
                   <Td etiqueta="Nivel">
                     <ChipEstado presentacion={PRESENTACION_STOCK[p.nivel]} />
+                  </Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    <FormularioProducto producto={p} categorias={categorias} />
                   </Td>
                 </Tr>
               ))

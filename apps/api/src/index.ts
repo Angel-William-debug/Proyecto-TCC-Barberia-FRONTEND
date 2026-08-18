@@ -39,6 +39,7 @@ export {
 export {
   listarServicios,
   listarCategoriasServicio,
+  listarCategoriasProducto,
   listarProfesionales,
   listarMetodosPago,
   listarProductosConNivel,
@@ -62,3 +63,12 @@ export {
   listarAuditoria,
   listarHorarios,
 } from './repositorios/operaciones';
+
+export {
+  crear,
+  actualizar,
+  borrarLogico,
+  restaurar,
+  CLAVE_PRIMARIA,
+  type TablaEscribible,
+} from './repositorios/escritura';
