@@ -5,11 +5,11 @@ import type {
   ServicioDeCita,
 } from '@barber-shop/tipos';
 
-import { agendaDemo } from '../demo/datos';
+import { agendaDemo } from '../demo/datos-catalogo';
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { ErrorAplicacion, traducirError } from '../errores';
-import { rechazarSiEsDemo } from './escritura';
+import { rechazarSiEsDemo } from '../compartido/escritura';
 
 /**
  * Agenda de turnos (CU-006).

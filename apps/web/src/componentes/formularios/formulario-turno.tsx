@@ -7,7 +7,7 @@ import {
   Boton, BotonIcono, Campo, CampoArea, CampoSelector, FilaCampos, GrupoCampos, guaranies,
 } from '@barber-shop/ui';
 
-import { guardarTurno } from '@/acciones/operaciones';
+import { guardarTurno } from '@/acciones/agenda';
 import { PanelFormulario } from './panel-formulario';
 
 /** Una linea del turno. `clave` solo existe para React, no se envia. */

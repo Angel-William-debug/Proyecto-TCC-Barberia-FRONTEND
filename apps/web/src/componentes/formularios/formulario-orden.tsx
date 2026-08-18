@@ -7,7 +7,7 @@ import {
   Boton, BotonIcono, Campo, CampoSelector, FilaCampos, GrupoCampos, guaranies,
 } from '@barber-shop/ui';
 
-import { guardarOrden } from '@/acciones/operaciones';
+import { guardarOrden } from '@/acciones/compras';
 import { PanelFormulario } from './panel-formulario';
 
 /** Producto del catalogo, con lo minimo que el formulario necesita. */

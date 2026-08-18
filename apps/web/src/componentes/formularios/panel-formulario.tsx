@@ -4,7 +4,7 @@ import { useRef, useState, useTransition, type ReactNode } from 'react';
 
 import { AvisoFormulario, Boton, CuerpoFormulario, PanelLateral, type AnchoPanel } from '@barber-shop/ui';
 
-import type { ResultadoAccion } from '@/acciones/comunes';
+import type { ResultadoAccion } from '@/acciones/base';
 
 /**
  * Armazon de todo formulario del sistema (seccion 9.11).

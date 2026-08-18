@@ -25,7 +25,7 @@ import {
   plural,
 } from '@barber-shop/ui';
 
-import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { FormularioProducto } from '@/componentes/formularios/formulario-producto';
 import { comunes, fecha, lista, type Parametros } from '@/lib/filtros';
 

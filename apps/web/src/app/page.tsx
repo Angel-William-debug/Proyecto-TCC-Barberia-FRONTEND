@@ -4,7 +4,7 @@ import { Boton, Icono, type NombreIcono } from '@barber-shop/ui';
 
 import { FotosPortada } from '@/componentes/marca/fotos-portada';
 import { LogoHorizontal } from '@/componentes/marca/logo';
-import { SelectorTema } from '@/componentes/sistema/selector-tema';
+import { SelectorTema } from '@/componentes/armazon/selector-tema';
 
 export const metadata = {
   title: 'Gestión para barberías',

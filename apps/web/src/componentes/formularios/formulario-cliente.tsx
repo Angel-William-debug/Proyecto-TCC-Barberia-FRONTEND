@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { Cliente } from '@barber-shop/tipos';
 import { Boton, BotonIcono, Campo, CampoArea, FilaCampos, GrupoCampos, Interruptor } from '@barber-shop/ui';
 
-import { guardarCliente } from '@/acciones/entidades';
+import { guardarCliente } from '@/acciones/catalogo';
 import { PanelFormulario } from './panel-formulario';
 
 /**

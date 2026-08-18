@@ -14,7 +14,7 @@ import {
   duracion,
 } from '@barber-shop/ui';
 
-import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { FormularioConfiguracion } from '@/componentes/formularios/formulario-configuracion';
 
 export const metadata = { title: 'Configuración' };

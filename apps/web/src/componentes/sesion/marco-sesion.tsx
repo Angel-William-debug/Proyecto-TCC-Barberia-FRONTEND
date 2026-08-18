@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { Isotipo } from '@/componentes/marca/logo';
-import { SelectorTema } from '@/componentes/sistema/selector-tema';
+import { SelectorTema } from '@/componentes/armazon/selector-tema';
 
 /**
  * Armazón común de las pantallas de sesión: ingreso, alta de cuenta y

@@ -1,10 +1,11 @@
-import type { Cliente, FiltroListado, NuevoCliente, Pagina } from '@barber-shop/tipos';
+import type { Cliente, FiltroListado, Pagina } from '@barber-shop/tipos';
 
-import { CLIENTES_DEMO } from '../demo/datos';
+import { CLIENTES_DEMO } from '../demo/datos-catalogo';
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { traducirError } from '../errores';
-import { coincideEstado, coincideTexto, entreFechas, paginar } from './filtros';
+import { coincideEstado, coincideTexto, entreFechas, paginar } from '../compartido/filtros';
+import { rechazarSiEsDemo } from '../compartido/escritura';
 
 const POR_PAGINA = 25;
 
@@ -98,31 +99,7 @@ export async function obtenerCliente(idCliente: number): Promise<Cliente | null>
   return (data as Cliente | null) ?? null;
 }
 
-export async function crearCliente(entrada: NuevoCliente): Promise<Cliente> {
-  const supabase = await clienteServidor();
 
-  const { data, error } = await supabase.from('clientes').insert(entrada).select().single();
-
-  if (error) throw traducirError(error);
-  return data as Cliente;
-}
-
-export async function actualizarCliente(
-  idCliente: number,
-  cambios: Partial<NuevoCliente>,
-): Promise<Cliente> {
-  const supabase = await clienteServidor();
-
-  const { data, error } = await supabase
-    .from('clientes')
-    .update(cambios)
-    .eq('id_cliente', idCliente)
-    .select()
-    .single();
-
-  if (error) throw traducirError(error);
-  return data as Cliente;
-}
 
 /**
  * Desactivar NO es lo mismo que borrar.
@@ -132,6 +109,8 @@ export async function actualizarCliente(
  * negocio (CU-002 A3), no una baja.
  */
 export async function desactivarCliente(idCliente: number): Promise<void> {
+  rechazarSiEsDemo();
+
   const supabase = await clienteServidor();
 
   const { error } = await supabase
@@ -142,42 +121,14 @@ export async function desactivarCliente(idCliente: number): Promise<void> {
   if (error) throw traducirError(error);
 }
 
-/**
- * Borrado logico: el registro deja de existir para la aplicacion.
+/*
+ * El alta, la edicion, el borrado logico y la restauracion NO viven aca.
  *
- * Se usa para la ficha cargada por error o duplicada. Nunca se borra de
- * verdad: el historial de servicios y los cobros lo referencian, y ademas se
- * perderia la base sobre la que el motor de recomendaciones aprende.
+ * Los hace la capa generica de `compartido/escritura.ts`, que es identica para
+ * las ocho tablas escribibles y ademas rechaza la escritura en modo
+ * demostracion. Habia cuatro copias especificas de cliente que hacian lo mismo
+ * sin ese guardia; se eliminaron.
  *
- * `deleted_at` lo completa el disparador de la base; aqui solo se marca la
- * bandera y se deja constancia de quien lo hizo.
+ * `desactivarCliente` se queda porque NO es lo mismo: desactivar es un estado
+ * de negocio (CU-002 A3) y borrar es una baja.
  */
-export async function borrarCliente(idCliente: number, idUsuario: number): Promise<void> {
-  const supabase = await clienteServidor();
-
-  const { error } = await supabase
-    .from('clientes')
-    .update({ deleted: true, deleted_user_id: idUsuario })
-    .eq('id_cliente', idCliente);
-
-  if (error) throw traducirError(error);
-}
-
-/**
- * Restaura un cliente borrado.
- *
- * PUEDE FALLAR, y el fallo es correcto: si mientras estuvo borrado otro
- * cliente tomo su correo, restaurarlo dejaria dos vigentes con la misma
- * direccion y el indice unico parcial lo rechaza. `traducirError` convierte
- * ese rechazo en un mensaje que explica que paso.
- */
-export async function restaurarCliente(idCliente: number): Promise<void> {
-  const supabase = await clienteServidor();
-
-  const { error } = await supabase
-    .from('clientes')
-    .update({ deleted: false })
-    .eq('id_cliente', idCliente);
-
-  if (error) throw traducirError(error);
-}

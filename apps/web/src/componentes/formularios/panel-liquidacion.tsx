@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { Boton, CampoSelector, GrupoCampos, guaranies, plural } from '@barber-shop/ui';
 
-import { liquidarPendientes } from '@/acciones/operaciones';
+import { liquidarPendientes } from '@/acciones/comisiones';
 import { PanelFormulario } from './panel-formulario';
 
 /** Lo que se va a liquidar, por barbero. Lo calcula la pantalla. */

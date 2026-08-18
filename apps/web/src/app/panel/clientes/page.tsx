@@ -21,7 +21,7 @@ import {
   telefono as formatoTelefono,
 } from '@barber-shop/ui';
 
-import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { FormularioCliente } from '@/componentes/formularios/formulario-cliente';
 import {
   ETIQUETAS_ACTIVO,

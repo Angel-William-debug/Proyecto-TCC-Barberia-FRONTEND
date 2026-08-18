@@ -7,7 +7,7 @@ import {
   Boton, BotonIcono, Campo, CampoArea, CampoSelector, FilaCampos, GrupoCampos, Interruptor,
 } from '@barber-shop/ui';
 
-import { guardarServicio } from '@/acciones/entidades';
+import { guardarServicio } from '@/acciones/catalogo';
 import { PanelFormulario } from './panel-formulario';
 
 /** CU-003 — alta y edicion del catalogo de servicios. */

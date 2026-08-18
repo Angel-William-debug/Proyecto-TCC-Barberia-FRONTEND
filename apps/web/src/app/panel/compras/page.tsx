@@ -25,7 +25,7 @@ import {
   identificador,
 } from '@barber-shop/ui';
 
-import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { FormularioOrden } from '@/componentes/formularios/formulario-orden';
 import { FormularioProveedor } from '@/componentes/formularios/formulario-proveedor';
 import { comunes, texto, type Parametros } from '@/lib/filtros';

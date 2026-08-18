@@ -7,7 +7,7 @@ import {
   AvisoFormulario, Boton, BotonIcono, Campo, CampoArea, CampoSelector, FilaCampos, GrupoCampos, Interruptor,
 } from '@barber-shop/ui';
 
-import { guardarProducto } from '@/acciones/entidades';
+import { guardarProducto } from '@/acciones/catalogo';
 import { PanelFormulario } from './panel-formulario';
 
 /**

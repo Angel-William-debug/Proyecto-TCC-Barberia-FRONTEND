@@ -4,10 +4,10 @@ import { redirect } from 'next/navigation';
 import { MODO_DEMO, usuarioActual } from '@barber-shop/api';
 import { Boton, EstadoVacio, Tarjeta } from '@barber-shop/ui';
 
-import { AvisoDemo } from '@/componentes/sistema/aviso-demo';
-import { BotonSalir } from '@/componentes/sistema/boton-salir';
-import { MarcoPanel } from '@/componentes/navegacion/marco-panel';
-import { SelectorTema } from '@/componentes/sistema/selector-tema';
+import { AvisoDemo } from '@/componentes/armazon/aviso-demo';
+import { BotonSalir } from '@/componentes/armazon/boton-salir';
+import { MarcoPanel } from '@/componentes/armazon/marco-panel';
+import { SelectorTema } from '@/componentes/armazon/selector-tema';
 import { menuPara } from '@/lib/navegacion';
 
 /**

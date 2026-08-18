@@ -28,20 +28,21 @@ export {
   type PropsPanelLateral,
   type AnchoPanel,
 } from './componentes/panel-lateral';
+// --- Campos de formulario (seccion 9.11) -----------------------------------
+export { Campo, type PropsCampo } from './componentes/campos/campo-texto';
 export {
   CampoSelector,
-  CampoArea,
-  Interruptor,
+  type OpcionCampo,
+  type PropsCampoSelector,
+} from './componentes/campos/campo-selector';
+export { CampoArea, type PropsCampoArea } from './componentes/campos/campo-area';
+export { Interruptor, type PropsInterruptor } from './componentes/campos/interruptor';
+export {
   GrupoCampos,
   FilaCampos,
   CuerpoFormulario,
   AvisoFormulario,
-  type OpcionCampo,
-  type PropsCampoSelector,
-  type PropsCampoArea,
-  type PropsInterruptor,
-} from './componentes/campos';
-export { Campo, type PropsCampo } from './componentes/campo';
+} from './componentes/campos/grupos';
 export {
   Tarjeta,
   TarjetaEncabezado,
@@ -55,20 +56,23 @@ export {
   EsqueletoTabla,
   type PropsEstadoVacio,
 } from './componentes/estado-vacio';
+// --- Filtros de tabla (seccion 9.9) ----------------------------------------
+export { BarraFiltros } from './componentes/filtros/barra-filtros';
+export { CampoBusqueda, type PropsCampoBusqueda } from './componentes/filtros/campo-busqueda';
 export {
-  BarraFiltros,
-  CampoBusqueda,
   SelectorFiltro,
-  SelectorMultiple,
-  RangoFechas,
-  FiltrosActivos,
   type Opcion,
-  type PropsCampoBusqueda,
   type PropsSelectorFiltro,
+} from './componentes/filtros/selector-filtro';
+export {
+  SelectorMultiple,
   type PropsSelectorMultiple,
-  type PropsRangoFechas,
+} from './componentes/filtros/selector-multiple';
+export { RangoFechas, type PropsRangoFechas } from './componentes/filtros/rango-fechas';
+export {
+  FiltrosActivos,
   type PropsFiltrosActivos,
-} from './componentes/filtros';
+} from './componentes/filtros/filtros-activos';
 export {
   Tabla,
   TablaEncabezado,

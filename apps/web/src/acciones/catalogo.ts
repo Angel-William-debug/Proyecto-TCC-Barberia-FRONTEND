@@ -1,19 +1,18 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
-
-import { ErrorAplicacion, actualizar, borrarLogico, crear, exigirSesion, restaurar } from '@barber-shop/api';
+import { actualizar, borrarLogico, crear, exigirSesion, restaurar } from '@barber-shop/api';
 import type { TablaEscribible } from '@barber-shop/api';
 
 import {
   CORREO,
   Validacion,
   booleano,
+  ejecutar,
   numero,
   texto,
   textoOpcional,
   type ResultadoAccion,
-} from './comunes';
+} from './base';
 
 /**
  * Acciones de servidor de las entidades que se cargan desde un formulario.
@@ -27,23 +26,6 @@ import {
  * para que la tabla se actualice sola.
  */
 
-/** Envoltorio comun: traduce la excepcion en un resultado que el formulario entiende. */
-async function ejecutar(
-  ruta: string,
-  operacion: () => Promise<number | void>,
-): Promise<ResultadoAccion> {
-  try {
-    const id = await operacion();
-    revalidatePath(ruta);
-    return typeof id === 'number' ? { ok: true, id } : { ok: true };
-  } catch (causa) {
-    const mensaje =
-      causa instanceof ErrorAplicacion
-        ? causa.message
-        : 'No se pudo guardar. Intente nuevamente en unos instantes.';
-    return { ok: false, error: mensaje };
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Clientes — CU-002

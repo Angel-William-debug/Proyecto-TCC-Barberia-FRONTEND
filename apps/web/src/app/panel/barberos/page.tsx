@@ -20,7 +20,7 @@ import {
   porcentaje,
 } from '@barber-shop/ui';
 
-import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { FormularioBarbero } from '@/componentes/formularios/formulario-barbero';
 import {
   ETIQUETAS_ACTIVO,

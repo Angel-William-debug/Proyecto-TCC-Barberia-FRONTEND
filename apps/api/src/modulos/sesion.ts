@@ -1,6 +1,6 @@
 import type { NombreRol, UsuarioSesion } from '@barber-shop/tipos';
 
-import { USUARIO_DEMO } from '../demo/datos';
+import { USUARIO_DEMO } from '../demo/datos-catalogo';
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 

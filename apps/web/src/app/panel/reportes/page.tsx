@@ -20,7 +20,7 @@ import {
   porcentaje,
 } from '@barber-shop/ui';
 
-import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 
 export const metadata = { title: 'Reportes' };
 

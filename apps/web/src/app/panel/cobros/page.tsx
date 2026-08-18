@@ -24,7 +24,7 @@ import {
   identificador,
 } from '@barber-shop/ui';
 
-import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { comunes, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Cobros' };

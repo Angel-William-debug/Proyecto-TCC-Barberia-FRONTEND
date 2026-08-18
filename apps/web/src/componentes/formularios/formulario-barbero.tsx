@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { Profesional } from '@barber-shop/tipos';
 import { Boton, BotonIcono, Campo, CampoSelector, FilaCampos, GrupoCampos, Interruptor } from '@barber-shop/ui';
 
-import { guardarBarbero } from '@/acciones/entidades';
+import { guardarBarbero } from '@/acciones/catalogo';
 import { PanelFormulario } from './panel-formulario';
 
 /** Tipos de contratacion de `profesionales.tipo`. */

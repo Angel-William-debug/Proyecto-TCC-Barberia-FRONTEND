@@ -22,7 +22,7 @@ import {
   type Presentacion,
 } from '@barber-shop/ui';
 
-import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { comunes, lista, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Auditoría' };

@@ -10,7 +10,7 @@ import {
   INGRESOS_DEMO,
   KPIS_DEMO,
   STOCK_CRITICO_DEMO,
-} from '../demo/datos';
+} from '../demo/datos-catalogo';
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { traducirError } from '../errores';

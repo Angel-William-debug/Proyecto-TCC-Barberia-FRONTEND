@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { ConfiguracionSistema } from '@barber-shop/tipos';
 import { Boton, Campo, CampoSelector, FilaCampos, GrupoCampos } from '@barber-shop/ui';
 
-import { guardarConfiguracion } from '@/acciones/operaciones';
+import { guardarConfiguracion } from '@/acciones/configuracion';
 import { PanelFormulario } from './panel-formulario';
 
 /**

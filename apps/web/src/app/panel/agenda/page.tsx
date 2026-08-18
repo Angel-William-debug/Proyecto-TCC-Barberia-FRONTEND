@@ -28,9 +28,9 @@ import {
   hora,
 } from '@barber-shop/ui';
 
-import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { FormularioTurno } from '@/componentes/formularios/formulario-turno';
-import { FiltroFecha } from '@/componentes/navegacion/filtro-fecha';
+import { FiltroFecha } from '@/componentes/filtros/filtro-fecha';
 import { fecha as leerFecha, lista, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Agenda' };

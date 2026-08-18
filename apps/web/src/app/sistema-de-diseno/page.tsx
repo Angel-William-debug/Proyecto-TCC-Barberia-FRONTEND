@@ -32,8 +32,8 @@ import {
 } from '@barber-shop/ui';
 
 import { LogoHorizontal, Isotipo } from '@/componentes/marca/logo';
-import { DemoPanel } from '@/componentes/sistema/demo-panel';
-import { SelectorTema } from '@/componentes/sistema/selector-tema';
+import { DemoPanel } from '@/componentes/sistema-de-diseno/demo-panel';
+import { SelectorTema } from '@/componentes/armazon/selector-tema';
 
 export const metadata = {
   title: 'Sistema de diseño',

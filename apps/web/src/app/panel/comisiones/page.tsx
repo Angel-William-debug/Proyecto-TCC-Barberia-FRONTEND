@@ -24,7 +24,7 @@ import {
   porcentaje,
 } from '@barber-shop/ui';
 
-import { EncabezadoVista } from '@/componentes/navegacion/encabezado-vista';
+import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { PanelLiquidacion } from '@/componentes/formularios/panel-liquidacion';
 import { comunes, texto, type Parametros } from '@/lib/filtros';
 

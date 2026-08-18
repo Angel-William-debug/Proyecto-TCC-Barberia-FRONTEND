@@ -1,69 +1,86 @@
 /**
- * @barber-shop/api - capa de acceso a datos.
+ * La unica puerta publica del backend.
  *
- * Es el unico lugar del sistema que conoce Supabase. Las vistas de
- * `apps/web` importan funciones de dominio (`listarClientes`, `crearCita`) y
- * nunca un cliente de base de datos. Esa frontera es lo que permite cambiar
- * el proveedor, agregar cache o registrar auditoria sin tocar una sola
- * pantalla.
+ * `apps/web` importa de aca y de ningun otro lado: nunca de un modulo suelto
+ * ni, mucho menos, de un cliente de Supabase. Esa regla la hace cumplir el
+ * compilador, porque `@supabase/ssr` no es dependencia de `apps/web`.
  *
- * Los clientes de Supabase NO se reexportan aqui a proposito: se importan
- * desde sus subrutas (`@barber-shop/api/servidor`) para que quien los use
- * tenga que escribirlo de forma explicita.
+ * Los clientes de Supabase NO se reexportan a proposito: quien los necesita
+ * -el middleware- los importa por su ruta completa, y esa friccion es
+ * deliberada.
+ *
+ * El orden de los bloques es el mismo de la barra lateral del panel, para que
+ * buscar una funcion sea mirar la pantalla donde se usa.
  */
 
 export { entornoPublico, entornoPrivado } from './entorno';
 export { MODO_DEMO } from './demo/modo';
 export { ErrorAplicacion, traducirError, ejecutar } from './errores';
 
-export { usuarioActual, exigirSesion } from './repositorios/sesion';
+// --- Sesion ----------------------------------------------------------------
+export { usuarioActual, exigirSesion } from './modulos/sesion';
 
-export {
-  listarClientes,
-  obtenerCliente,
-  crearCliente,
-  actualizarCliente,
-  desactivarCliente,
-  borrarCliente,
-  restaurarCliente,
-} from './repositorios/clientes';
-
+// --- Agenda ----------------------------------------------------------------
 export {
   listarAgenda,
   obtenerCita,
   crearCita,
   cambiarEstadoCita,
   hayConflictoHorario,
-} from './repositorios/agenda';
+} from './modulos/agenda';
 
+// --- Clientes --------------------------------------------------------------
+export { listarClientes, obtenerCliente, desactivarCliente } from './modulos/clientes';
+
+// --- Servicios -------------------------------------------------------------
+export { listarServicios, listarCategoriasServicio } from './modulos/servicios';
+
+// --- Barberos --------------------------------------------------------------
+export { listarProfesionales } from './modulos/barberos';
+
+// --- Cobros ----------------------------------------------------------------
+export { listarCobros } from './modulos/cobros';
+
+// --- Comisiones ------------------------------------------------------------
+export { listarComisiones, liquidarComisiones } from './modulos/comisiones';
+
+// --- Inventario ------------------------------------------------------------
 export {
-  listarServicios,
-  listarCategoriasServicio,
   listarCategoriasProducto,
-  listarProfesionales,
-  listarMetodosPago,
   listarProductosConNivel,
-  obtenerConfiguracion,
-  listarHorariosAtencion,
-} from './repositorios/catalogo';
+  listarMovimientos,
+} from './modulos/inventario';
 
+// --- Compras ---------------------------------------------------------------
+export {
+  listarProveedores,
+  listarPedidos,
+  crearPedido,
+  type EntradaNuevoPedido,
+  type LineaPedido,
+} from './modulos/compras';
+
+// --- Reportes --------------------------------------------------------------
 export {
   resumenKpis,
   ingresosPorPeriodo,
   stockCritico,
   comisionesPendientes,
-} from './repositorios/reportes';
+} from './modulos/reportes';
 
+// --- Configuracion ---------------------------------------------------------
 export {
-  listarCobros,
-  listarComisiones,
-  listarProveedores,
-  listarPedidos,
-  listarMovimientos,
-  listarAuditoria,
+  obtenerConfiguracion,
+  actualizarConfiguracion,
   listarHorarios,
-} from './repositorios/operaciones';
+  listarMetodosPago,
+  type EntradaConfiguracion,
+} from './modulos/configuracion';
 
+// --- Auditoria -------------------------------------------------------------
+export { listarAuditoria } from './modulos/auditoria';
+
+// --- Escritura generica ----------------------------------------------------
 export {
   crear,
   actualizar,
@@ -71,13 +88,4 @@ export {
   restaurar,
   CLAVE_PRIMARIA,
   type TablaEscribible,
-} from './repositorios/escritura';
-
-export {
-  actualizarConfiguracion,
-  liquidarComisiones,
-  crearPedido,
-  type EntradaConfiguracion,
-  type EntradaNuevoPedido,
-  type LineaPedido,
-} from './repositorios/escritura-operaciones';
+} from './compartido/escritura';
