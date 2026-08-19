@@ -1,18 +1,30 @@
+import Link from 'next/link';
+
 import {
   comisionesPendientes,
   ingresosPorPeriodo,
+  previsualizarReporte,
   resumenKpis,
   stockCritico,
+  TIPOS_REPORTE,
+  TITULOS_TIPO_REPORTE,
 } from '@barber-shop/api';
+import type { TipoReporte } from '@barber-shop/api';
 import {
+  BarraFiltros,
   Boton,
+  CampoBusqueda,
+  EstadoVacio,
   Indicador,
+  RangoFechas,
+  SelectorFiltro,
   Tabla,
   TablaCuerpo,
   TablaEncabezado,
   Tarjeta,
   TarjetaEncabezado,
   Td,
+  TdCompleta,
   Th,
   Tr,
   cantidad,
@@ -21,56 +33,75 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { fecha, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Reportes' };
 
 const MESES = [
-  'enero',
-  'febrero',
-  'marzo',
-  'abril',
-  'mayo',
-  'junio',
-  'julio',
-  'agosto',
-  'septiembre',
-  'octubre',
-  'noviembre',
-  'diciembre',
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
 ];
 
+// El tipo "general" hace de opcion en blanco del selector (ver comentario
+// junto a `SelectorFiltro` mas abajo): no aparece en la lista de opciones
+// porque elegir "todos" -el valor vacio del selector- ya significa eso.
+const OPCIONES_TIPO = TIPOS_REPORTE.filter((t) => t !== 'general').map((t) => ({
+  valor: t,
+  etiqueta: TITULOS_TIPO_REPORTE[t],
+}));
+
+function esTipoReporte(valor: string): valor is TipoReporte {
+  return (TIPOS_REPORTE as readonly string[]).includes(valor);
+}
+
 /**
- * Módulo 7 — Reportes.
+ * Módulo 7 — Reportes (CU-014).
  *
- * Los agregados los calcula la base: `fn_generar_resumen_kpis` y las vistas
- * SQL. Traer miles de filas al servidor para sumarlas aquí sería más lento y
- * daría resultados distintos según quién consulte.
+ * Dos secciones. Arriba, el resumen del período en curso: los agregados los
+ * calcula la base (`fn_generar_resumen_kpis` y las vistas SQL), traerlos
+ * enteros para sumarlos aquí sería más lento y daría resultados distintos
+ * según quién consulte. Abajo, el generador: se elige un tipo de reporte, se
+ * ve una vista previa y se exporta a Excel o PDF desde una ruta -no una
+ * Server Action, que no puede empujar un archivo binario al navegador-.
  */
-export default async function PaginaReportes() {
+export default async function PaginaReportes({
+  searchParams,
+}: {
+  searchParams: Promise<Parametros>;
+}) {
+  const params = await searchParams;
   const hoy = new Date();
   const desde = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
   const hasta = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-28`;
 
-  const [kpis, ingresos, criticos, comisiones] = await Promise.all([
+  const tipoParametro = texto(params, 'tipo') ?? '';
+  const tipo: TipoReporte = esTipoReporte(tipoParametro) ? tipoParametro : 'general';
+
+  const filtroReporte = {
+    desde: fecha(params, 'desde'),
+    hasta: fecha(params, 'hasta'),
+    busqueda: texto(params, 'q'),
+  };
+
+  const [kpis, ingresos, criticos, comisiones, previsualizacion] = await Promise.all([
     resumenKpis(desde, hasta),
     ingresosPorPeriodo(),
     stockCritico(),
     comisionesPendientes(),
+    previsualizarReporte(tipo, filtroReporte),
   ]);
 
   const mayorIngreso = Math.max(...ingresos.map((i) => i.total_ingresos), 1);
 
+  const queryExportar = new URLSearchParams();
+  queryExportar.set('tipo', tipo);
+  if (filtroReporte.desde) queryExportar.set('desde', filtroReporte.desde);
+  if (filtroReporte.hasta) queryExportar.set('hasta', filtroReporte.hasta);
+  if (filtroReporte.busqueda) queryExportar.set('q', filtroReporte.busqueda);
+
   return (
     <>
-      <EncabezadoVista
-        titulo="Reportes"
-        descripcion="Indicadores del período en curso"
-        accion={
-          <Boton variante="secundario" icono="download">
-            Exportar
-          </Boton>
-        }
-      />
+      <EncabezadoVista titulo="Reportes" descripcion="Indicadores del período en curso" />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Indicador
@@ -112,8 +143,6 @@ export default async function PaginaReportes() {
                     {guaranies(i.total_ingresos)}
                   </span>
                 </div>
-                {/* Barra simple con un div: para cuatro series no hace falta
-                    una biblioteca de gráficos completa. */}
                 <div className="bg-elevado h-2 w-full overflow-hidden rounded-full">
                   <div
                     className="bg-marca h-full rounded-full"
@@ -183,6 +212,74 @@ export default async function PaginaReportes() {
           </Tarjeta>
         </div>
       </div>
+
+      <Tarjeta className="mt-6">
+        <TarjetaEncabezado
+          titulo="Generar reporte"
+          descripcion="Clientes, proveedores, cobros, inventario, comisiones o el general de KPIs mensuales"
+        />
+
+        <BarraFiltros>
+          <SelectorFiltro
+            nombre="tipo"
+            etiqueta="Tipo de reporte"
+            textoTodos={TITULOS_TIPO_REPORTE.general}
+            opciones={OPCIONES_TIPO}
+          />
+          <CampoBusqueda placeholder="Buscar dentro del reporte" />
+          <RangoFechas etiqueta="Rango de fechas" />
+        </BarraFiltros>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1 pt-2 pb-4">
+          <p className="text-cuerpo-sm text-terciario">
+            {previsualizacion.titulo}
+            {previsualizacion.filas.length >= 50 && ' · vista previa limitada a 50 filas'}
+          </p>
+          <div className="flex gap-2">
+            <Link href={`/panel/reportes/exportar?${queryExportar.toString()}&formato=excel`}>
+              <Boton variante="secundario" icono="download">
+                Excel
+              </Boton>
+            </Link>
+            <Link href={`/panel/reportes/exportar?${queryExportar.toString()}&formato=pdf`}>
+              <Boton variante="secundario" icono="download">
+                PDF
+              </Boton>
+            </Link>
+          </div>
+        </div>
+
+        <Tabla titulo={previsualizacion.titulo}>
+          <TablaEncabezado>
+            {previsualizacion.columnas.map((c) => (
+              <Th key={c.clave} numerico={c.numerico}>
+                {c.titulo}
+              </Th>
+            ))}
+          </TablaEncabezado>
+          <TablaCuerpo>
+            {previsualizacion.filas.length === 0 ? (
+              <TdCompleta colSpan={Math.max(1, previsualizacion.columnas.length)}>
+                <EstadoVacio
+                  icono="chart-column"
+                  titulo="Sin datos para exportar"
+                  descripcion="Ningún registro coincide con los filtros elegidos, o esta pantalla está en modo demostración."
+                />
+              </TdCompleta>
+            ) : (
+              previsualizacion.filas.map((fila, i) => (
+                <Tr key={i}>
+                  {previsualizacion.columnas.map((c) => (
+                    <Td key={c.clave} numerico={c.numerico} etiqueta={c.titulo}>
+                      {fila[c.clave]}
+                    </Td>
+                  ))}
+                </Tr>
+              ))
+            )}
+          </TablaCuerpo>
+        </Tabla>
+      </Tarjeta>
     </>
   );
 }

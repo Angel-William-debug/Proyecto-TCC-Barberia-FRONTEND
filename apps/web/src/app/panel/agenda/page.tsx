@@ -30,6 +30,7 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { FormularioTurno } from '@/componentes/formularios/formulario-turno';
+import { PanelCierreServicio } from '@/componentes/formularios/panel-cierre-servicio';
 import { FiltroFecha } from '@/componentes/filtros/filtro-fecha';
 import { fecha as leerFecha, lista, texto, type Parametros } from '@/lib/filtros';
 
@@ -44,7 +45,7 @@ const ETIQUETAS_ESTADO = Object.fromEntries(
 );
 
 /**
- * CU-006 — Agenda de turnos. Vista diaria.
+ * CU-005 (registrar) y CU-006 (modificar y cancelar) — Agenda de turnos. Vista diaria.
  *
  * La fecha viaja en la URL para que un día concreto se pueda compartir por
  * enlace. Sin parámetro, se muestra el día de hoy en hora de Asunción.
@@ -156,10 +157,13 @@ export default async function PaginaAgenda({
             <Th>Duración</Th>
             <Th numerico>Total</Th>
             <Th>Estado</Th>
+            <Th>
+              <span className="solo-lectores">Acciones</span>
+            </Th>
           </TablaEncabezado>
           <TablaCuerpo>
             {citas.length === 0 ? (
-              <TdCompleta colSpan={7}>
+              <TdCompleta colSpan={8}>
                 <EstadoVacio
                   icono="calendar-days"
                   titulo="No hay turnos para mostrar"
@@ -186,6 +190,13 @@ export default async function PaginaAgenda({
                   <Td numerico etiqueta="Total">{guaranies(c.total)}</Td>
                   <Td etiqueta="Estado">
                     <ChipEstado presentacion={PRESENTACION_CITA[c.estado]} />
+                  </Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    {(c.estado === 'pendiente' ||
+                      c.estado === 'confirmado' ||
+                      c.estado === 'en_proceso') && (
+                      <PanelCierreServicio idCita={c.id_cita} nombreCliente={c.cliente.nombre} />
+                    )}
                   </Td>
                 </Tr>
               ))

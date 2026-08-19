@@ -1,4 +1,4 @@
-import type { Cliente, FiltroListado, Pagina } from '@barber-shop/tipos';
+import type { Cliente, FiltroListado, Pagina, VistaHistorialCliente } from '@barber-shop/tipos';
 
 import { CLIENTES_DEMO } from '../demo/datos-catalogo';
 import { MODO_DEMO } from '../demo/modo';
@@ -6,6 +6,7 @@ import { clienteServidor } from '../supabase/cliente-servidor';
 import { traducirError } from '../errores';
 import { coincideEstado, coincideTexto, entreFechas, paginar } from '../compartido/filtros';
 import { rechazarSiEsDemo } from '../compartido/escritura';
+import { uno } from '../compartido/relaciones';
 
 const POR_PAGINA = 25;
 
@@ -100,6 +101,37 @@ export async function obtenerCliente(idCliente: number): Promise<Cliente | null>
 }
 
 
+
+/**
+ * Historial completo de un cliente (CU-012).
+ *
+ * Se consulta `historial_servicio` directamente y no la vista
+ * `v_historial_completo_cliente`: esa vista no expone `id_cliente` -solo el
+ * nombre-, asi que no se puede filtrar por cliente sin arriesgar una
+ * coincidencia de nombre entre dos personas distintas.
+ */
+export async function listarHistorialCliente(
+  idCliente: number,
+): Promise<Array<Omit<VistaHistorialCliente, 'id_cliente' | 'nombre_cliente'>>> {
+  if (MODO_DEMO) return [];
+
+  const supabase = await clienteServidor();
+
+  const { data, error } = await supabase
+    .from('historial_servicio')
+    .select('fecha_realizacion, costo_cobrado, servicios ( nombre ), profesionales ( nombre )')
+    .eq('id_cliente', idCliente)
+    .order('fecha_realizacion', { ascending: false });
+
+  if (error) throw traducirError(error);
+
+  return (data ?? []).map((f) => ({
+    fecha_realizacion: f.fecha_realizacion,
+    nombre_servicio: uno<{ nombre: string }>(f.servicios)?.nombre ?? '—',
+    nombre_profesional: uno<{ nombre: string }>(f.profesionales)?.nombre ?? '—',
+    costo_cobrado: f.costo_cobrado,
+  }));
+}
 
 /**
  * Desactivar NO es lo mismo que borrar.

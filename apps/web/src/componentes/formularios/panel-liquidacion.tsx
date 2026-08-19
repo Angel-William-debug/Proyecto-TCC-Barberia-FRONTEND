@@ -16,7 +16,7 @@ export interface ResumenBarbero {
 }
 
 /**
- * CU-011 - liquidacion de comisiones.
+ * CU-009 - liquidacion de comisiones.
  *
  * No es un alta: es una confirmacion. Por eso el panel es `sm` y lo unico que
  * se elige es el alcance. Aun asi pasa por el mismo armazon que los demas

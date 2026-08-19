@@ -1,4 +1,4 @@
-import { listarCategoriasServicio, listarServicios } from '@barber-shop/api';
+import { listarCategoriasServicio, listarProductosConNivel, listarServicios } from '@barber-shop/api';
 import {
   BarraFiltros,
   CampoBusqueda,
@@ -22,6 +22,7 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { FormularioServicio } from '@/componentes/formularios/formulario-servicio';
+import { PanelReceta } from '@/componentes/formularios/panel-receta';
 import {
   ETIQUETAS_ACTIVO,
   OPCIONES_ACTIVO,
@@ -41,12 +42,16 @@ export default async function PaginaServicios({
   const params = await searchParams;
   const filtro = { ...comunes(params), categoria: texto(params, 'categoria') };
 
-  const [servicios, categorias] = await Promise.all([
+  const [servicios, categorias, productos] = await Promise.all([
     listarServicios(filtro),
     listarCategoriasServicio().catch(() => []),
+    listarProductosConNivel().catch(() => []),
   ]);
 
   const nombreCategoria = new Map(categorias.map((c) => [c.id_categoria, c.nombre]));
+  const productosActivos = productos
+    .filter((p) => p.estado)
+    .map((p) => ({ id_producto: p.id_producto, nombre: p.nombre }));
 
   return (
     <>
@@ -130,7 +135,14 @@ export default async function PaginaServicios({
                     />
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    <FormularioServicio servicio={s} categorias={categorias} />
+                    <div className="flex justify-end gap-1">
+                      <PanelReceta
+                        idServicio={s.id_servicio}
+                        nombreServicio={s.nombre}
+                        productos={productosActivos}
+                      />
+                      <FormularioServicio servicio={s} categorias={categorias} />
+                    </div>
                   </Td>
                 </Tr>
               ))

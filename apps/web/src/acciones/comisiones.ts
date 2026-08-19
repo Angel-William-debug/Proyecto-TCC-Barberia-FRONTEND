@@ -1,4 +1,4 @@
-/** Accion de servidor de las comisiones (CU-011). */
+/** Accion de servidor de las comisiones (CU-009). */
 'use server';
 
 import { ErrorAplicacion, exigirSesion, liquidarComisiones } from '@barber-shop/api';
@@ -6,7 +6,7 @@ import { ErrorAplicacion, exigirSesion, liquidarComisiones } from '@barber-shop/
 import { ejecutar, numero } from './base';
 import type { ResultadoAccion } from './base';
 
-/** Liquidacion de comisiones pendientes (CU-011). */
+/** Liquidacion de comisiones pendientes (CU-009). */
 export async function liquidarPendientes(datos: FormData): Promise<ResultadoAccion> {
   await exigirSesion();
 

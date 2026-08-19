@@ -32,6 +32,11 @@ export class ErrorAplicacion extends Error {
  */
 const REGLAS_DE_NEGOCIO: Array<{ patron: RegExp; mensaje: string; regla: string }> = [
   {
+    patron: /RN-009/,
+    mensaje: 'El cliente necesita al menos 3 servicios en su historial para generar recomendaciones.',
+    regla: 'RN-009',
+  },
+  {
     patron: /RN-018/,
     mensaje: 'Esta cita ya esta completada o cancelada y no puede modificarse.',
     regla: 'RN-018',
@@ -40,6 +45,11 @@ const REGLAS_DE_NEGOCIO: Array<{ patron: RegExp; mensaje: string; regla: string 
     patron: /RN-024/,
     mensaje: 'Solo se puede registrar un cobro sobre una cita completada.',
     regla: 'RN-024',
+  },
+  {
+    patron: /RN-025/,
+    mensaje: 'El monto supera el saldo pendiente de esa cita.',
+    regla: 'RN-025',
   },
   {
     patron: /RN-027/,

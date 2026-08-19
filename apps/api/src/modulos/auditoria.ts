@@ -1,5 +1,6 @@
 /**
- * Auditoria (CU-019): el registro de quien hizo que.
+ * Auditoria: el registro de quien hizo que. Transversal, sin CU propio en el
+ * documento v4 -CU-019 es "Gestionar Usuarios y Roles", un caso distinto.
  *
  * Es de solo lectura por diseno. La escriben los disparadores de la base, no
  * la aplicacion: una bitacora que la aplicacion pueda editar no sirve como

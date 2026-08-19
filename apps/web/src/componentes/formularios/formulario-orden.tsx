@@ -39,7 +39,7 @@ const ETIQUETA_ESTADO: Record<string, string> = {
 };
 
 /**
- * CU-016 - alta de una orden de compra.
+ * CU-017 - alta de una orden de compra.
  *
  * Mismo patron que el turno: cabecera arriba, lista de lineas abajo, campos
  * repetidos que la accion empareja por posicion.

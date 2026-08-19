@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { MODO_DEMO, usuarioActual } from '@barber-shop/api';
+import { listarAlertas, MODO_DEMO, usuarioActual } from '@barber-shop/api';
 import { Boton, EstadoVacio, Tarjeta } from '@barber-shop/ui';
 
 import { AvisoDemo } from '@/componentes/armazon/aviso-demo';
 import { BotonSalir } from '@/componentes/armazon/boton-salir';
+import { CampanaAlertas } from '@/componentes/armazon/campana-alertas';
 import { MarcoPanel } from '@/componentes/armazon/marco-panel';
 import { SelectorTema } from '@/componentes/armazon/selector-tema';
 import { menuPara } from '@/lib/navegacion';
@@ -67,6 +68,14 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
 
   const entradas = menuPara(usuario.rol);
 
+  // La campanita solo se ofrece a quien ya tiene Inventario en su menu: el
+  // enlace que abre lleva ahi, y mostrarla a quien no puede entrar solo
+  // generaria una alerta sin adonde ir.
+  const tieneInventario = entradas.some((e) => e.modulo === 'inventario');
+  const alertasSinResolver = tieneInventario
+    ? await listarAlertas({ soloNoResueltas: true }).catch(() => [])
+    : [];
+
   return (
     <MarcoPanel
       entradas={entradas}
@@ -74,6 +83,7 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
       aviso={MODO_DEMO ? <AvisoDemo /> : undefined}
       acciones={
         <>
+          {tieneInventario && <CampanaAlertas cantidad={alertasSinResolver.length} />}
           <SelectorTema />
           <BotonSalir />
         </>

@@ -166,7 +166,7 @@ export async function guardarProducto(datos: FormData): Promise<ResultadoAccion>
 }
 
 // ---------------------------------------------------------------------------
-// Proveedores — CU-011
+// Proveedores — CU-016
 // ---------------------------------------------------------------------------
 
 export async function guardarProveedor(datos: FormData): Promise<ResultadoAccion> {
@@ -206,6 +206,9 @@ const RUTA: Record<TablaEscribible, string> = {
   categorias_servicio: '/panel/servicios',
   categorias_producto: '/panel/inventario',
   metodos_pago: '/panel/configuracion',
+  servicio_producto: '/panel/servicios',
+  cobros_cliente: '/panel/cobros',
+  facturas: '/panel/facturas',
 };
 
 /**

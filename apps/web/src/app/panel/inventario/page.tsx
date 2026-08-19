@@ -1,4 +1,9 @@
-import { listarCategoriasProducto, listarMovimientos, listarProductosConNivel } from '@barber-shop/api';
+import {
+  listarAlertas,
+  listarCategoriasProducto,
+  listarMovimientos,
+  listarProductosConNivel,
+} from '@barber-shop/api';
 import { NIVELES_STOCK, TIPOS_MOVIMIENTO } from '@barber-shop/tipos';
 import {
   BarraFiltros,
@@ -26,6 +31,8 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonResolverAlerta } from '@/componentes/formularios/boton-resolver-alerta';
+import { FormularioCategoriaProducto } from '@/componentes/formularios/formulario-categoria-producto';
 import { FormularioProducto } from '@/componentes/formularios/formulario-producto';
 import { comunes, fecha, lista, type Parametros } from '@/lib/filtros';
 
@@ -69,7 +76,7 @@ export default async function PaginaInventario({
   const params = await searchParams;
   const base = comunes(params);
 
-  const [productos, movimientos, categorias] = await Promise.all([
+  const [productos, movimientos, categorias, alertas] = await Promise.all([
     listarProductosConNivel({ busqueda: base.busqueda, niveles: lista(params, 'nivel') }),
     listarMovimientos({
       tipos: lista(params, 'mov_tipo'),
@@ -77,6 +84,7 @@ export default async function PaginaInventario({
       hasta: fecha(params, 'mov_hasta'),
     }),
     listarCategoriasProducto().catch(() => []),
+    listarAlertas().catch(() => []),
   ]);
 
   const criticos = productos.filter(
@@ -98,7 +106,12 @@ export default async function PaginaInventario({
       <EncabezadoVista
         titulo="Inventario"
         descripcion={`${plural(productos.length, 'producto', 'productos')} en el catálogo`}
-        accion={<FormularioProducto categorias={categorias} />}
+        accion={
+          <div className="flex items-center gap-2">
+            <FormularioCategoriaProducto />
+            <FormularioProducto categorias={categorias} />
+          </div>
+        }
       />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -243,6 +256,66 @@ export default async function PaginaInventario({
                   <Td numerico etiqueta="Cantidad">{cantidad(m.cantidad)}</Td>
                   <Td className="text-secundario" etiqueta="Motivo">{m.motivo ?? '—'}</Td>
                   <Td className="text-secundario" etiqueta="Usuario">{m.nombre_usuario ?? '—'}</Td>
+                </Tr>
+              ))
+            )}
+          </TablaCuerpo>
+        </Tabla>
+      </Tarjeta>
+
+      <Tarjeta className="mt-6">
+        <TarjetaEncabezado
+          titulo="Alertas de stock"
+          descripcion="Se generan solas cuando un producto cae al mínimo (CU-022)"
+        />
+
+        <Tabla titulo="Alertas de stock">
+          <TablaEncabezado>
+            <Th>Producto</Th>
+            <Th numerico>Actual</Th>
+            <Th numerico>Mínimo</Th>
+            <Th>Fecha</Th>
+            <Th>Estado</Th>
+            <Th>
+              <span className="solo-lectores">Acciones</span>
+            </Th>
+          </TablaEncabezado>
+          <TablaCuerpo>
+            {alertas.length === 0 ? (
+              <TdCompleta colSpan={6}>
+                <EstadoVacio
+                  icono="triangle-alert"
+                  titulo="Sin alertas"
+                  descripcion="Ningún producto generó una alerta de stock todavía."
+                />
+              </TdCompleta>
+            ) : (
+              alertas.map((a) => (
+                <Tr key={a.id_alerta}>
+                  <Td className="font-medium" etiqueta="Producto">
+                    {a.nombre_producto}
+                  </Td>
+                  <Td numerico className="text-peligro" etiqueta="Actual">
+                    {cantidad(a.stock_actual)}
+                  </Td>
+                  <Td numerico className="text-secundario" etiqueta="Mínimo">
+                    {cantidad(a.stock_minimo)}
+                  </Td>
+                  <Td className="text-secundario" etiqueta="Fecha">
+                    {fechaHora(a.fecha_alerta)}
+                  </Td>
+                  <Td etiqueta="Estado">
+                    <ChipEstado
+                      presentacion={
+                        a.resuelta
+                          ? { etiqueta: 'Resuelta', tono: 'exito', icono: 'circle-check' }
+                          : { etiqueta: 'Sin resolver', tono: 'peligro', icono: 'triangle-alert' }
+                      }
+                    />
+                  </Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    {!a.resuelta && <BotonResolverAlerta idAlerta={a.id_alerta} />}
+                  </Td>
                 </Tr>
               ))
             )}

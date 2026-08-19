@@ -90,7 +90,7 @@ export function FormularioBarbero({ barbero }: { barbero?: Profesional }) {
                 defaultValue={barbero?.porcentaje_com ?? ''}
                 sufijo="%"
                 error={errores.porcentaje_com}
-                ayuda="Entre 0 y 100. Se calcula sola al cerrar cada servicio (CU-009)."
+                ayuda="Entre 0 y 100. Se calcula sola al cerrar cada servicio (CU-007)."
                 required
               />
               <Interruptor

@@ -1,8 +1,10 @@
 import type {
   CitaCompleta,
   EntradaNuevaCita,
+  EntradaProductoUtilizado,
   FiltroAgenda,
   ServicioDeCita,
+  SugerenciaCierre,
 } from '@barber-shop/tipos';
 
 import { agendaDemo } from '../demo/datos-catalogo';
@@ -10,9 +12,10 @@ import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { ErrorAplicacion, traducirError } from '../errores';
 import { rechazarSiEsDemo } from '../compartido/escritura';
+import { uno } from '../compartido/relaciones';
 
 /**
- * Agenda de turnos (CU-006).
+ * Agenda de turnos (CU-005: registrar; CU-006: modificar y cancelar).
  *
  * La consulta trae la cita, su cliente y el detalle con servicio y
  * profesional en un solo viaje. Hacerlo en varios producia el problema N+1:
@@ -181,7 +184,7 @@ export async function hayConflictoHorario(params: {
 }
 
 /**
- * Alta de un turno (CU-006).
+ * Alta de un turno (CU-005).
  *
  * El campo `total` NO se envia: lo calcula el disparador
  * `trg_detalle_cita_after_insert` sumando los subtotales. Enviarlo desde aqui
@@ -286,7 +289,8 @@ export async function crearCita(entrada: EntradaNuevaCita): Promise<number> {
 }
 
 /**
- * Cambio de estado del turno (CU-007).
+ * Cambio de estado del turno (CU-006 para reprogramar/cancelar, CU-007 para
+ * completarlo).
  *
  * No valida la transicion: de eso se encarga el disparador
  * `trg_cita_inmutable`, que rechaza cualquier cambio sobre una cita
@@ -300,6 +304,107 @@ export async function cambiarEstadoCita(
   const supabase = await clienteServidor();
 
   const { error } = await supabase.from('citas').update({ estado }).eq('id_cita', idCita);
+
+  if (error) throw traducirError(error);
+}
+
+/**
+ * Cierra el turno (CU-007) y arma la sugerencia de insumos para CU-011.
+ *
+ * El disparador `trg_cita_completada_after_update` ya genera, al pasar la
+ * cita a 'completado', un `historial_servicio` por cada servicio y la
+ * comision del profesional. Lo unico que falta -y que el documento describe
+ * como un paso del empleado, no automatico- es `productos_utilizados`: se
+ * propone aqui la cantidad estandar de la receta de cada servicio (con el
+ * stock actual de cada producto, para que el frontend pueda advertir antes de
+ * enviar si algo va a quedar negativo) y `registrarProductosUtilizados` la
+ * confirma.
+ */
+export async function completarCita(idCita: number): Promise<SugerenciaCierre[]> {
+  rechazarSiEsDemo();
+
+  await cambiarEstadoCita(idCita, 'completado');
+
+  const supabase = await clienteServidor();
+
+  const { data: historial, error: errorHistorial } = await supabase
+    .from('historial_servicio')
+    .select('id_historial, id_servicio, servicios ( nombre )')
+    .eq('id_cita', idCita);
+
+  if (errorHistorial) throw traducirError(errorHistorial);
+
+  const filas = (historial ?? []) as Array<{
+    id_historial: number;
+    id_servicio: number;
+    servicios: { nombre: string } | { nombre: string }[] | null;
+  }>;
+
+  const idsServicio = [...new Set(filas.map((f) => f.id_servicio))];
+  if (idsServicio.length === 0) return [];
+
+  const { data: receta, error: errorReceta } = await supabase
+    .from('servicio_producto')
+    .select(
+      'id_servicio, id_producto, cantidad_estandar, unidad_uso, productos ( nombre, stock_actual )',
+    )
+    .in('id_servicio', idsServicio)
+    .eq('deleted', false)
+    .eq('estado', true);
+
+  if (errorReceta) throw traducirError(errorReceta);
+
+  const recetaPorServicio = new Map<number, typeof receta>();
+  for (const r of receta ?? []) {
+    const lista = recetaPorServicio.get(r.id_servicio) ?? [];
+    lista.push(r);
+    recetaPorServicio.set(r.id_servicio, lista);
+  }
+
+  return filas.map((f) => ({
+    idHistorial: f.id_historial,
+    idServicio: f.id_servicio,
+    nombreServicio: uno<{ nombre: string }>(f.servicios)?.nombre ?? 'Servicio eliminado',
+    productos: (recetaPorServicio.get(f.id_servicio) ?? []).map((r) => {
+      const producto = uno<{ nombre: string; stock_actual: number }>(r.productos);
+      return {
+        idProducto: r.id_producto,
+        nombreProducto: producto?.nombre ?? '—',
+        cantidadSugerida: r.cantidad_estandar,
+        unidadUso: r.unidad_uso,
+        stockActual: producto?.stock_actual ?? 0,
+      };
+    }),
+  }));
+}
+
+/**
+ * Confirma el consumo de insumos de un turno recien cerrado (CU-011).
+ *
+ * `excepcionStock` lo decide el frontend ANTES de enviar, comparando la
+ * cantidad cargada contra el `stockActual` que devolvio `completarCita`: es
+ * el mismo dato, asi que no hace falta un ida y vuelta para descubrir que una
+ * linea va a quedar negativa. Si el stock cambio entre la sugerencia y el
+ * envio, el disparador `trg_stock_no_negativo` igual lo rechaza (RN-031) y
+ * `errores.ts` lo traduce.
+ */
+export async function registrarProductosUtilizados(
+  entradas: EntradaProductoUtilizado[],
+): Promise<void> {
+  rechazarSiEsDemo();
+
+  if (entradas.length === 0) return;
+
+  const supabase = await clienteServidor();
+
+  const { error } = await supabase.from('productos_utilizados').insert(
+    entradas.map((e) => ({
+      id_historial: e.idHistorial,
+      id_producto: e.idProducto,
+      cantidad_usada: e.cantidadUsada,
+      excepcion_stock: e.excepcionStock ?? false,
+    })),
+  );
 
   if (error) throw traducirError(error);
 }

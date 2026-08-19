@@ -29,7 +29,10 @@ export type TablaEscribible =
   | 'proveedores'
   | 'categorias_servicio'
   | 'categorias_producto'
-  | 'metodos_pago';
+  | 'metodos_pago'
+  | 'servicio_producto'
+  | 'cobros_cliente'
+  | 'facturas';
 
 /** Nombre de la clave primaria de cada tabla. */
 export const CLAVE_PRIMARIA: Record<TablaEscribible, string> = {
@@ -41,6 +44,9 @@ export const CLAVE_PRIMARIA: Record<TablaEscribible, string> = {
   categorias_servicio: 'id_categoria',
   categorias_producto: 'id_categoria_p',
   metodos_pago: 'id_metodo',
+  servicio_producto: 'id_servicio_producto',
+  cobros_cliente: 'id_cobro',
+  facturas: 'id_factura',
 };
 
 /**

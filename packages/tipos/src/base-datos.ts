@@ -391,6 +391,35 @@ export interface HorarioAtencion extends AuditoriaTemporal, BorradoLogico {
   activo: boolean;
 }
 
+/** `facturas.estado`. */
+export const ESTADOS_FACTURA = ['emitida', 'anulada'] as const;
+export type EstadoFactura = (typeof ESTADOS_FACTURA)[number];
+
+/**
+ * CU-025 (anexo). Comprobante interno de venta emitido desde un cobro.
+ * Sin integracion con SIFEN: no reemplaza una factura legal paraguaya.
+ */
+export interface Factura extends AuditoriaTemporal, BorradoLogico {
+  id_factura: number;
+  id_cliente: number;
+  id_cita: number;
+  id_cobro: number | null;
+  fecha_emision: string;
+  subtotal: number;
+  total: number;
+  estado: EstadoFactura;
+  observaciones: string | null;
+}
+
+export interface DetalleFactura extends AuditoriaTemporal {
+  id_detalle_factura: number;
+  id_factura: number;
+  descripcion: string;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+}
+
 // ---------------------------------------------------------------------------
 // Vistas SQL (7). Son de solo lectura y usan security_invoker.
 // ---------------------------------------------------------------------------
@@ -819,3 +848,6 @@ export type CambiosProfesional = Cambios<Profesional, 'id_profesional'>;
 export type NuevoProducto = Nuevo<Producto, 'id_producto'>;
 export type CambiosProducto = Cambios<Producto, 'id_producto'>;
 export type NuevoProveedor = Nuevo<Proveedor, 'id_proveedor'>;
+export type NuevoServicioProducto = Nuevo<ServicioProducto, 'id_servicio_producto'>;
+export type CambiosServicioProducto = Cambios<ServicioProducto, 'id_servicio_producto'>;
+export type NuevaCategoriaProducto = Nuevo<CategoriaProducto, 'id_categoria_p'>;

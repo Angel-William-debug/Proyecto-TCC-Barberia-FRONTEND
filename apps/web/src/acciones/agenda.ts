@@ -1,12 +1,21 @@
-/** Accion de servidor de la agenda (CU-006). */
+/** Accion de servidor de la agenda (CU-005, CU-006, CU-007, CU-011). */
 'use server';
 
-import { crearCita, exigirSesion } from '@barber-shop/api';
+import { revalidatePath } from 'next/cache';
+
+import {
+  completarCita,
+  crearCita,
+  ErrorAplicacion,
+  exigirSesion,
+  registrarProductosUtilizados,
+} from '@barber-shop/api';
+import type { EntradaProductoUtilizado, SugerenciaCierre } from '@barber-shop/tipos';
 
 import { Validacion, ejecutar, lineas, numero, texto, textoOpcional } from './base';
 import type { ResultadoAccion } from './base';
 
-/** Alta de un turno (CU-006). El solapamiento lo comprueba `crearCita`. */
+/** Alta de un turno (CU-005). El solapamiento lo comprueba `crearCita`. */
 export async function guardarTurno(datos: FormData): Promise<ResultadoAccion> {
   await exigirSesion();
 
@@ -41,4 +50,34 @@ export async function guardarTurno(datos: FormData): Promise<ResultadoAccion> {
   return ejecutar('/panel/agenda', () =>
     crearCita({ idCliente: idCliente!, fechaHora, observaciones, servicios }),
   );
+}
+
+/** Resultado de cerrar un turno: trae la sugerencia de insumos para el paso siguiente (CU-011). */
+export type ResultadoCierre =
+  | { ok: true; sugerencias: SugerenciaCierre[] }
+  | { ok: false; error: string };
+
+/** Cierra el turno (CU-007). Irreversible: la cita queda inmutable (RN-018). */
+export async function completarCitaAccion(idCita: number): Promise<ResultadoCierre> {
+  await exigirSesion();
+
+  try {
+    const sugerencias = await completarCita(idCita);
+    revalidatePath('/panel/agenda');
+    return { ok: true, sugerencias };
+  } catch (causa) {
+    const mensaje =
+      causa instanceof ErrorAplicacion
+        ? causa.message
+        : 'No se pudo completar el turno. Intente nuevamente en unos instantes.';
+    return { ok: false, error: mensaje };
+  }
+}
+
+/** Confirma el consumo de insumos de un turno recien cerrado (CU-011). */
+export async function registrarInsumosAccion(
+  entradas: EntradaProductoUtilizado[],
+): Promise<ResultadoAccion> {
+  await exigirSesion();
+  return ejecutar('/panel/inventario', () => registrarProductosUtilizados(entradas));
 }

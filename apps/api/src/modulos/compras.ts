@@ -1,5 +1,5 @@
 /**
- * Compras (CU-016): proveedores y ordenes de compra con su detalle.
+ * Compras: proveedores (CU-016) y ordenes de compra con su detalle (CU-017).
  *
  * Una orden marcada como recibida dispara la entrada de stock: lo hace un
  * disparador de la base, no este archivo.
@@ -102,7 +102,7 @@ export interface EntradaNuevoPedido {
 }
 
 /**
- * Alta de una orden de compra (CU-016): cabecera y detalle.
+ * Alta de una orden de compra (CU-017): cabecera y detalle.
  *
  * Igual que `crearCita`, si el detalle falla se borra la cabecera para no
  * dejar una orden vacia en la lista. Lo correcto seria una funcion

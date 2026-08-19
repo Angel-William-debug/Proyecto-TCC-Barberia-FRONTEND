@@ -1,7 +1,10 @@
+import Link from 'next/link';
+
 import { listarClientes } from '@barber-shop/api';
 import {
   BarraFiltros,
   Boton,
+  BotonIcono,
   CampoBusqueda,
   ChipEstado,
   EstadoVacio,
@@ -113,7 +116,17 @@ export default async function PaginaClientes({
                     />
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    <FormularioCliente cliente={c} />
+                    <div className="flex justify-end gap-1">
+                      <Link href={`/panel/clientes/${c.id_cliente}`}>
+                        <BotonIcono
+                          icono="chevron-right"
+                          etiqueta={`Ver perfil de ${c.nombre}`}
+                          variante="terciario"
+                          tamano="sm"
+                        />
+                      </Link>
+                      <FormularioCliente cliente={c} />
+                    </div>
                   </Td>
                 </Tr>
               ))

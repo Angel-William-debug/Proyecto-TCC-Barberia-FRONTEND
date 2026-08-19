@@ -20,7 +20,9 @@
   "dependencies": {
     "@barber-shop/tipos": "workspace:*",
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.48.1"
+    "@supabase/supabase-js": "^2.48.1",
+    "exceljs": "^4.4.0",
+    "pdf-lib": "^1.17.1"
   },
   "peerDependencies": {
     "next": "^15.1.0"

@@ -1,8 +1,7 @@
-import { listarCobros, listarMetodosPago } from '@barber-shop/api';
+import { listarCitasPendientesDeCobro, listarCobros, listarMetodosPago } from '@barber-shop/api';
 import { ESTADOS_COBRO } from '@barber-shop/tipos';
 import {
   BarraFiltros,
-  Boton,
   CampoBusqueda,
   ChipEstado,
   EstadoVacio,
@@ -25,6 +24,8 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonEmitirFactura } from '@/componentes/formularios/boton-emitir-factura';
+import { FormularioCobro } from '@/componentes/formularios/formulario-cobro';
 import { comunes, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Cobros' };
@@ -47,7 +48,11 @@ export default async function PaginaCobros({
   const params = await searchParams;
   const filtro = { ...comunes(params), metodo: texto(params, 'metodo') };
 
-  const [cobros, metodos] = await Promise.all([listarCobros(filtro), listarMetodosPago()]);
+  const [cobros, metodos, citasPendientes] = await Promise.all([
+    listarCobros(filtro),
+    listarMetodosPago(),
+    listarCitasPendientesDeCobro().catch(() => []),
+  ]);
 
   const cobrado = cobros
     .filter((c) => c.estado === 'pagado' || c.estado === 'parcial')
@@ -61,11 +66,7 @@ export default async function PaginaCobros({
       <EncabezadoVista
         titulo="Cobros"
         descripcion="Pagos registrados sobre turnos completados"
-        accion={
-          <Boton variante="primario" icono="plus">
-            Registrar cobro
-          </Boton>
-        }
+        accion={<FormularioCobro citasPendientes={citasPendientes} metodos={metodos} />}
       />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -118,10 +119,13 @@ export default async function PaginaCobros({
             <Th>Fecha de pago</Th>
             <Th numerico>Monto</Th>
             <Th>Estado</Th>
+            <Th>
+              <span className="solo-lectores">Acciones</span>
+            </Th>
           </TablaEncabezado>
           <TablaCuerpo>
             {cobros.length === 0 ? (
-              <TdCompleta colSpan={6}>
+              <TdCompleta colSpan={7}>
                 <EstadoVacio
                   icono="receipt"
                   titulo="No se encontraron cobros"
@@ -140,6 +144,9 @@ export default async function PaginaCobros({
                   <Td numerico etiqueta="Monto">{guaranies(c.monto)}</Td>
                   <Td etiqueta="Estado">
                     <ChipEstado presentacion={PRESENTACION_COBRO[c.estado]} />
+                  </Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    {c.estado === 'pagado' && <BotonEmitirFactura idCobro={c.id_cobro} />}
                   </Td>
                 </Tr>
               ))

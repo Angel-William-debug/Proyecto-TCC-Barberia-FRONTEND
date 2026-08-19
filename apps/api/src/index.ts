@@ -27,10 +27,17 @@ export {
   crearCita,
   cambiarEstadoCita,
   hayConflictoHorario,
+  completarCita,
+  registrarProductosUtilizados,
 } from './modulos/agenda';
 
 // --- Clientes --------------------------------------------------------------
-export { listarClientes, obtenerCliente, desactivarCliente } from './modulos/clientes';
+export {
+  listarClientes,
+  obtenerCliente,
+  desactivarCliente,
+  listarHistorialCliente,
+} from './modulos/clientes';
 
 // --- Servicios -------------------------------------------------------------
 export { listarServicios, listarCategoriasServicio } from './modulos/servicios';
@@ -39,7 +46,15 @@ export { listarServicios, listarCategoriasServicio } from './modulos/servicios';
 export { listarProfesionales } from './modulos/barberos';
 
 // --- Cobros ----------------------------------------------------------------
-export { listarCobros } from './modulos/cobros';
+export { listarCobros, listarCitasPendientesDeCobro, crearCobro } from './modulos/cobros';
+
+// --- Facturas ----------------------------------------------------------------
+export {
+  listarFacturas,
+  obtenerFactura,
+  crearFactura,
+  generarFacturaPdf,
+} from './modulos/facturas';
 
 // --- Comisiones ------------------------------------------------------------
 export { listarComisiones, liquidarComisiones } from './modulos/comisiones';
@@ -49,6 +64,9 @@ export {
   listarCategoriasProducto,
   listarProductosConNivel,
   listarMovimientos,
+  listarRecetaServicio,
+  listarAlertas,
+  marcarAlertaResuelta,
 } from './modulos/inventario';
 
 // --- Compras ---------------------------------------------------------------
@@ -60,12 +78,23 @@ export {
   type LineaPedido,
 } from './modulos/compras';
 
+// --- Recomendaciones ---------------------------------------------------------
+export { generarRecomendaciones, listarRecomendaciones } from './modulos/recomendaciones';
+
 // --- Reportes --------------------------------------------------------------
 export {
   resumenKpis,
   ingresosPorPeriodo,
   stockCritico,
   comisionesPendientes,
+  TIPOS_REPORTE,
+  TITULOS_TIPO_REPORTE,
+  previsualizarReporte,
+  exportarReporteExcel,
+  exportarReportePdf,
+  type TipoReporte,
+  type FiltroReporte,
+  type PrevisualizacionReporte,
 } from './modulos/reportes';
 
 // --- Configuracion ---------------------------------------------------------

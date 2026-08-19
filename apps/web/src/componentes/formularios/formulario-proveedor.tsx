@@ -8,7 +8,7 @@ import { Boton, BotonIcono, Campo, CampoArea, GrupoCampos, Interruptor } from '@
 import { guardarProveedor } from '@/acciones/catalogo';
 import { PanelFormulario } from './panel-formulario';
 
-/** CU-011 — alta y edicion de proveedores. */
+/** CU-016 — alta y edicion de proveedores. */
 export function FormularioProveedor({ proveedor }: { proveedor?: Proveedor }) {
   const [abierto, setAbierto] = useState(false);
   const editando = Boolean(proveedor);

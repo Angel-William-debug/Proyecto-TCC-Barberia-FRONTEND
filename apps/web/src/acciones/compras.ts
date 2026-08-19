@@ -1,4 +1,4 @@
-/** Accion de servidor de las compras (CU-016). */
+/** Accion de servidor de las compras (CU-017). */
 'use server';
 
 import { crearPedido, exigirSesion } from '@barber-shop/api';
@@ -7,7 +7,7 @@ import { ESTADOS_PEDIDO, type EstadoPedido } from '@barber-shop/tipos';
 import { Validacion, ejecutar, lineas, numero, texto } from './base';
 import type { ResultadoAccion } from './base';
 
-/** Alta de una orden de compra (CU-016). */
+/** Alta de una orden de compra (CU-017). */
 export async function guardarOrden(datos: FormData): Promise<ResultadoAccion> {
   await exigirSesion();
 

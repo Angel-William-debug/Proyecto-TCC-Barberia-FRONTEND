@@ -26,6 +26,7 @@ export const MENU: EntradaMenu[] = [
     icono: 'scissors',
   },
   { modulo: 'cobros', etiqueta: 'Cobros', ruta: '/panel/cobros', icono: 'receipt' },
+  { modulo: 'facturas', etiqueta: 'Facturas', ruta: '/panel/facturas', icono: 'file-text' },
   {
     modulo: 'comisiones',
     etiqueta: 'Comisiones',

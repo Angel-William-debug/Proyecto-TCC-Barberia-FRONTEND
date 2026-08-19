@@ -16,6 +16,7 @@ import type {
   EstadoCita,
   EstadoCobro,
   EstadoComision,
+  EstadoFactura,
   EstadoPedido,
   NombreRol,
   Producto,
@@ -49,6 +50,7 @@ export const MODULOS = [
   'servicios',
   'profesionales',
   'cobros',
+  'facturas',
   'comisiones',
   'inventario',
   'compras',
@@ -58,10 +60,12 @@ export const MODULOS = [
 ] as const;
 export type Modulo = (typeof MODULOS)[number];
 
-/** Refleja las 56 politicas RLS. La base sigue siendo la autoridad. */
+/** Refleja las politicas RLS. La base sigue siendo la autoridad. */
 export const MODULOS_POR_ROL: Record<NombreRol, readonly Modulo[]> = {
   administrador: MODULOS,
-  recepcionista: ['agenda', 'clientes', 'servicios', 'profesionales', 'cobros', 'inventario'],
+  recepcionista: [
+    'agenda', 'clientes', 'servicios', 'profesionales', 'cobros', 'facturas', 'inventario',
+  ],
   profesional: ['agenda', 'comisiones'],
   cliente: [],
 };
@@ -256,4 +260,101 @@ export interface Pagina<T> {
   pagina: number;
   porPagina: number;
   totalPaginas: number;
+}
+
+// ---------------------------------------------------------------------------
+// Insumos: receta del servicio y consumo al cerrar un turno (CU-003, CU-011)
+// ---------------------------------------------------------------------------
+
+/** Una linea de la receta de un servicio, con el nombre del producto resuelto. */
+export interface RecetaLinea {
+  id_servicio_producto: number;
+  id_producto: number;
+  nombre_producto: string;
+  cantidad_estandar: number;
+  unidad_uso: string | null;
+}
+
+export interface EntradaLineaReceta {
+  idServicio: number;
+  idProducto: number;
+  cantidadEstandar: number;
+  unidadUso?: string;
+}
+
+/** Un producto de la receta propuesto para un servicio ya cerrado, con su stock. */
+export interface ProductoSugerido {
+  idProducto: number;
+  nombreProducto: string;
+  cantidadSugerida: number;
+  unidadUso: string | null;
+  stockActual: number;
+}
+
+/** Lo que devuelve `completarCita`: por cada servicio del turno, su receta sugerida. */
+export interface SugerenciaCierre {
+  idHistorial: number;
+  idServicio: number;
+  nombreServicio: string;
+  productos: ProductoSugerido[];
+}
+
+export interface EntradaProductoUtilizado {
+  idHistorial: number;
+  idProducto: number;
+  cantidadUsada: number;
+  /** RN-031: el usuario confirmo consumir por encima del stock disponible. */
+  excepcionStock?: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Alertas de stock (CU-022)
+// ---------------------------------------------------------------------------
+
+export interface AlertaDeLista {
+  id_alerta: number;
+  id_producto: number;
+  nombre_producto: string;
+  stock_actual: number;
+  stock_minimo: number;
+  fecha_alerta: string;
+  resuelta: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Recomendaciones ML (CU-013)
+// ---------------------------------------------------------------------------
+
+export interface RecomendacionDeLista {
+  id_recomendacion: number;
+  id_servicio: number;
+  nombre_servicio: string;
+  score_relevancia: number;
+  algoritmo: string | null;
+  fecha_generacion: string;
+}
+
+// ---------------------------------------------------------------------------
+// Facturas (CU-025, anexo)
+// ---------------------------------------------------------------------------
+
+export interface FacturaDeLista {
+  id_factura: number;
+  id_cliente: number;
+  nombre_cliente: string;
+  id_cita: number;
+  fecha_emision: string;
+  total: number;
+  estado: EstadoFactura;
+}
+
+export interface FacturaCompleta extends FacturaDeLista {
+  subtotal: number;
+  observaciones: string | null;
+  lineas: Array<{
+    descripcion: string;
+    cantidad: number;
+    precio_unitario: number;
+    subtotal: number;
+  }>;
 }

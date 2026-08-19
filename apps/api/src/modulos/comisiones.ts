@@ -1,5 +1,5 @@
 /**
- * Comisiones de los barberos (CU-011): consulta y liquidacion.
+ * Comisiones de los barberos (CU-009): consulta y liquidacion.
  *
  * La lectura y la escritura van en el mismo archivo a proposito. Son dos
  * mitades de la misma operacion -se mira lo pendiente y se paga- y separarlas
@@ -77,7 +77,7 @@ export async function listarComisiones(
 }
 
 /**
- * Liquidacion de comisiones (CU-011).
+ * Liquidacion de comisiones (CU-009).
  *
  * Marca como pagadas las comisiones pendientes y les pone la fecha. Se puede
  * acotar a un barbero; sin barbero, liquida todas.

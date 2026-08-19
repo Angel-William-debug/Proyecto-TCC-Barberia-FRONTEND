@@ -24,7 +24,7 @@ const LINEA_VACIA = (clave: number): LineaServicio => ({
 });
 
 /**
- * CU-006 - alta de un turno.
+ * CU-005 - alta de un turno.
  *
  * Es el unico formulario del sistema con una lista adentro: un turno puede
  * llevar varios servicios, cada uno con su barbero. Por eso usa el ancho `lg`.
