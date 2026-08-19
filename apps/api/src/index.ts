@@ -74,8 +74,12 @@ export {
   listarProveedores,
   listarPedidos,
   crearPedido,
+  listarPagosProveedor,
+  listarPedidosPendientesDePago,
+  crearPagoProveedor,
   type EntradaNuevoPedido,
   type LineaPedido,
+  type EntradaNuevoPagoProveedor,
 } from './modulos/compras';
 
 // --- Recomendaciones ---------------------------------------------------------
@@ -106,6 +110,14 @@ export {
   type EntradaConfiguracion,
 } from './modulos/configuracion';
 
+// --- Usuarios y roles --------------------------------------------------------
+export {
+  listarUsuarios,
+  listarRoles,
+  crearUsuario,
+  type EntradaNuevoUsuario,
+} from './modulos/usuarios';
+
 // --- Auditoria -------------------------------------------------------------
 export { listarAuditoria } from './modulos/auditoria';
 
@@ -115,6 +127,8 @@ export {
   actualizar,
   borrarLogico,
   restaurar,
+  listarBorrados,
   CLAVE_PRIMARIA,
   type TablaEscribible,
+  type RegistroBorrado,
 } from './compartido/escritura';

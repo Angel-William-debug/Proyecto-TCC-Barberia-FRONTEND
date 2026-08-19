@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { ESTADOS_PEDIDO, type Proveedor } from '@barber-shop/tipos';
 import {
-  Boton, BotonIcono, Campo, CampoSelector, FilaCampos, GrupoCampos, guaranies,
+  Boton, BotonIcono, Campo, CampoSelector, FilaCampos, GrupoCampos, cantidad as formatoCantidad, guaranies,
 } from '@barber-shop/ui';
 
 import { guardarOrden } from '@/acciones/compras';
@@ -15,6 +15,10 @@ export interface ProductoParaOrden {
   id_producto: number;
   nombre: string;
   precio_unitario: number;
+  unidad_medida: string | null;
+  unidad_uso: string | null;
+  /** Cuantas unidades de uso trae una unidad de medida (ej. 1 frasco = 500 ml). */
+  cantidad_uso_estandar: number | null;
 }
 
 interface LineaProducto {
@@ -139,55 +143,74 @@ export function FormularioOrden({
 
             <GrupoCampos titulo="Productos">
               <div className="flex flex-col gap-3">
-                {lineas.map((linea, i) => (
-                  <div key={linea.clave} className="flex items-end gap-3">
-                    <CampoSelector
-                      etiqueta={i === 0 ? 'Producto' : ''}
-                      aria-label={i === 0 ? undefined : `Producto ${i + 1}`}
-                      name="id_producto"
-                      value={linea.idProducto}
-                      onChange={(e) => elegirProducto(linea.clave, e.target.value)}
-                      opciones={productos.map((p) => ({
-                        valor: p.id_producto,
-                        etiqueta: p.nombre,
-                      }))}
-                      marcador="Elija un producto"
-                      error={i === 0 ? errores.id_producto : undefined}
-                      claseContenedor="flex-[2]"
-                    />
-                    <Campo
-                      etiqueta={i === 0 ? 'Cantidad' : ''}
-                      aria-label={i === 0 ? undefined : `Cantidad del producto ${i + 1}`}
-                      name="cantidad"
-                      inputMode="numeric"
-                      value={linea.cantidad}
-                      onChange={(e) => cambiar(linea.clave, 'cantidad', e.target.value)}
-                      error={i === 0 ? errores.cantidad : undefined}
-                      claseContenedor="w-24"
-                    />
-                    <Campo
-                      etiqueta={i === 0 ? 'Precio unitario' : ''}
-                      aria-label={i === 0 ? undefined : `Precio del producto ${i + 1}`}
-                      name="precio_unitario"
-                      inputMode="numeric"
-                      value={linea.precio}
-                      onChange={(e) => cambiar(linea.clave, 'precio', e.target.value)}
-                      sufijo="Gs."
-                      error={i === 0 ? errores.precio_unitario : undefined}
-                      claseContenedor="w-44"
-                    />
-                    <div className="pb-1">
-                      <BotonIcono
-                        icono="trash-2"
-                        etiqueta={`Quitar el producto ${i + 1}`}
-                        variante="terciario"
-                        tamano="sm"
-                        onClick={() => quitar(linea.clave)}
-                        disabled={lineas.length === 1}
-                      />
+                {lineas.map((linea, i) => {
+                  const producto = productos.find((p) => String(p.id_producto) === linea.idProducto);
+                  const cantidadNum = aNumero(linea.cantidad);
+                  const equivalente =
+                    producto?.cantidad_uso_estandar && cantidadNum > 0
+                      ? cantidadNum * producto.cantidad_uso_estandar
+                      : null;
+
+                  return (
+                    <div key={linea.clave} className="flex flex-col gap-1">
+                      <div className="flex items-end gap-3">
+                        <CampoSelector
+                          etiqueta={i === 0 ? 'Producto' : ''}
+                          aria-label={i === 0 ? undefined : `Producto ${i + 1}`}
+                          name="id_producto"
+                          value={linea.idProducto}
+                          onChange={(e) => elegirProducto(linea.clave, e.target.value)}
+                          opciones={productos.map((p) => ({
+                            valor: p.id_producto,
+                            etiqueta: p.nombre,
+                          }))}
+                          marcador="Elija un producto"
+                          error={i === 0 ? errores.id_producto : undefined}
+                          claseContenedor="flex-[2]"
+                        />
+                        <Campo
+                          etiqueta={i === 0 ? 'Cantidad' : ''}
+                          aria-label={i === 0 ? undefined : `Cantidad del producto ${i + 1}`}
+                          name="cantidad"
+                          inputMode="numeric"
+                          value={linea.cantidad}
+                          onChange={(e) => cambiar(linea.clave, 'cantidad', e.target.value)}
+                          sufijo={producto?.unidad_medida ?? undefined}
+                          error={i === 0 ? errores.cantidad : undefined}
+                          claseContenedor="w-28"
+                        />
+                        <Campo
+                          etiqueta={i === 0 ? 'Precio unitario' : ''}
+                          aria-label={i === 0 ? undefined : `Precio del producto ${i + 1}`}
+                          name="precio_unitario"
+                          inputMode="numeric"
+                          value={linea.precio}
+                          onChange={(e) => cambiar(linea.clave, 'precio', e.target.value)}
+                          sufijo="Gs."
+                          error={i === 0 ? errores.precio_unitario : undefined}
+                          claseContenedor="w-44"
+                        />
+                        <div className="pb-1">
+                          <BotonIcono
+                            icono="trash-2"
+                            etiqueta={`Quitar el producto ${i + 1}`}
+                            variante="terciario"
+                            tamano="sm"
+                            onClick={() => quitar(linea.clave)}
+                            disabled={lineas.length === 1}
+                          />
+                        </div>
+                      </div>
+                      {equivalente !== null && (
+                        <p className="text-cuerpo-sm text-terciario">
+                          Al recibirla, suma {formatoCantidad(equivalente)} {producto?.unidad_uso} al stock
+                          ({formatoCantidad(cantidadNum)} {producto?.unidad_medida} × {producto?.cantidad_uso_estandar}{' '}
+                          {producto?.unidad_uso}).
+                        </p>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div>

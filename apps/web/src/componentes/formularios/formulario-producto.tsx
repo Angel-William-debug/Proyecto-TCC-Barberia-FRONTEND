@@ -83,7 +83,7 @@ export function FormularioProducto({
 
             <GrupoCampos
               titulo="Unidades"
-              descripcion="Se compra en una unidad y se consume en otra. Todavía no hay conversión automática entre las dos."
+              descripcion="Se compra en una unidad y se consume en otra. Al recibir una orden, el sistema convierte con la cantidad de la derecha."
             >
               <FilaCampos>
                 <Campo
@@ -99,6 +99,14 @@ export function FormularioProducto({
                   placeholder="ml"
                 />
               </FilaCampos>
+              <Campo
+                etiqueta="Equivalencia"
+                name="cantidad_uso_estandar"
+                inputMode="numeric"
+                defaultValue={producto?.cantidad_uso_estandar ?? ''}
+                ayuda="Cuántas unidades de consumo trae una unidad de compra. Ej: 1 frasco = 500 ml."
+                error={errores.cantidad_uso_estandar}
+              />
             </GrupoCampos>
 
             <GrupoCampos titulo="Precio y niveles de stock">

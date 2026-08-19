@@ -42,6 +42,8 @@ export const MENU: EntradaMenu[] = [
     ruta: '/panel/configuracion',
     icono: 'settings',
   },
+  { modulo: 'usuarios', etiqueta: 'Usuarios', ruta: '/panel/usuarios', icono: 'shield-check' },
+  { modulo: 'papelera', etiqueta: 'Papelera', ruta: '/panel/papelera', icono: 'trash-2' },
   { modulo: 'auditoria', etiqueta: 'Auditoría', ruta: '/panel/auditoria', icono: 'scroll-text' },
 ];
 

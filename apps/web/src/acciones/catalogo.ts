@@ -132,6 +132,7 @@ export async function guardarProducto(datos: FormData): Promise<ResultadoAccion>
   const precio = numero(datos, 'precio_unitario');
   const minimo = numero(datos, 'stock_minimo');
   const maximo = numero(datos, 'stock_maximo');
+  const cantidadUsoEstandar = numero(datos, 'cantidad_uso_estandar');
 
   const v = new Validacion();
   v.exigir(nombre.length >= 3, 'nombre', 'Ingrese el nombre del producto.');
@@ -143,6 +144,11 @@ export async function guardarProducto(datos: FormData): Promise<ResultadoAccion>
     'stock_maximo',
     'El stock máximo debe ser mayor o igual al mínimo.',
   );
+  v.exigir(
+    cantidadUsoEstandar === null || cantidadUsoEstandar > 0,
+    'cantidad_uso_estandar',
+    'La equivalencia debe ser mayor a cero.',
+  );
   if (v.hayErrores) return v.resultado;
 
   const fila = {
@@ -151,6 +157,7 @@ export async function guardarProducto(datos: FormData): Promise<ResultadoAccion>
     descripcion: textoOpcional(datos, 'descripcion'),
     unidad_medida: textoOpcional(datos, 'unidad_medida'),
     unidad_uso: textoOpcional(datos, 'unidad_uso'),
+    cantidad_uso_estandar: cantidadUsoEstandar,
     precio_unitario: precio,
     stock_minimo: minimo,
     stock_maximo: maximo,
@@ -209,6 +216,7 @@ const RUTA: Record<TablaEscribible, string> = {
   servicio_producto: '/panel/servicios',
   cobros_cliente: '/panel/cobros',
   facturas: '/panel/facturas',
+  usuarios: '/panel/usuarios',
 };
 
 /**

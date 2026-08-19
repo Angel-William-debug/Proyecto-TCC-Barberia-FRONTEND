@@ -5,7 +5,13 @@
  * disparador de la base, no este archivo.
  */
 
-import type { EstadoPedido, PedidoDeLista, Proveedor } from '@barber-shop/tipos';
+import type {
+  EstadoPedido,
+  PagoProveedorDeLista,
+  PedidoDeLista,
+  PedidoPendientePago,
+  Proveedor,
+} from '@barber-shop/tipos';
 
 import { PEDIDOS_DEMO, PROVEEDORES_DEMO } from '../demo/datos-operacion';
 import { MODO_DEMO } from '../demo/modo';
@@ -147,4 +153,122 @@ export async function crearPedido(entrada: EntradaNuevoPedido): Promise<number> 
   }
 
   return idPedido;
+}
+
+// ---------------------------------------------------------------------------
+// Pago al proveedor (CU-018). No hay vista SQL para el saldo pendiente, a
+// diferencia de `v_cobros_pendientes`: se calcula aca sobre las ordenes
+// recibidas, restando lo ya pagado (RN-028, CU-018 A1).
+// ---------------------------------------------------------------------------
+
+export async function listarPagosProveedor(filtro: FiltroTabla = {}): Promise<PagoProveedorDeLista[]> {
+  if (MODO_DEMO) return [];
+
+  const supabase = await clienteServidor();
+
+  let consulta = supabase
+    .from('pagos_proveedor')
+    .select(
+      `id_pago_prov, id_pedido, monto, estado, fecha_pago,
+       metodos_pago ( nombre ),
+       pedidos ( proveedores ( nombre ) )`,
+    )
+    .order('fecha_pago', { ascending: false, nullsFirst: false })
+    .limit(200);
+
+  if (filtro.estados?.length) consulta = consulta.in('estado', filtro.estados);
+  if (filtro.desde) consulta = consulta.gte('fecha_pago', `${filtro.desde}T00:00:00`);
+  if (filtro.hasta) consulta = consulta.lte('fecha_pago', `${filtro.hasta}T23:59:59`);
+
+  const { data, error } = await consulta;
+  if (error) throw traducirError(error);
+
+  const filas = (data ?? []).map((f) => {
+    const pedido = uno<{ proveedores: unknown }>(f.pedidos);
+    const proveedor = uno<{ nombre: string }>(pedido?.proveedores);
+    const metodo = uno<{ nombre: string }>(f.metodos_pago);
+
+    return {
+      id_pago_prov: f.id_pago_prov,
+      id_pedido: f.id_pedido,
+      nombre_proveedor: proveedor?.nombre ?? 'Proveedor eliminado',
+      metodo_pago: metodo?.nombre ?? '—',
+      monto: f.monto,
+      fecha_pago: f.fecha_pago,
+      estado: f.estado,
+    } satisfies PagoProveedorDeLista;
+  });
+
+  return filas.filter((p) => coincideTexto([p.nombre_proveedor], filtro.busqueda));
+}
+
+/** Ordenes recibidas con saldo pendiente, para el selector del formulario de pago. */
+export async function listarPedidosPendientesDePago(): Promise<PedidoPendientePago[]> {
+  if (MODO_DEMO) return [];
+
+  const supabase = await clienteServidor();
+
+  const { data: pedidos, error: errorPedidos } = await supabase
+    .from('pedidos')
+    .select('id_pedido, fecha_pedido, total, proveedores ( nombre )')
+    .eq('estado', 'recibido')
+    .eq('deleted', false);
+
+  if (errorPedidos) throw traducirError(errorPedidos);
+  if (!pedidos || pedidos.length === 0) return [];
+
+  const { data: pagos, error: errorPagos } = await supabase
+    .from('pagos_proveedor')
+    .select('id_pedido, monto')
+    .in('id_pedido', pedidos.map((p) => p.id_pedido))
+    .in('estado', ['pagado', 'pendiente']);
+
+  if (errorPagos) throw traducirError(errorPagos);
+
+  const pagadoPorPedido = new Map<number, number>();
+  for (const pago of pagos ?? []) {
+    pagadoPorPedido.set(pago.id_pedido, (pagadoPorPedido.get(pago.id_pedido) ?? 0) + pago.monto);
+  }
+
+  return pedidos
+    .map((p) => {
+      const pagado = pagadoPorPedido.get(p.id_pedido) ?? 0;
+      return {
+        id_pedido: p.id_pedido,
+        nombre_proveedor: uno<{ nombre: string }>(p.proveedores)?.nombre ?? 'Proveedor eliminado',
+        fecha_pedido: p.fecha_pedido,
+        total: p.total,
+        pagado,
+        saldo: p.total - pagado,
+      } satisfies PedidoPendientePago;
+    })
+    .filter((p) => p.saldo > 0);
+}
+
+export interface EntradaNuevoPagoProveedor {
+  idPedido: number;
+  idMetodoPago: number;
+  monto: number;
+}
+
+/** Alta de un pago al proveedor (CU-018). La base valida RN-028 y CU-018 A1. */
+export async function crearPagoProveedor(entrada: EntradaNuevoPagoProveedor): Promise<number> {
+  rechazarSiEsDemo();
+
+  const supabase = await clienteServidor();
+
+  const { data, error } = await supabase
+    .from('pagos_proveedor')
+    .insert({
+      id_pedido: entrada.idPedido,
+      id_metodo_pago: entrada.idMetodoPago,
+      monto: entrada.monto,
+      estado: 'pagado',
+      fecha_pago: new Date().toISOString(),
+    })
+    .select('id_pago_prov')
+    .single();
+
+  if (error) throw traducirError(error);
+  return (data as { id_pago_prov: number }).id_pago_prov;
 }

@@ -1,5 +1,12 @@
-import { listarPedidos, listarProductosConNivel, listarProveedores } from '@barber-shop/api';
-import { ESTADOS_PEDIDO } from '@barber-shop/tipos';
+import {
+  listarMetodosPago,
+  listarPagosProveedor,
+  listarPedidos,
+  listarPedidosPendientesDePago,
+  listarProductosConNivel,
+  listarProveedores,
+} from '@barber-shop/api';
+import { ESTADOS_PAGO_PROVEEDOR, ESTADOS_PEDIDO } from '@barber-shop/tipos';
 import {
   BarraFiltros,
   CampoBusqueda,
@@ -26,9 +33,17 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonBorrar } from '@/componentes/formularios/boton-borrar';
 import { FormularioOrden } from '@/componentes/formularios/formulario-orden';
+import { FormularioPagoProveedor } from '@/componentes/formularios/formulario-pago-proveedor';
 import { FormularioProveedor } from '@/componentes/formularios/formulario-proveedor';
-import { comunes, texto, type Parametros } from '@/lib/filtros';
+import { comunes, fecha, lista, texto, type Parametros } from '@/lib/filtros';
+
+const ETIQUETA_ESTADO_PAGO: Record<string, string> = {
+  pendiente: 'Pendiente',
+  pagado: 'Pagado',
+  anulado: 'Anulado',
+};
 
 export const metadata = { title: 'Compras' };
 
@@ -57,12 +72,20 @@ export default async function PaginaCompras({
   const params = await searchParams;
   const base = comunes(params);
 
-  const [pedidos, proveedoresTodos, proveedores, productos] = await Promise.all([
-    listarPedidos({ ...base, proveedor: texto(params, 'proveedor') }),
-    listarProveedores(),
-    listarProveedores({ busqueda: texto(params, 'prov_q') }),
-    listarProductosConNivel({}),
-  ]);
+  const [pedidos, proveedoresTodos, proveedores, productos, pagos, pedidosPendientesDePago, metodos] =
+    await Promise.all([
+      listarPedidos({ ...base, proveedor: texto(params, 'proveedor') }),
+      listarProveedores(),
+      listarProveedores({ busqueda: texto(params, 'prov_q') }),
+      listarProductosConNivel({}),
+      listarPagosProveedor({
+        estados: lista(params, 'pago_estado'),
+        desde: fecha(params, 'pago_desde'),
+        hasta: fecha(params, 'pago_hasta'),
+      }),
+      listarPedidosPendientesDePago(),
+      listarMetodosPago(),
+    ]);
 
   // Fecha del servidor, no del navegador: el formulario la propone como
   // predeterminada y la barberia opera en una sola zona horaria.
@@ -85,6 +108,9 @@ export default async function PaginaCompras({
               id_producto: p.id_producto,
               nombre: p.nombre,
               precio_unitario: p.precio_unitario,
+              unidad_medida: p.unidad_medida,
+              unidad_uso: p.unidad_uso,
+              cantidad_uso_estandar: p.cantidad_uso_estandar,
             }))}
             fechaHoy={hoy}
           />
@@ -199,7 +225,84 @@ export default async function PaginaCompras({
                   <Td className="text-secundario" etiqueta="Correo">{p.email ?? '—'}</Td>
                   <Td className="text-secundario" etiqueta="Dirección">{p.direccion ?? '—'}</Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    <FormularioProveedor proveedor={p} />
+                    <div className="flex justify-end gap-1">
+                      <FormularioProveedor proveedor={p} />
+                      <BotonBorrar tabla="proveedores" id={p.id_proveedor} nombre={p.nombre} />
+                    </div>
+                  </Td>
+                </Tr>
+              ))
+            )}
+          </TablaCuerpo>
+        </Tabla>
+      </Tarjeta>
+
+      <Tarjeta className="mt-6">
+        <TarjetaEncabezado
+          titulo="Pagos a proveedores"
+          descripcion="Solo sobre órdenes ya recibidas (RN-028)"
+          accion={
+            <FormularioPagoProveedor pedidosPendientes={pedidosPendientesDePago} metodos={metodos} />
+          }
+        />
+
+        <BarraFiltros>
+          <SelectorMultiple
+            nombre="pago_estado"
+            etiqueta="Estado"
+            opciones={ESTADOS_PAGO_PROVEEDOR.map((e) => ({ valor: e, etiqueta: ETIQUETA_ESTADO_PAGO[e]! }))}
+          />
+          <RangoFechas etiqueta="Fecha de pago" nombreDesde="pago_desde" nombreHasta="pago_hasta" />
+        </BarraFiltros>
+
+        <FiltrosActivos
+          total={pagos.length}
+          sustantivo={['pago', 'pagos']}
+          etiquetas={{
+            pago_estado: { titulo: 'Estado', valores: ETIQUETA_ESTADO_PAGO },
+            pago_desde: { titulo: 'Desde' },
+            pago_hasta: { titulo: 'Hasta' },
+          }}
+        />
+
+        <Tabla titulo="Pagos registrados a proveedores">
+          <TablaEncabezado>
+            <Th>Proveedor</Th>
+            <Th>Orden</Th>
+            <Th>Método</Th>
+            <Th>Fecha de pago</Th>
+            <Th numerico>Monto</Th>
+            <Th>Estado</Th>
+          </TablaEncabezado>
+          <TablaCuerpo>
+            {pagos.length === 0 ? (
+              <TdCompleta colSpan={6}>
+                <EstadoVacio
+                  icono="hand-coins"
+                  titulo="No se encontraron pagos"
+                  descripcion="Ningún pago cumple con los filtros aplicados."
+                />
+              </TdCompleta>
+            ) : (
+              pagos.map((p) => (
+                <Tr key={p.id_pago_prov}>
+                  <Td className="font-medium" etiqueta="Proveedor">{p.nombre_proveedor}</Td>
+                  <Td className="font-mono" etiqueta="Orden">{identificador(p.id_pedido)}</Td>
+                  <Td className="text-secundario" etiqueta="Método">{p.metodo_pago}</Td>
+                  <Td className="text-secundario" etiqueta="Fecha de pago">
+                    {p.fecha_pago ? fechaCorta(p.fecha_pago) : '—'}
+                  </Td>
+                  <Td numerico etiqueta="Monto">{guaranies(p.monto)}</Td>
+                  <Td etiqueta="Estado">
+                    <ChipEstado
+                      presentacion={
+                        p.estado === 'pagado'
+                          ? { etiqueta: 'Pagado', tono: 'exito', icono: 'circle-check' }
+                          : p.estado === 'anulado'
+                            ? { etiqueta: 'Anulado', tono: 'peligro', icono: 'ban' }
+                            : { etiqueta: 'Pendiente', tono: 'neutro', icono: 'clock' }
+                      }
+                    />
                   </Td>
                 </Tr>
               ))

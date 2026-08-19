@@ -32,7 +32,8 @@ export type TablaEscribible =
   | 'metodos_pago'
   | 'servicio_producto'
   | 'cobros_cliente'
-  | 'facturas';
+  | 'facturas'
+  | 'usuarios';
 
 /** Nombre de la clave primaria de cada tabla. */
 export const CLAVE_PRIMARIA: Record<TablaEscribible, string> = {
@@ -47,6 +48,7 @@ export const CLAVE_PRIMARIA: Record<TablaEscribible, string> = {
   servicio_producto: 'id_servicio_producto',
   cobros_cliente: 'id_cobro',
   facturas: 'id_factura',
+  usuarios: 'id_usuario',
 };
 
 /**
@@ -153,4 +155,62 @@ export async function restaurar(tabla: TablaEscribible, id: number): Promise<voi
     .eq(CLAVE_PRIMARIA[tabla], id);
 
   if (error) throw traducirError(error);
+}
+
+/** Columna con la que cada tabla borrable se identifica en la papelera. */
+export const COLUMNA_NOMBRE: Record<TablaEscribible, string> = {
+  clientes: 'nombre',
+  servicios: 'nombre',
+  profesionales: 'nombre',
+  productos: 'nombre',
+  proveedores: 'nombre',
+  categorias_servicio: 'nombre',
+  categorias_producto: 'nombre',
+  metodos_pago: 'nombre',
+  servicio_producto: 'id_servicio_producto',
+  cobros_cliente: 'id_cobro',
+  facturas: 'id_factura',
+  usuarios: 'nombre',
+};
+
+export interface RegistroBorrado {
+  id: number;
+  nombre: string;
+  deletedAt: string | null;
+}
+
+/**
+ * Papelera: lo borrado logicamente de una tabla, mas reciente primero.
+ *
+ * Devuelve solo id, nombre y fecha de borrado -no la fila entera-, porque
+ * cada tabla tiene columnas distintas y la papelera es una sola pantalla
+ * generica para las once. Restaurar trae el registro completo de vuelta;
+ * verlo en detalle no es lo que hace falta desde acá.
+ */
+export async function listarBorrados(tabla: TablaEscribible): Promise<RegistroBorrado[]> {
+  if (MODO_DEMO) return [];
+
+  const supabase = await clienteServidor();
+  const pk = CLAVE_PRIMARIA[tabla];
+  const columnaNombre = COLUMNA_NOMBRE[tabla];
+  const columnas = [...new Set([pk, columnaNombre, 'deleted_at'])].join(', ');
+
+  const { data, error } = await supabase
+    .from(tabla)
+    .select(columnas)
+    .eq('deleted', true)
+    .order('deleted_at', { ascending: false })
+    .limit(200);
+
+  if (error) throw traducirError(error);
+
+  const filas = (data ?? []) as unknown as Array<Record<string, unknown>>;
+
+  return filas.map((fila) => {
+    return {
+      id: fila[pk] as number,
+      nombre: String(fila[columnaNombre] ?? '—'),
+      deletedAt: (fila.deleted_at as string | null) ?? null,
+    };
+  });
 }

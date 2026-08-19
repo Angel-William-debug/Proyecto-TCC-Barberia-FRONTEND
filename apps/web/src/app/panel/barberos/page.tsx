@@ -21,6 +21,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonBorrar } from '@/componentes/formularios/boton-borrar';
 import { FormularioBarbero } from '@/componentes/formularios/formulario-barbero';
 import {
   ETIQUETAS_ACTIVO,
@@ -139,7 +140,10 @@ export default async function PaginaBarberos({
                     />
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    <FormularioBarbero barbero={b} />
+                    <div className="flex justify-end gap-1">
+                      <FormularioBarbero barbero={b} />
+                      <BotonBorrar tabla="profesionales" id={b.id_profesional} nombre={b.nombre} />
+                    </div>
                   </Td>
                 </Tr>
               ))

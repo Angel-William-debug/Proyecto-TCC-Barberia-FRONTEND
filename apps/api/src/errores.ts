@@ -62,6 +62,11 @@ const REGLAS_DE_NEGOCIO: Array<{ patron: RegExp; mensaje: string; regla: string 
     regla: 'RN-028',
   },
   {
+    patron: /CU-018 A1/,
+    mensaje: 'El monto supera el saldo pendiente de esa orden.',
+    regla: 'CU-018 A1',
+  },
+  {
     patron: /RN-031/,
     mensaje: 'El stock disponible no alcanza. Confirme la excepcion para continuar.',
     regla: 'RN-031',

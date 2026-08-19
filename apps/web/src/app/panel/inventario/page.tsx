@@ -31,6 +31,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonBorrar } from '@/componentes/formularios/boton-borrar';
 import { BotonResolverAlerta } from '@/componentes/formularios/boton-resolver-alerta';
 import { FormularioCategoriaProducto } from '@/componentes/formularios/formulario-categoria-producto';
 import { FormularioProducto } from '@/componentes/formularios/formulario-producto';
@@ -194,7 +195,10 @@ export default async function PaginaInventario({
                     <ChipEstado presentacion={PRESENTACION_STOCK[p.nivel]} />
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    <FormularioProducto producto={p} categorias={categorias} />
+                    <div className="flex justify-end gap-1">
+                      <FormularioProducto producto={p} categorias={categorias} />
+                      <BotonBorrar tabla="productos" id={p.id_producto} nombre={p.nombre} />
+                    </div>
                   </Td>
                 </Tr>
               ))

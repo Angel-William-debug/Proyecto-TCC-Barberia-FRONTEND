@@ -100,6 +100,8 @@ export const TIPOS_REPORTE = [
   'cobros',
   'inventario',
   'comisiones',
+  'inactivos',
+  'cumpleanos',
   'general',
 ] as const;
 export type TipoReporte = (typeof TIPOS_REPORTE)[number];
@@ -110,6 +112,8 @@ export const TITULOS_TIPO_REPORTE: Record<TipoReporte, string> = {
   cobros: 'Reporte de cobros',
   inventario: 'Reporte de inventario',
   comisiones: 'Reporte de comisiones',
+  inactivos: 'Clientes inactivos (fidelización)',
+  cumpleanos: 'Cumpleaños del mes',
   general: 'Reporte general (KPIs mensuales)',
 };
 
@@ -257,6 +261,48 @@ async function datosReporte(tipo: TipoReporte, filtro: FiltroReporte): Promise<D
           { clave: 'fecha_realizacion', titulo: 'Fecha', anchoExcel: 14, pesoPdf: 1, tipo: 'fecha' },
           { clave: 'costo_cobrado', titulo: 'Costo', anchoExcel: 14, pesoPdf: 1, tipo: 'moneda' },
           { clave: 'comision', titulo: 'Comision', anchoExcel: 14, pesoPdf: 1, tipo: 'moneda' },
+        ],
+        filas: (data ?? []) as unknown as Array<Record<string, unknown>>,
+      };
+    }
+
+    case 'inactivos': {
+      let consulta = supabase.from('v_clientes_inactivos').select('*').order('dias_sin_venir', {
+        ascending: false,
+      });
+      if (filtro.busqueda) consulta = consulta.ilike('nombre', `%${filtro.busqueda}%`);
+
+      const { data, error } = await consulta;
+      if (error) throw traducirError(error);
+
+      return {
+        titulo,
+        columnas: [
+          { clave: 'nombre', titulo: 'Cliente', anchoExcel: 26, pesoPdf: 1.8 },
+          { clave: 'telefono', titulo: 'Teléfono', anchoExcel: 16, pesoPdf: 1.1 },
+          { clave: 'cantidad_visitas', titulo: 'Visitas', anchoExcel: 10, pesoPdf: 0.8, tipo: 'numero' },
+          { clave: 'total_gastado', titulo: 'Total gastado', anchoExcel: 16, pesoPdf: 1.2, tipo: 'moneda' },
+          { clave: 'ultima_visita', titulo: 'Última visita', anchoExcel: 14, pesoPdf: 1, tipo: 'fecha' },
+          { clave: 'dias_sin_venir', titulo: 'Días sin venir', anchoExcel: 14, pesoPdf: 1, tipo: 'numero' },
+        ],
+        filas: (data ?? []) as unknown as Array<Record<string, unknown>>,
+      };
+    }
+
+    case 'cumpleanos': {
+      let consulta = supabase.from('v_cumpleanos_del_mes').select('*').order('dia', { ascending: true });
+      if (filtro.busqueda) consulta = consulta.ilike('nombre', `%${filtro.busqueda}%`);
+
+      const { data, error } = await consulta;
+      if (error) throw traducirError(error);
+
+      return {
+        titulo,
+        columnas: [
+          { clave: 'nombre', titulo: 'Cliente', anchoExcel: 26, pesoPdf: 1.8 },
+          { clave: 'telefono', titulo: 'Teléfono', anchoExcel: 16, pesoPdf: 1.1 },
+          { clave: 'dia', titulo: 'Día', anchoExcel: 8, pesoPdf: 0.6, tipo: 'numero' },
+          { clave: 'edad', titulo: 'Edad', anchoExcel: 8, pesoPdf: 0.6, tipo: 'numero' },
         ],
         filas: (data ?? []) as unknown as Array<Record<string, unknown>>,
       };

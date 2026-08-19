@@ -17,6 +17,7 @@ import type {
   EstadoCobro,
   EstadoComision,
   EstadoFactura,
+  EstadoPagoProveedor,
   EstadoPedido,
   NombreRol,
   Producto,
@@ -56,6 +57,8 @@ export const MODULOS = [
   'compras',
   'reportes',
   'configuracion',
+  'usuarios',
+  'papelera',
   'auditoria',
 ] as const;
 export type Modulo = (typeof MODULOS)[number];
@@ -65,6 +68,7 @@ export const MODULOS_POR_ROL: Record<NombreRol, readonly Modulo[]> = {
   administrador: MODULOS,
   recepcionista: [
     'agenda', 'clientes', 'servicios', 'profesionales', 'cobros', 'facturas', 'inventario',
+    'papelera',
   ],
   profesional: ['agenda', 'comisiones'],
   cliente: [],
@@ -145,6 +149,27 @@ export interface PedidoDeLista {
   cantidad_items: number;
   estado: EstadoPedido;
   total: number;
+}
+
+/** CU-018 — pago al proveedor. */
+export interface PagoProveedorDeLista {
+  id_pago_prov: number;
+  id_pedido: number;
+  nombre_proveedor: string;
+  metodo_pago: string;
+  monto: number;
+  fecha_pago: string | null;
+  estado: EstadoPagoProveedor;
+}
+
+/** Ordenes recibidas con saldo sin pagar, para el selector del formulario (RN-028). */
+export interface PedidoPendientePago {
+  id_pedido: number;
+  nombre_proveedor: string;
+  fecha_pedido: string;
+  total: number;
+  pagado: number;
+  saldo: number;
 }
 
 export interface MovimientoDeLista {

@@ -21,6 +21,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonBorrar } from '@/componentes/formularios/boton-borrar';
 import { FormularioServicio } from '@/componentes/formularios/formulario-servicio';
 import { PanelReceta } from '@/componentes/formularios/panel-receta';
 import {
@@ -142,6 +143,7 @@ export default async function PaginaServicios({
                         productos={productosActivos}
                       />
                       <FormularioServicio servicio={s} categorias={categorias} />
+                      <BotonBorrar tabla="servicios" id={s.id_servicio} nombre={s.nombre} />
                     </div>
                   </Td>
                 </Tr>

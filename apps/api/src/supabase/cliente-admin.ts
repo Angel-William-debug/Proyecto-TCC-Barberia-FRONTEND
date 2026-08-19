@@ -7,13 +7,17 @@ import { entornoPrivado } from '../entorno';
  * Cliente con la clave de servicio. OMITE TODAS LAS POLITICAS RLS.
  *
  * Usarlo equivale a operar como superusuario de la base. Solo se justifica en
- * tres lugares, todos ellos en el servidor y sin intervencion del usuario:
+ * dos lugares, ambos en el servidor y sin intervencion del usuario:
  *
  *   1. El alta de un usuario, que debe escribir en `auth.users` y en
- *      `public.usuarios` de forma coordinada (CU-001).
+ *      `public.usuarios` de forma coordinada (CU-019, no CU-001: ese es el
+ *      inicio de sesion).
  *   2. La Edge Function de recordatorios, que corre sin sesion (RN-050).
- *   3. La escritura de `recomendaciones_ml` desde el microservicio de ML
- *      (CU-013).
+ *
+ * Las recomendaciones (CU-013) NO usan este cliente: el motor corre embebido
+ * en `apps/api` con `clienteServidor()`, no en un microservicio aparte -ver
+ * `modulos/recomendaciones.ts`-, asi que respeta RLS como cualquier otra
+ * escritura.
  *
  * Para cualquier otra cosa se usa `clienteServidor()`. Si una consulta falla
  * por permisos, la respuesta correcta casi siempre es revisar la politica RLS,

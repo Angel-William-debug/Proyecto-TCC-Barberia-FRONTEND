@@ -1,7 +1,7 @@
 /** Accion de servidor de las compras (CU-017). */
 'use server';
 
-import { crearPedido, exigirSesion } from '@barber-shop/api';
+import { crearPagoProveedor, crearPedido, exigirSesion } from '@barber-shop/api';
 import { ESTADOS_PEDIDO, type EstadoPedido } from '@barber-shop/tipos';
 
 import { Validacion, ejecutar, lineas, numero, texto } from './base';
@@ -61,5 +61,24 @@ export async function guardarOrden(datos: FormData): Promise<ResultadoAccion> {
       estado: estadoBruto as EstadoPedido,
       lineas: lineasPedido,
     }),
+  );
+}
+
+/** Alta de un pago al proveedor (CU-018). La base valida RN-028 y CU-018 A1. */
+export async function guardarPagoProveedor(datos: FormData): Promise<ResultadoAccion> {
+  await exigirSesion();
+
+  const idPedido = numero(datos, 'id_pedido');
+  const idMetodoPago = numero(datos, 'id_metodo_pago');
+  const monto = numero(datos, 'monto');
+
+  const v = new Validacion();
+  v.exigir(idPedido !== null, 'id_pedido', 'Elija la orden a pagar.');
+  v.exigir(idMetodoPago !== null, 'id_metodo_pago', 'Elija el método de pago.');
+  v.exigir(monto !== null && monto > 0, 'monto', 'El monto debe ser mayor a cero.');
+  if (v.hayErrores) return v.resultado;
+
+  return ejecutar('/panel/compras', () =>
+    crearPagoProveedor({ idPedido: idPedido!, idMetodoPago: idMetodoPago!, monto: monto! }),
   );
 }

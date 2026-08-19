@@ -25,6 +25,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonBorrar } from '@/componentes/formularios/boton-borrar';
 import { FormularioCliente } from '@/componentes/formularios/formulario-cliente';
 import {
   ETIQUETAS_ACTIVO,
@@ -126,6 +127,7 @@ export default async function PaginaClientes({
                         />
                       </Link>
                       <FormularioCliente cliente={c} />
+                      <BotonBorrar tabla="clientes" id={c.id_cliente} nombre={c.nombre} />
                     </div>
                   </Td>
                 </Tr>
