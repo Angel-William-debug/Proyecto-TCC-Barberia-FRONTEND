@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { exigirSesion, generarFacturaPdf } from '@barber-shop/api';
+import { exigirSesion, generarFacturaPdf, MODO_DEMO } from '@barber-shop/api';
 
 /** Descarga del PDF de una factura (CU-025, anexo). */
 export async function GET(
@@ -13,6 +13,13 @@ export async function GET(
   const idFactura = Number(id);
   if (!Number.isFinite(idFactura)) {
     return new NextResponse('Factura inválida.', { status: 400 });
+  }
+
+  if (MODO_DEMO) {
+    return new NextResponse(
+      'El modo demostración no tiene facturas reales que descargar.',
+      { status: 403 },
+    );
   }
 
   try {

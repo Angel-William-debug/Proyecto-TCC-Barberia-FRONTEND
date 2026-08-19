@@ -4,6 +4,7 @@ import {
   exigirSesion,
   exportarReporteExcel,
   exportarReportePdf,
+  MODO_DEMO,
   TIPOS_REPORTE,
   type TipoReporte,
 } from '@barber-shop/api';
@@ -30,6 +31,15 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   if (!esTipoReporte(tipo)) {
     return new NextResponse('Tipo de reporte inválido.', { status: 400 });
+  }
+
+  // 403 y no 500: no es una falla, es una restricción a proposito del modo
+  // demostracion, que no tiene datos reales que exportar.
+  if (MODO_DEMO) {
+    return new NextResponse(
+      'El modo demostración no puede exportar: no hay datos reales que exportar.',
+      { status: 403 },
+    );
   }
 
   const filtro = {

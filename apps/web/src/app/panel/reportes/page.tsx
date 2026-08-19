@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {
   comisionesPendientes,
   ingresosPorPeriodo,
+  MODO_DEMO,
   previsualizarReporte,
   resumenKpis,
   stockCritico,
@@ -235,18 +236,24 @@ export default async function PaginaReportes({
             {previsualizacion.titulo}
             {previsualizacion.filas.length >= 50 && ' · vista previa limitada a 50 filas'}
           </p>
-          <div className="flex gap-2">
-            <Link href={`/panel/reportes/exportar?${queryExportar.toString()}&formato=excel`}>
-              <Boton variante="secundario" icono="download">
-                Excel
-              </Boton>
-            </Link>
-            <Link href={`/panel/reportes/exportar?${queryExportar.toString()}&formato=pdf`}>
-              <Boton variante="secundario" icono="download">
-                PDF
-              </Boton>
-            </Link>
-          </div>
+          {MODO_DEMO ? (
+            <p className="text-cuerpo-sm text-terciario">
+              La exportación no está disponible en modo demostración.
+            </p>
+          ) : (
+            <div className="flex gap-2">
+              <Link href={`/panel/reportes/exportar?${queryExportar.toString()}&formato=excel`}>
+                <Boton variante="secundario" icono="download">
+                  Excel
+                </Boton>
+              </Link>
+              <Link href={`/panel/reportes/exportar?${queryExportar.toString()}&formato=pdf`}>
+                <Boton variante="secundario" icono="download">
+                  PDF
+                </Boton>
+              </Link>
+            </div>
+          )}
         </div>
 
         <Tabla titulo={previsualizacion.titulo}>
