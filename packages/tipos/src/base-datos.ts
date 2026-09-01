@@ -127,6 +127,14 @@ export interface Cliente extends AuditoriaTemporal, BorradoLogico {
   id_cliente: number;
   /** Usuario que lo registro, NO el cliente como usuario del sistema. */
   id_usuario_reg: number | null;
+  /**
+   * Cuenta con la que este cliente entra al portal.
+   *
+   * `null` cuando lo registro el mostrador y nunca abrio una cuenta, que es el
+   * caso de quien pasa una vez. No confundir con `id_usuario_reg`: aquel es
+   * quien lo dio de alta, este es el.
+   */
+  id_usuario: number | null;
   nombre: string;
   email: string | null;
   /** NOT NULL desde la migracion de validaciones. */
@@ -792,8 +800,57 @@ export interface VistaAuditoriaDetalle {
 }
 
 // ---------------------------------------------------------------------------
+// Catalogo publico del portal del cliente
+//
+// Las tres vistas `v_publico_*` son las unicas del sistema declaradas SIN
+// `security_invoker`: se ejecutan con los permisos de su dueno y atraviesan
+// RLS. Por eso exponen una lista de columnas corta y elegida a mano —
+// `v_publico_barberos` omite `porcentaje_com` a proposito—, y por eso `anon`
+// puede leerlas: la portada muestra precios y horarios sin pedir sesion.
+// ---------------------------------------------------------------------------
+
+export interface VistaPublicoServicio {
+  id_servicio: number;
+  nombre: string;
+  descripcion: string | null;
+  categoria: string;
+  duracion_min: number;
+  precio_base: number;
+}
+
+export interface VistaPublicoBarbero {
+  id_profesional: number;
+  nombre: string;
+  especialidad: string | null;
+}
+
+export interface VistaPublicoHorario {
+  /** 0 = domingo ... 6 = sabado. */
+  dia_semana: number;
+  hora_apertura: string;
+  hora_cierre: string;
+  activo: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // Funciones RPC expuestas por la base
 // ---------------------------------------------------------------------------
+
+/**
+ * Una fila de `fn_turnos_disponibles(p_fecha, p_duracion_min, ...)`.
+ *
+ * `barberos_disponibles` es la capacidad real de esa franja: cuantos turnos
+ * simultaneos entran. No sale de un cupo configurado sino de cuantos barberos
+ * activos quedan libres, asi que baja sola cuando uno se desactiva.
+ */
+export interface FranjaDisponible {
+  /** ISO 8601 con zona. Es lo que se manda como `fecha_hora` al agendar. */
+  inicio: string;
+  /** `HH:mm:ss` en la zona horaria de la barberia. Para mostrar, no para enviar. */
+  hora_local: string;
+  barberos_disponibles: number;
+  ids_barberos: number[];
+}
 
 /** Resultado de `fn_generar_resumen_kpis(p_desde, p_hasta)`. */
 export interface ResumenKpis {

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { listarAlertas, MODO_DEMO, usuarioActual } from '@barber-shop/api';
+import { usaElPortal } from '@barber-shop/tipos';
 import { Boton, EstadoVacio, Tarjeta } from '@barber-shop/ui';
 
 import { AvisoDemo } from '@/componentes/armazon/aviso-demo';
@@ -64,6 +65,14 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
 
   if (!usuario) {
     redirect('/ingresar');
+  }
+
+  // El cliente no tiene lugar en el panel: `MODULOS_POR_ROL.cliente` esta
+  // vacio, asi que veria una barra lateral sin una sola entrada. Su zona es el
+  // portal. Aca se hace la separacion por rol que el middleware evita hacer
+  // para no consultar la base en cada peticion; ver `middleware.ts`.
+  if (usaElPortal(usuario.rol)) {
+    redirect('/mi-cuenta');
   }
 
   const entradas = menuPara(usuario.rol);

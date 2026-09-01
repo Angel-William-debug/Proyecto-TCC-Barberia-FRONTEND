@@ -190,6 +190,11 @@ export const CLIENTES_DEMO: Cliente[] = NOMBRES_CLIENTES.map(([nombre, telefono,
   vigente({
     id_cliente: i + 1,
     id_usuario_reg: 1,
+    // Solo los que tienen correo pueden tener cuenta en el portal, y ni
+    // siquiera todos: la mayoria de los clientes de una barberia los registra
+    // el mostrador y nunca abren una. La proporcion -uno de cada tres- deja la
+    // columna «Cuenta» de la lista de clientes con los dos casos a la vista.
+    id_usuario: email && i % 3 === 0 ? 100 + i : null,
     nombre,
     email,
     telefono,

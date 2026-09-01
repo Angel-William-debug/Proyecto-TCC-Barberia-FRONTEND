@@ -63,7 +63,14 @@ export const MODULOS = [
 ] as const;
 export type Modulo = (typeof MODULOS)[number];
 
-/** Refleja las politicas RLS. La base sigue siendo la autoridad. */
+/**
+ * Refleja las politicas RLS. La base sigue siendo la autoridad.
+ *
+ * `cliente` esta vacio y va a seguir estandolo: no es que le falten permisos,
+ * es que no usa el panel. Su lugar es el portal (`/mi-cuenta`), que tiene su
+ * propia navegacion en `SECCIONES_PORTAL` porque no comparte ni el armazon ni
+ * la identidad visual con las pantallas del mostrador.
+ */
 export const MODULOS_POR_ROL: Record<NombreRol, readonly Modulo[]> = {
   administrador: MODULOS,
   recepcionista: [
@@ -73,6 +80,11 @@ export const MODULOS_POR_ROL: Record<NombreRol, readonly Modulo[]> = {
   profesional: ['agenda', 'comisiones'],
   cliente: [],
 };
+
+/** Un rol usa el panel del mostrador, o usa el portal. Nunca los dos. */
+export function usaElPortal(rol: NombreRol): boolean {
+  return rol === 'cliente';
+}
 
 // ---------------------------------------------------------------------------
 // Composiciones de lectura
@@ -382,4 +394,106 @@ export interface FacturaCompleta extends FacturaDeLista {
     precio_unitario: number;
     subtotal: number;
   }>;
+}
+
+// ---------------------------------------------------------------------------
+// Portal del cliente
+//
+// El portal es la mitad de la plataforma que usa quien viene a cortarse el
+// pelo. Comparte la base de datos y `apps/api` con el panel del mostrador, y
+// no comparte nada mas: ni armazon, ni navegacion, ni la sensacion de estar
+// frente a un sistema de gestion.
+//
+// Lo que puede hacer, y no mas que eso: reservar un turno viendo que hay
+// libre, consultar sus turnos, y mirar su historial y sus facturas. Todo lo
+// demas -precios de costo, comisiones, inventario, otros clientes- no le
+// llega, y no porque la pantalla no lo muestre sino porque las politicas RLS
+// del rol `cliente` no lo devuelven.
+// ---------------------------------------------------------------------------
+
+/** Las secciones del portal, en el orden en que aparecen en su navegacion. */
+export const SECCIONES_PORTAL = ['reservar', 'turnos', 'historial', 'perfil'] as const;
+export type SeccionPortal = (typeof SECCIONES_PORTAL)[number];
+
+/**
+ * Alta de cuenta desde el registro publico (CU-001).
+ *
+ * Es lo unico que se le pide a alguien para poder reservar. El telefono va
+ * porque `clientes.telefono` es NOT NULL desde la migracion de validaciones y
+ * porque es como la barberia avisa si algo cambia.
+ */
+export interface EntradaRegistroCliente {
+  nombre: string;
+  email: string;
+  telefono: string;
+  password: string;
+}
+
+/** La ficha del cliente tal como el la ve. Sin `notas_internas` (RN-008). */
+export interface PerfilCliente {
+  idCliente: number;
+  nombre: string;
+  email: string | null;
+  telefono: string;
+  direccion: string | null;
+  fechaNacimiento: string | null;
+  fechaRegistro: string;
+}
+
+/** Lo que el cliente puede cambiar de su propia ficha. */
+export interface CambiosPerfilCliente {
+  nombre: string;
+  telefono: string;
+  direccion?: string;
+  fechaNacimiento?: string;
+}
+
+/**
+ * Un turno en la lista del cliente.
+ *
+ * Trae el nombre del barbero y de los servicios ya resueltos, y la duracion
+ * total, que es la respuesta a «cuanto me va a llevar» — la pregunta que el
+ * mostrador contesta de memoria y el portal tiene que contestar solo.
+ */
+export interface TurnoDelCliente {
+  idCita: number;
+  fechaHora: string;
+  fechaHoraFin: string;
+  estado: EstadoCita;
+  duracionTotalMin: number;
+  total: number;
+  observaciones: string | null;
+  servicios: Array<{
+    idServicio: number;
+    nombre: string;
+    barbero: string;
+    duracionMin: number;
+    precio: number;
+  }>;
+  /** `true` mientras el turno se pueda cancelar desde el portal. */
+  cancelable: boolean;
+}
+
+/**
+ * Reserva hecha desde el portal.
+ *
+ * No lleva `idCliente`: sale de la sesion. Pedirlo permitiria mandar el de
+ * otro, y aunque RLS lo rechazaria, un contrato que invita a intentarlo esta
+ * mal escrito.
+ */
+export interface EntradaReserva {
+  /** ISO 8601 con zona, tal como lo devuelve `FranjaDisponible.inicio`. */
+  fechaHora: string;
+  idServicio: number;
+  idProfesional: number;
+  observaciones?: string;
+}
+
+/** Una factura en la lista del portal. Igual que la del panel, sin el cliente. */
+export interface FacturaDelCliente {
+  idFactura: number;
+  idCita: number;
+  fechaEmision: string;
+  total: number;
+  estado: EstadoFactura;
 }

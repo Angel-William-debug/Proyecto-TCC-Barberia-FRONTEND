@@ -96,9 +96,19 @@ export default function Portada() {
 
           <div className="flex items-center gap-2">
             <SelectorTema />
-            <Link href="/ingresar">
+            {/* Dos accesos y no uno: la portada la miran dos publicos muy
+                distintos. Quien viene a cortarse el pelo reserva; quien
+                trabaja en la barberia entra al panel. El primario es el del
+                cliente porque es el que llega sin que nadie le explique
+                nada. */}
+            <Link href="/ingresar" className="hidden sm:block">
+              <Boton variante="secundario" tamano="sm">
+                Soy de la barbería
+              </Boton>
+            </Link>
+            <Link href="/mi-cuenta">
               <Boton variante="primario" tamano="sm">
-                Ingresar
+                Reservar turno
               </Boton>
             </Link>
           </div>
@@ -131,9 +141,14 @@ export default function Portada() {
                   son detalles de construcción que no le dicen nada a quien va
                   a usar la barbería. La galería sigue disponible escribiendo
                   /sistema-de-diseno, para revisiones y capturas del TCC. */}
-              <div className="mt-8">
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href="/mi-cuenta">
+                  <Boton variante="primario" tamano="lg" icono="calendar-days">
+                    Reservar mi turno
+                  </Boton>
+                </Link>
                 <Link href="/ingresar">
-                  <Boton variante="primario" tamano="lg" icono="log-out">
+                  <Boton variante="secundario" tamano="lg" icono="log-out">
                     Ingresar al sistema
                   </Boton>
                 </Link>

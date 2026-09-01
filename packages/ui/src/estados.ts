@@ -157,7 +157,7 @@ export const PRESENTACION_ROL: Record<NombreRol, Presentacion> = {
     etiqueta: 'Cliente',
     tono: 'neutro',
     icono: 'user-round',
-    ayuda: 'Rol reservado. Hoy sin acceso a la interfaz',
+    ayuda: 'Usa el portal, no el panel: reserva y consulta sus propios turnos',
   },
 };
 

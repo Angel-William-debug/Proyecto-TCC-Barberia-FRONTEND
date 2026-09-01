@@ -20,6 +20,24 @@ export { ErrorAplicacion, traducirError, ejecutar } from './errores';
 // --- Sesion ----------------------------------------------------------------
 export { usuarioActual, exigirSesion } from './modulos/sesion';
 
+// --- Portal del cliente ------------------------------------------------------
+// Fuera del orden de la barra lateral porque no esta en la barra lateral: es
+// la otra mitad del sistema, la que usa quien viene a cortarse el pelo.
+export {
+  sesionPortal,
+  registrarCliente,
+  catalogoServicios,
+  barberosPublicos,
+  horariosPublicos,
+  turnosDisponibles,
+  misTurnos,
+  reservarTurno,
+  cancelarMiTurno,
+  miPerfil,
+  actualizarMiPerfil,
+  misFacturas,
+} from './modulos/portal';
+
 // --- Agenda ----------------------------------------------------------------
 export {
   listarAgenda,

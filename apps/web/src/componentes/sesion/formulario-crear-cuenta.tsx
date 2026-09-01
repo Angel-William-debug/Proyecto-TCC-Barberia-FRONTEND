@@ -1,78 +1,60 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type FormEvent } from 'react';
+import { useState, useTransition, type FormEvent } from 'react';
 
 import { MODO_DEMO } from '@barber-shop/api/demo';
-import { clienteNavegador } from '@barber-shop/api/navegador';
-import { Boton, Campo, Icono } from '@barber-shop/ui';
+import { AvisoFormulario, Boton, Campo, Icono } from '@barber-shop/ui';
+
+import { accionRegistrarCliente } from '@/acciones/portal';
 
 /**
- * CU-001 — alta de cuenta.
+ * CU-001 — alta de cuenta de cliente.
  *
- * Crea la credencial en Supabase Auth. NO crea la fila de `public.usuarios`
- * ni asigna rol: eso lo hace el administrador desde Configuración, porque el
- * rol determina qué puede ver cada persona y no puede quedar a elección de
- * quien se registra.
+ * QUE CAMBIO Y POR QUE
  *
- * Por eso, hasta que un administrador habilite la cuenta, quien se registre
- * podrá autenticarse pero no entrar al panel: `usuarioActual()` devuelve null
- * si no encuentra su fila en `public.usuarios`.
+ * Antes esto llamaba a `auth.signUp()` desde el navegador y no creaba ni la
+ * fila de `public.usuarios` ni la ficha de `clientes`: dejaba una cuenta de
+ * Auth suelta y un cartel que decia «un administrador debe habilitar su
+ * cuenta». Quien se registraba no podia hacer nada hasta que alguien de la
+ * barberia se acordara de el.
+ *
+ * Ahora el registro publico es del cliente y se completa solo: la accion de
+ * servidor crea la credencial, el usuario con rol `cliente` y su ficha, las
+ * tres enlazadas. Al confirmar el correo ya puede reservar.
+ *
+ * EL ROL NO ES UN CAMPO DE ESTE FORMULARIO, y no por descuido. Quien se
+ * registra por su cuenta es siempre un cliente; el personal de la barberia lo
+ * da de alta el Administrador desde `/panel/usuarios`, por invitacion. Si el
+ * rol se pudiera elegir aca, cualquiera se haria administrador.
  */
 export function FormularioCrearCuenta() {
   const [error, setError] = useState<string | null>(null);
+  const [errores, setErrores] = useState<Record<string, string>>({});
   const [listo, setListo] = useState(false);
-  const [enviando, setEnviando] = useState(false);
+  const [enviando, iniciar] = useTransition();
 
-  async function enviar(evento: FormEvent<HTMLFormElement>) {
+  function enviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    setError(null);
-
     const datos = new FormData(evento.currentTarget);
-    const nombre = String(datos.get('nombre') ?? '').trim();
-    const email = String(datos.get('email') ?? '').trim();
-    const password = String(datos.get('password') ?? '');
-    const repetir = String(datos.get('repetir') ?? '');
 
-    if (password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres.');
-      return;
-    }
-
-    if (password !== repetir) {
-      setError('Las dos contraseñas no coinciden.');
-      return;
-    }
-
-    setEnviando(true);
+    setError(null);
+    setErrores({});
 
     if (MODO_DEMO) {
       setListo(true);
-      setEnviando(false);
       return;
     }
 
-    try {
-      const { error: errorAuth } = await clienteNavegador().auth.signUp({
-        email,
-        password,
-        options: { data: { nombre } },
-      });
-
-      if (errorAuth) {
-        // No se distingue «ese correo ya existe» de otros fallos: revelarlo
-        // permitiría averiguar qué cuentas están dadas de alta.
-        setError('No se pudo crear la cuenta. Revise los datos e intente de nuevo.');
-        setEnviando(false);
+    iniciar(async () => {
+      const r = await accionRegistrarCliente(datos);
+      if (!r.ok) {
+        setError(r.error);
+        setErrores(r.campos ?? {});
         return;
       }
-
       setListo(true);
-      setEnviando(false);
-    } catch {
-      setError('No se pudo conectar con el servidor. Revise su conexión e intente de nuevo.');
-      setEnviando(false);
-    }
+    });
   }
 
   if (listo) {
@@ -83,9 +65,8 @@ export function FormularioCrearCuenta() {
         </span>
         <h2 className="text-titulo-3 text-principal mt-4 font-semibold">Cuenta creada</h2>
         <p className="text-cuerpo-sm text-secundario medida-lectura mx-auto mt-2">
-          Le enviamos un correo para confirmar su dirección. Después de confirmarla, un
-          administrador debe habilitar su cuenta y asignarle un rol antes de que pueda ingresar
-          al sistema.
+          Le enviamos un correo para confirmar su dirección. Cuando la confirme puede ingresar
+          y reservar su turno.
         </p>
         <Link href="/ingresar" className="mt-6 inline-block">
           <Boton variante="primario">Ir a iniciar sesión</Boton>
@@ -96,21 +77,14 @@ export function FormularioCrearCuenta() {
 
   return (
     <form onSubmit={enviar} className="flex flex-col gap-5" noValidate>
-      {error && (
-        <div
-          role="alert"
-          className="border-peligro text-peligro text-cuerpo-sm flex items-start gap-2 rounded-md border bg-[var(--chip-peligro-fondo)] p-3"
-        >
-          <Icono nombre="circle-alert" tamano="sm" className="mt-0.5" />
-          <span>{error}</span>
-        </div>
-      )}
+      {error && <AvisoFormulario mensaje={error} />}
 
       <Campo
         etiqueta="Nombre y apellido"
         name="nombre"
         autoComplete="name"
         placeholder="Juan González"
+        error={errores.nombre}
         required
       />
 
@@ -119,7 +93,21 @@ export function FormularioCrearCuenta() {
         name="email"
         type="email"
         autoComplete="email"
-        placeholder="nombre@barbershop.com.py"
+        placeholder="nombre@correo.com.py"
+        error={errores.email}
+        required
+      />
+
+      {/* El telefono es obligatorio porque `clientes.telefono` es NOT NULL
+          desde la migracion de validaciones, y porque es como la barberia
+          avisa si hay que mover un turno. */}
+      <Campo
+        etiqueta="Teléfono"
+        name="telefono"
+        type="tel"
+        autoComplete="tel"
+        placeholder="0981 123 456"
+        error={errores.telefono}
         required
       />
 
@@ -129,6 +117,7 @@ export function FormularioCrearCuenta() {
         type="password"
         autoComplete="new-password"
         ayuda="Al menos 8 caracteres"
+        error={errores.password}
         required
       />
 
@@ -137,6 +126,7 @@ export function FormularioCrearCuenta() {
         name="repetir"
         type="password"
         autoComplete="new-password"
+        error={errores.repetir}
         required
       />
 
