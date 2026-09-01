@@ -10,7 +10,7 @@ import { BotonSalir } from '@/componentes/armazon/boton-salir';
 import { CampanaAlertas } from '@/componentes/armazon/campana-alertas';
 import { MarcoPanel } from '@/componentes/armazon/marco-panel';
 import { SelectorTema } from '@/componentes/armazon/selector-tema';
-import { menuPara } from '@/lib/navegacion';
+import { gruposPara, menuPara } from '@/lib/navegacion';
 
 /**
  * Ninguna vista del panel se puede prerenderizar: todas dependen de la sesión
@@ -76,6 +76,7 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
   }
 
   const entradas = menuPara(usuario.rol);
+  const grupos = gruposPara(usuario.rol);
 
   // La campanita solo se ofrece a quien ya tiene Inventario en su menu: el
   // enlace que abre lleva ahi, y mostrarla a quien no puede entrar solo
@@ -87,7 +88,7 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
 
   return (
     <MarcoPanel
-      entradas={entradas}
+      grupos={grupos}
       usuario={{ nombre: usuario.nombre, rol: usuario.rol }}
       aviso={MODO_DEMO ? <AvisoDemo /> : undefined}
       acciones={

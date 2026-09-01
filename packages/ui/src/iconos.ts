@@ -62,6 +62,7 @@ import {
   TrendingDown,
   TrendingUp,
   TriangleAlert,
+  Trophy,
   Truck,
   UserRound,
   UserX,
@@ -95,6 +96,7 @@ export const ICONOS = {
   brain: Brain,
   'scroll-text': ScrollText,
   bell: Bell,
+  trophy: Trophy,
 
   // Estados
   'check-check': CheckCheck,

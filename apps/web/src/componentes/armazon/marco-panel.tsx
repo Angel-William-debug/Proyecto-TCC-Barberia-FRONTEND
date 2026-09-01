@@ -7,7 +7,7 @@ import { BotonIcono, cn } from '@barber-shop/ui';
 import type { NombreRol } from '@barber-shop/tipos';
 
 import { BarraLateral } from './barra-lateral';
-import type { EntradaMenu } from '@/lib/navegacion';
+import type { EntradaMenu, NombreGrupo } from '@/lib/navegacion';
 
 /**
  * Armazón del panel (sección 6.5 del sistema de diseño).
@@ -25,13 +25,13 @@ import type { EntradaMenu } from '@/lib/navegacion';
  *    con Escape, y al tocar fuera.
  */
 export function MarcoPanel({
-  entradas,
+  grupos,
   usuario,
   acciones,
   aviso,
   children,
 }: {
-  entradas: EntradaMenu[];
+  grupos: Array<{ grupo: NombreGrupo; entradas: EntradaMenu[] }>;
   usuario: { nombre: string; rol: NombreRol };
   acciones: ReactNode;
   /** Franja de ancho completo sobre todo lo demás. Hoy, el aviso de demostración. */
@@ -72,7 +72,7 @@ export function MarcoPanel({
       <div className="flex min-h-0 flex-1">
         {/* Barra lateral de escritorio: fija, nunca se desplaza con el contenido */}
         <div className="hidden lg:flex">
-          <BarraLateral entradas={entradas} usuario={usuario} />
+          <BarraLateral grupos={grupos} usuario={usuario} />
         </div>
 
       {/* Cajón de móvil */}
@@ -85,7 +85,7 @@ export function MarcoPanel({
             className="absolute inset-0 bg-[var(--fondo-velo)]"
           />
           <div className="animate-in slide-in-from-left relative h-full w-[264px] duration-200">
-            <BarraLateral entradas={entradas} usuario={usuario} />
+            <BarraLateral grupos={grupos} usuario={usuario} />
             <div className="absolute top-3 -right-12">
               <BotonIcono
                 icono="x"

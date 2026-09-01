@@ -29,9 +29,38 @@ export async function usuarioActual(): Promise<UsuarioSesion | null> {
 
   if (!user) return null;
 
-  const { data, error } = await supabase
+  /**
+   * La forma de la fila, escrita a mano.
+   *
+   * Con el `!nombre_de_la_clave` del select, los tipos generados de Supabase
+   * dejan de inferir la relacion y devuelven `GenericStringError`. El dato
+   * llega bien -esta comprobado contra la base real-, es la inferencia la que
+   * no acompana esa sintaxis. Declarar la forma aca es preferible a volver al
+   * select ambiguo, que compilaba y fallaba en ejecucion.
+   */
+  interface FilaSesion {
+    id_usuario: number;
+    nombre: string;
+    email: string;
+    estado: boolean;
+    roles: { nombre: string } | { nombre: string }[] | null;
+    profesionales: { id_profesional: number } | { id_profesional: number }[] | null;
+  }
+
+  const { data: fila, error } = await supabase
     .from('usuarios')
-    .select('id_usuario, nombre, email, estado, roles(nombre), profesionales(id_profesional)')
+    // `profesionales` va con el nombre de la clave foranea, y no a secas.
+    // Hay DOS caminos entre `usuarios` y `profesionales`: `id_usuario` -el
+    // barbero es este usuario- y `deleted_user_id` -este usuario borro al
+    // barbero-, que agrego la migracion de borrado logico. Sin desambiguar,
+    // PostgREST no elige: responde PGRST201 y esta funcion devuelve null, es
+    // decir, nadie puede iniciar sesion. No se detecto antes porque el error
+    // solo aparece contra la base real, y el recorrido de prueba se hizo
+    // siempre en modo demostracion.
+    .select(
+      'id_usuario, nombre, email, estado, roles(nombre), ' +
+        'profesionales!profesionales_id_usuario_fkey(id_profesional)',
+    )
     .eq('auth_uid', user.id)
     // Un usuario borrado no entra. El filtro va en la consulta y no en una
     // comprobacion posterior: si alguna vez esta funcion cambia de forma, es
@@ -39,7 +68,9 @@ export async function usuarioActual(): Promise<UsuarioSesion | null> {
     .eq('deleted', false)
     .maybeSingle();
 
-  if (error || !data) return null;
+  if (error || !fila) return null;
+
+  const data = fila as unknown as FilaSesion;
 
   // Un usuario desactivado (CU-001) conserva su cuenta en Auth pero pierde el
   // acceso. Distinto de borrado: al desactivado se lo puede reactivar. En los

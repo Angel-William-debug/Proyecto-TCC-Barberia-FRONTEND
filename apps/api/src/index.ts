@@ -119,6 +119,16 @@ export {
   type PrevisualizacionReporte,
 } from './modulos/reportes';
 
+// --- Ranking de barberos -----------------------------------------------------
+export {
+  rankingBarberos,
+  CRITERIOS_RANKING,
+  TITULOS_CRITERIO,
+  type CriterioRanking,
+  type FilaRanking,
+  type FiltroRanking,
+} from './modulos/ranking';
+
 // --- Configuracion ---------------------------------------------------------
 export {
   obtenerConfiguracion,

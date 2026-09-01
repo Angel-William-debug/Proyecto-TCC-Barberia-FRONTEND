@@ -7,7 +7,7 @@ import { ChipEstado, Icono, PRESENTACION_ROL, cn } from '@barber-shop/ui';
 import type { NombreRol } from '@barber-shop/tipos';
 
 import { LogoHorizontal, Isotipo } from '@/componentes/marca/logo';
-import type { EntradaMenu } from '@/lib/navegacion';
+import { TITULO_GRUPO, type EntradaMenu, type NombreGrupo } from '@/lib/navegacion';
 
 /**
  * Barra lateral: 264 px desplegada, 64 px colapsada (seccion 6.5).
@@ -17,11 +17,11 @@ import type { EntradaMenu } from '@/lib/navegacion';
  * no puede sustituirse por un cambio de color.
  */
 export function BarraLateral({
-  entradas,
+  grupos,
   usuario,
   colapsada = false,
 }: {
-  entradas: EntradaMenu[];
+  grupos: Array<{ grupo: NombreGrupo; entradas: EntradaMenu[] }>;
   usuario: { nombre: string; rol: NombreRol };
   colapsada?: boolean;
 }) {
@@ -43,38 +43,61 @@ export function BarraLateral({
         </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Secciones del sistema">
-        <ul className="space-y-1">
-          {entradas.map((e) => {
-            const activa = ruta === e.ruta || ruta.startsWith(`${e.ruta}/`);
+      {/* Cada grupo es su propia `nav` con su nombre accesible, y no una sola
+          lista con encabezados sueltos: asi un lector de pantalla puede
+          saltar de un grupo a otro, que es lo mismo que hace la vista al
+          recorrer los titulillos. Colapsada, los titulos desaparecen y solo
+          queda una linea divisoria entre grupos: el ancho de 64 px no admite
+          texto, y sin separacion las catorce entradas volverian a leerse como
+          una lista continua. */}
+      <div className="flex-1 overflow-y-auto px-3 py-4">
+        {grupos.map(({ grupo, entradas }, i) => (
+          <nav
+            key={grupo}
+            aria-label={TITULO_GRUPO[grupo]}
+            className={cn(
+              i > 0 && (colapsada ? 'border-borde-sutil mt-2 border-t pt-2' : 'mt-5'),
+            )}
+          >
+            {!colapsada && (
+              <h2 className="text-titulillo text-terciario px-3 pb-2 font-semibold tracking-[0.06em] uppercase">
+                {TITULO_GRUPO[grupo]}
+              </h2>
+            )}
 
-            return (
-              <li key={e.modulo}>
-                <Link
-                  href={e.ruta}
-                  aria-current={activa ? 'page' : undefined}
-                  title={colapsada ? e.etiqueta : undefined}
-                  className={cn(
-                    'flex h-10 items-center gap-3 rounded-md px-3',
-                    'text-cuerpo transition-colors duration-[var(--movimiento-rapido)]',
-                    colapsada && 'justify-center px-0',
-                    activa
-                      ? 'bg-elevado text-principal font-medium'
-                      : 'text-secundario hover:bg-elevado hover:text-principal',
-                  )}
-                >
-                  <Icono
-                    nombre={e.icono}
-                    tamano="md"
-                    className={activa ? 'text-marca' : undefined}
-                  />
-                  {!colapsada && e.etiqueta}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+            <ul className="space-y-1">
+              {entradas.map((e) => {
+                const activa = ruta === e.ruta || ruta.startsWith(`${e.ruta}/`);
+
+                return (
+                  <li key={e.modulo}>
+                    <Link
+                      href={e.ruta}
+                      aria-current={activa ? 'page' : undefined}
+                      title={colapsada ? e.etiqueta : undefined}
+                      className={cn(
+                        'flex h-10 items-center gap-3 rounded-md px-3',
+                        'text-cuerpo transition-colors duration-[var(--movimiento-rapido)]',
+                        colapsada && 'justify-center px-0',
+                        activa
+                          ? 'bg-elevado text-principal font-medium'
+                          : 'text-secundario hover:bg-elevado hover:text-principal',
+                      )}
+                    >
+                      <Icono
+                        nombre={e.icono}
+                        tamano="md"
+                        className={activa ? 'text-marca' : undefined}
+                      />
+                      {!colapsada && e.etiqueta}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        ))}
+      </div>
 
       <div className="border-borde-sutil shrink-0 border-t p-3">
         {colapsada ? (

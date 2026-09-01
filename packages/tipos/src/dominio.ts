@@ -47,6 +47,8 @@ export interface UsuarioSesion {
  */
 export const MODULOS = [
   'agenda',
+  /** Pantalla resumen que reune los catalogos maestros en un solo apartado. */
+  'datos-generales',
   'clientes',
   'servicios',
   'profesionales',
@@ -56,6 +58,8 @@ export const MODULOS = [
   'inventario',
   'compras',
   'reportes',
+  /** Ranking de barberos por volumen, facturacion y ocupacion. */
+  'ranking',
   'configuracion',
   'usuarios',
   'papelera',
@@ -74,10 +78,15 @@ export type Modulo = (typeof MODULOS)[number];
 export const MODULOS_POR_ROL: Record<NombreRol, readonly Modulo[]> = {
   administrador: MODULOS,
   recepcionista: [
-    'agenda', 'clientes', 'servicios', 'profesionales', 'cobros', 'facturas', 'inventario',
-    'papelera',
+    'agenda', 'datos-generales', 'clientes', 'servicios', 'profesionales', 'cobros',
+    'facturas', 'inventario', 'papelera',
   ],
-  profesional: ['agenda', 'comisiones'],
+  // El ranking se le ofrece al barbero porque las tres vistas que lo alimentan
+  // ya le son legibles: `profesional_consulta` le da lectura sobre
+  // `profesionales` y `profesional_ve_lo_suyo` sobre su historial. Vera el
+  // ranking completo por volumen, que es informacion del equipo, no de nadie
+  // en particular.
+  profesional: ['agenda', 'comisiones', 'ranking'],
   cliente: [],
 };
 
