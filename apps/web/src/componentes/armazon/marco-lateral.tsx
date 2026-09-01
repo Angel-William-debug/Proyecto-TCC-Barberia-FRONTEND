@@ -6,11 +6,16 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { BotonIcono, cn } from '@barber-shop/ui';
 import type { NombreRol } from '@barber-shop/tipos';
 
-import { BarraLateral } from './barra-lateral';
-import type { EntradaMenu, NombreGrupo } from '@/lib/navegacion';
+import { BarraLateral, type GrupoBarra } from './barra-lateral';
 
 /**
- * Armazón del panel (sección 6.5 del sistema de diseño).
+ * Armazón con barra lateral (sección 6.5 del sistema de diseño).
+ *
+ * Lo usan las DOS mitades del sistema: el panel de la barbería y el portal
+ * del cliente. Antes el portal tenía el suyo propio, con navegación superior
+ * en escritorio e inferior en el teléfono; se unificó a pedido del equipo,
+ * para que quien pasa de una mitad a la otra no tenga que aprender dos formas
+ * de moverse.
  *
  * Dos cosas que resuelve y conviene no deshacer:
  *
@@ -24,18 +29,24 @@ import type { EntradaMenu, NombreGrupo } from '@/lib/navegacion';
  *    desde el botón de la barra superior, sobre un velo. Se cierra al navegar,
  *    con Escape, y al tocar fuera.
  */
-export function MarcoPanel({
+export function MarcoLateral({
   grupos,
   usuario,
+  inicio,
   acciones,
   aviso,
+  /** Ancho máximo del contenido. El portal usa una columna más angosta. */
+  anchoContenido = 'max-w-[1440px]',
   children,
 }: {
-  grupos: Array<{ grupo: NombreGrupo; entradas: EntradaMenu[] }>;
+  grupos: GrupoBarra[];
   usuario: { nombre: string; rol: NombreRol };
+  /** Adonde lleva el logotipo de la barra lateral. */
+  inicio: string;
   acciones: ReactNode;
   /** Franja de ancho completo sobre todo lo demás. Hoy, el aviso de demostración. */
   aviso?: ReactNode;
+  anchoContenido?: string;
   children: ReactNode;
 }) {
   const [abierto, setAbierto] = useState(false);
@@ -72,7 +83,7 @@ export function MarcoPanel({
       <div className="flex min-h-0 flex-1">
         {/* Barra lateral de escritorio: fija, nunca se desplaza con el contenido */}
         <div className="hidden lg:flex">
-          <BarraLateral grupos={grupos} usuario={usuario} />
+          <BarraLateral grupos={grupos} usuario={usuario} inicio={inicio} />
         </div>
 
       {/* Cajón de móvil */}
@@ -85,7 +96,7 @@ export function MarcoPanel({
             className="absolute inset-0 bg-[var(--fondo-velo)]"
           />
           <div className="animate-in slide-in-from-left relative h-full w-[264px] duration-200">
-            <BarraLateral grupos={grupos} usuario={usuario} />
+            <BarraLateral grupos={grupos} usuario={usuario} inicio={inicio} />
             <div className="absolute top-3 -right-12">
               <BotonIcono
                 icono="x"
@@ -125,7 +136,7 @@ export function MarcoPanel({
               tablas, que lleva `solo-lectores`: la ventana quedaba con DOS
               barras de desplazamiento y la barra lateral se iba hacia arriba. */}
           <main id="contenido" className="relative flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-[1440px] p-4 sm:p-6">{children}</div>
+            <div className={cn('mx-auto w-full p-4 sm:p-6', anchoContenido)}>{children}</div>
           </main>
         </div>
       </div>

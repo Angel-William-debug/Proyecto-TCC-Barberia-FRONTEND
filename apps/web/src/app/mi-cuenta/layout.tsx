@@ -33,7 +33,7 @@ export default async function LayoutPortal({ children }: { children: React.React
 
   return (
     <MarcoPortal
-      nombre={usuario.nombre}
+      usuario={{ nombre: usuario.nombre, rol: usuario.rol }}
       aviso={MODO_DEMO ? <AvisoDemo /> : undefined}
       acciones={
         <>

@@ -8,7 +8,7 @@ import { Boton, EstadoVacio, Tarjeta } from '@barber-shop/ui';
 import { AvisoDemo } from '@/componentes/armazon/aviso-demo';
 import { BotonSalir } from '@/componentes/armazon/boton-salir';
 import { CampanaAlertas } from '@/componentes/armazon/campana-alertas';
-import { MarcoPanel } from '@/componentes/armazon/marco-panel';
+import { MarcoLateral } from '@/componentes/armazon/marco-lateral';
 import { SelectorTema } from '@/componentes/armazon/selector-tema';
 import { gruposPara, menuPara } from '@/lib/navegacion';
 
@@ -87,9 +87,10 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
     : [];
 
   return (
-    <MarcoPanel
+    <MarcoLateral
       grupos={grupos}
       usuario={{ nombre: usuario.nombre, rol: usuario.rol }}
+      inicio="/panel/agenda"
       aviso={MODO_DEMO ? <AvisoDemo /> : undefined}
       acciones={
         <>
@@ -100,6 +101,6 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
       }
     >
       {children}
-    </MarcoPanel>
+    </MarcoLateral>
   );
 }

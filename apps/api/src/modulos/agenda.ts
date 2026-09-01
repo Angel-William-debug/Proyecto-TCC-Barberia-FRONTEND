@@ -13,6 +13,7 @@ import { clienteServidor } from '../supabase/cliente-servidor';
 import { ErrorAplicacion, traducirError } from '../errores';
 import { rechazarSiEsDemo } from '../compartido/escritura';
 import { uno } from '../compartido/relaciones';
+import { usuarioActual } from './sesion';
 
 /**
  * Agenda de turnos (CU-005: registrar; CU-006: modificar y cancelar).
@@ -193,11 +194,21 @@ export async function hayConflictoHorario(params: {
  * Tampoco se envian `duracion_min` ni `precio_unit`: se toman del catalogo en
  * el momento del alta, para que un cambio de precio posterior no altere
  * turnos ya agendados.
+ *
+ * `id_usuario` SI se envia: es quien gestiona el turno, es decir la persona
+ * del mostrador que lo esta cargando. Hasta el 1/9/2026 no lo escribia nadie
+ * -ni esta funcion ni el portal- y la columna estaba vacia en todos los
+ * turnos, de modo que no habia forma de saber quien habia agendado que.
+ *
+ * En el portal se deja en NULL a proposito, y ese NULL es informacion: quiere
+ * decir que el cliente se agendo solo, sin que interviniera nadie de la
+ * barberia. Por eso importa que aca no lo este.
  */
 export async function crearCita(entrada: EntradaNuevaCita): Promise<number> {
   rechazarSiEsDemo();
 
   const supabase = await clienteServidor();
+  const gestiona = await usuarioActual();
 
   if (entrada.servicios.length === 0) {
     throw new ErrorAplicacion('El turno debe incluir al menos un servicio.');
@@ -252,6 +263,7 @@ export async function crearCita(entrada: EntradaNuevaCita): Promise<number> {
     .from('citas')
     .insert({
       id_cliente: entrada.idCliente,
+      id_usuario: gestiona?.idUsuario ?? null,
       fecha_hora: entrada.fechaHora,
       observaciones: entrada.observaciones ?? null,
       estado: 'pendiente',

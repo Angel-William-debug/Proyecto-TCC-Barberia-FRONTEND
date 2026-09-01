@@ -1,5 +1,7 @@
 import { MODULOS_POR_ROL, type Modulo, type NombreRol } from '@barber-shop/tipos';
-import type { NombreIcono } from '@barber-shop/ui';
+
+
+import type { EntradaBarra, GrupoBarra } from '@/componentes/armazon/barra-lateral';
 
 /**
  * Estructura de la barra lateral (seccion 6.5 del sistema de diseno).
@@ -10,7 +12,7 @@ import type { NombreIcono } from '@barber-shop/ui';
  *
  * LAS ENTRADAS VAN AGRUPADAS
  *
- * Catorce entradas seguidas se leen como una lista, no como un sistema: hay
+ * Diecisiete entradas seguidas se leen como una lista, no como un sistema: hay
  * que recorrerlas para encontrar cualquier cosa. Los cinco grupos responden a
  * la pregunta con la que uno llega -"vengo a atender", "vengo a mantener los
  * datos", "vengo a mirar como va el negocio"- en vez de obligar a saber de
@@ -21,11 +23,8 @@ import type { NombreIcono } from '@barber-shop/ui';
  * -clientes, servicios, productos y metodos de pago-. Su primera entrada es
  * la pantalla resumen, que las reune todas con su cantidad de registros.
  */
-export interface EntradaMenu {
+export interface EntradaMenu extends EntradaBarra {
   modulo: Modulo;
-  etiqueta: string;
-  ruta: string;
-  icono: NombreIcono;
   grupo: NombreGrupo;
 }
 
@@ -123,15 +122,16 @@ export function menuPara(rol: NombreRol): EntradaMenu[] {
 }
 
 /**
- * El menu ya partido en grupos, sin los que quedaron vacios.
+ * El menu ya partido en grupos, con la forma que espera `BarraLateral`.
  *
- * Un encabezado de grupo sobre cero entradas es peor que no tener grupos: la
- * recepcionista veria «Administración» seguido de nada.
+ * Se descartan los grupos vacios: un encabezado sobre cero entradas es peor
+ * que no tener grupos, porque la recepcionista veria «Administración» seguido
+ * de nada.
  */
-export function gruposPara(rol: NombreRol): Array<{ grupo: NombreGrupo; entradas: EntradaMenu[] }> {
+export function gruposPara(rol: NombreRol): GrupoBarra[] {
   const entradas = menuPara(rol);
   return GRUPOS.map((grupo) => ({
-    grupo,
+    titulo: TITULO_GRUPO[grupo],
     entradas: entradas.filter((e) => e.grupo === grupo),
   })).filter((g) => g.entradas.length > 0);
 }
