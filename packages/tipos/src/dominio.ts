@@ -472,6 +472,8 @@ export interface TurnoDelCliente {
   duracionTotalMin: number;
   total: number;
   observaciones: string | null;
+  /** Cuando se reservó. Se muestra al desplegar la tarjeta. */
+  reservadoEn: string;
   servicios: Array<{
     idServicio: number;
     nombre: string;
@@ -489,11 +491,25 @@ export interface TurnoDelCliente {
  * No lleva `idCliente`: sale de la sesion. Pedirlo permitiria mandar el de
  * otro, y aunque RLS lo rechazaria, un contrato que invita a intentarlo esta
  * mal escrito.
+ *
+ * VARIOS SERVICIOS, UN SOLO BARBERO
+ *
+ * `idsServicio` es una lista: quien viene por corte y barba pide un turno, no
+ * dos. Los servicios se atienden seguidos y la duracion del turno es la suma,
+ * que es lo que decide que franjas se le ofrecen.
+ *
+ * El barbero, en cambio, es uno para toda la visita. El panel del mostrador si
+ * admite uno distinto por servicio -la recepcionista arma el turno con el
+ * cliente enfrente y sabe quien esta libre-, pero en el portal significaria
+ * calcular disponibilidad por tramos: el segundo barbero tiene que estar libre
+ * en el segundo tramo, no en el primero. Complica la pantalla para un caso
+ * que casi no ocurre.
  */
 export interface EntradaReserva {
   /** ISO 8601 con zona, tal como lo devuelve `FranjaDisponible.inicio`. */
   fechaHora: string;
-  idServicio: number;
+  /** Al menos uno. Se cobran y se suman en el orden en que vienen. */
+  idsServicio: number[];
   idProfesional: number;
   observaciones?: string;
 }

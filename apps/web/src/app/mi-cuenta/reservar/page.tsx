@@ -33,21 +33,30 @@ export default async function Reservar({
     return Array.isArray(v) ? v[0] : v;
   };
 
-  const servicios = await catalogoServicios();
+  const catalogo = await catalogoServicios();
 
-  const idServicio = Number(leer('servicio'));
+  // `servicio=1,3`: la misma convencion de valores multiples que usan las
+  // tablas del panel. Se conserva el orden en que el cliente los fue eligiendo.
+  const elegidos = (leer('servicio') ?? '')
+    .split(',')
+    .map((n) => Number(n))
+    .filter((n) => Number.isFinite(n) && n > 0);
+
   const fecha = leer('fecha') ?? '';
-  const servicio = servicios.find((s) => s.id_servicio === idServicio);
 
-  // Las franjas solo se piden cuando hay servicio y fecha: sin los dos no hay
-  // nada que calcular, y la duracion del servicio es parte del calculo -un
-  // corte de 30 minutos entra en huecos donde un corte con barba de 55 no-.
+  const servicios = elegidos
+    .map((id) => catalogo.find((s) => s.id_servicio === id))
+    .filter((s): s is (typeof catalogo)[number] => Boolean(s));
+
+  const duracionTotal = servicios.reduce((n, s) => n + s.duracion_min, 0);
+
+  // Las franjas solo se piden cuando hay al menos un servicio y una fecha: sin
+  // eso no hay nada que calcular. Se pide por la duracion TOTAL, no por la de
+  // cada servicio: un corte de 30 minutos entra en huecos donde un corte con
+  // barba de 75 no.
   const [franjas, barberos] =
-    servicio && fecha
-      ? await Promise.all([
-          turnosDisponibles(fecha, servicio.duracion_min),
-          barberosPublicos(),
-        ])
+    servicios.length && fecha
+      ? await Promise.all([turnosDisponibles(fecha, duracionTotal), barberosPublicos()])
       : [[], []];
 
   return (
@@ -61,15 +70,15 @@ export default async function Reservar({
       </p>
 
       <div className="mt-6">
-        <EleccionReserva servicios={servicios} hoy={hoyLocal()} />
+        <EleccionReserva servicios={catalogo} hoy={hoyLocal()} />
       </div>
 
-      {!servicio || !fecha ? (
+      {!servicios.length || !fecha ? (
         <div className="border-borde-sutil bg-superficie mt-6 rounded-lg border p-2">
           <EstadoVacio
             icono="calendar-days"
-            titulo="Elija un servicio y un día"
-            descripcion="Con esos dos datos podemos calcular qué horarios quedan libres."
+            titulo="Elija al menos un servicio y un día"
+            descripcion="Con eso podemos calcular qué horarios quedan libres y cuánto va a durar el turno."
           />
         </div>
       ) : franjas.length === 0 ? (
@@ -80,13 +89,14 @@ export default async function Reservar({
             // Los dos motivos posibles, porque desde afuera no se distinguen:
             // o la barberia no atiende ese dia, o el dia se lleno.
             descripcion={
-              'Puede que la barbería no atienda ese día o que ya esté completo. ' +
-              'Pruebe con otra fecha.'
+              'Puede que la barbería no atienda ese día, que ya esté completo, o que ' +
+              'no quede un hueco lo bastante largo para todo lo que eligió. Pruebe con ' +
+              'otra fecha o con menos servicios.'
             }
           />
         </div>
       ) : (
-        <GrillaHorarios franjas={franjas} barberos={barberos} servicio={servicio} />
+        <GrillaHorarios franjas={franjas} barberos={barberos} servicios={servicios} />
       )}
     </div>
   );

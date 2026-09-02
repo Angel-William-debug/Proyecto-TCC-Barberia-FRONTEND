@@ -29,12 +29,15 @@ import { accionReservarTurno } from '@/acciones/portal';
 export function GrillaHorarios({
   franjas,
   barberos,
-  servicio,
+  servicios,
 }: {
   franjas: FranjaDisponible[];
   barberos: VistaPublicoBarbero[];
-  servicio: VistaPublicoServicio;
+  /** Los elegidos, en orden. Se atienden seguidos y con el mismo barbero. */
+  servicios: VistaPublicoServicio[];
 }) {
+  const duracionTotal = servicios.reduce((n, s) => n + s.duracion_min, 0);
+  const precioTotal = servicios.reduce((n, s) => n + s.precio_base, 0);
   const router = useRouter();
   const [elegida, setElegida] = useState<FranjaDisponible | null>(null);
   const [idProfesional, setIdProfesional] = useState<number | null>(null);
@@ -56,8 +59,10 @@ export function GrillaHorarios({
 
     const datos = new FormData(evento.currentTarget);
     datos.set('fechaHora', elegida.inicio);
-    datos.set('idServicio', String(servicio.id_servicio));
     datos.set('idProfesional', String(idProfesional));
+    // Repetido, no separado por comas: es como el navegador envia una lista y
+    // como `datos.getAll('idServicio')` la lee del otro lado.
+    for (const s of servicios) datos.append('idServicio', String(s.id_servicio));
 
     setError(null);
     iniciar(async () => {
@@ -80,7 +85,8 @@ export function GrillaHorarios({
       <section>
         <h2 className="text-titulo-3 text-principal font-semibold">Horarios libres</h2>
         <p className="text-cuerpo-sm text-terciario mt-1">
-          {servicio.nombre} · {duracion(servicio.duracion_min)} · {guaranies(servicio.precio_base)}
+          {servicios.map((s) => s.nombre).join(' + ')} · {duracion(duracionTotal)} ·{' '}
+          {guaranies(precioTotal)}
         </p>
 
         <ul className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
@@ -181,7 +187,7 @@ export function GrillaHorarios({
               cargando={enviando}
               disabled={idProfesional == null}
             >
-              Reservar {hora(elegida.inicio)}
+              Reservar {hora(elegida.inicio)} · {guaranies(precioTotal)}
             </Boton>
           </div>
         </section>

@@ -177,6 +177,7 @@ function turno(
 
   return {
     idCita,
+    reservadoEn: new Date(inicio.getTime() - 3 * 86_400_000).toISOString(),
     fechaHora: inicio.toISOString(),
     fechaHoraFin: new Date(inicio.getTime() + duracionTotalMin * 60_000).toISOString(),
     estado,
@@ -195,7 +196,7 @@ export function turnosPortalDemo(): {
 } {
   return {
     proximos: [
-      turno(1041, 2, 10, 'confirmado', [5], 1),
+      turno(1041, 2, 10, 'confirmado', [1, 3], 1),
       turno(1046, 9, 16, 'pendiente', [1], 2),
     ],
     pasados: [

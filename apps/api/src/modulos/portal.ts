@@ -251,69 +251,36 @@ export async function turnosDisponibles(
 // Los turnos del cliente
 // ---------------------------------------------------------------------------
 
-/** Lo que PostgREST devuelve al pedir la cita con su detalle resuelto. */
+/** Una fila de `fn_mis_turnos()`. */
 interface FilaTurno {
   id_cita: number;
   fecha_hora: string;
   estado: TurnoDelCliente['estado'];
   observaciones: string | null;
   total: number;
-  detalle_cita: Array<{
-    id_servicio: number;
-    duracion_min: number;
-    precio_unit: number;
-    servicios: { nombre: string } | { nombre: string }[] | null;
-    profesionales: { nombre: string } | { nombre: string }[] | null;
-  }> | null;
-}
-
-/** PostgREST devuelve objeto o arreglo segun infiera la cardinalidad. */
-function nombreDe(valor: { nombre: string } | { nombre: string }[] | null): string {
-  if (Array.isArray(valor)) return valor[0]?.nombre ?? '';
-  return valor?.nombre ?? '';
+  reservado_en: string;
+  duracion_total_min: number;
+  fecha_hora_fin: string;
+  servicios: TurnoDelCliente['servicios'];
 }
 
 const CANCELABLES: ReadonlyArray<TurnoDelCliente['estado']> = ['pendiente', 'confirmado'];
 
-function armarTurno(fila: FilaTurno): TurnoDelCliente {
-  const lineas = fila.detalle_cita ?? [];
-  const duracionTotalMin = lineas.reduce((suma, l) => suma + l.duracion_min, 0);
-
-  return {
-    idCita: fila.id_cita,
-    fechaHora: fila.fecha_hora,
-    fechaHoraFin: new Date(
-      new Date(fila.fecha_hora).getTime() + duracionTotalMin * 60_000,
-    ).toISOString(),
-    estado: fila.estado,
-    duracionTotalMin,
-    total: fila.total,
-    observaciones: fila.observaciones,
-    servicios: lineas.map((l) => ({
-      idServicio: l.id_servicio,
-      nombre: nombreDe(l.servicios),
-      barbero: nombreDe(l.profesionales),
-      duracionMin: l.duracion_min,
-      precio: l.precio_unit,
-    })),
-    // Un turno ya pasado no se cancela aunque siga en `pendiente`: se marca
-    // `no_asistio` desde el mostrador. Ofrecer cancelarlo seria ofrecer una
-    // salida limpia a quien falto.
-    cancelable:
-      CANCELABLES.includes(fila.estado) && new Date(fila.fecha_hora).getTime() > Date.now(),
-  };
-}
-
-const SELECT_TURNO =
-  'id_cita, fecha_hora, estado, observaciones, total, ' +
-  'detalle_cita(id_servicio, duracion_min, precio_unit, servicios(nombre), profesionales(nombre))';
-
 /**
  * Los turnos del cliente, separados en los que vienen y los que ya pasaron.
  *
- * Se traen todos en una sola consulta y se parten en TypeScript en lugar de
- * hacer dos viajes: son las citas de una persona, no de la barberia entera, y
- * el volumen no justifica paginar.
+ * POR QUE UNA FUNCION DE LA BASE Y NO UNA CONSULTA CON RELACIONES EMBEBIDAS
+ *
+ * Porque la consulta embebida devolvia el nombre del servicio y el del barbero
+ * VACIOS. Una relacion embebida de PostgREST atraviesa RLS como cualquier
+ * lectura, y el rol `cliente` no tiene politica de SELECT sobre `servicios` ni
+ * sobre `profesionales` -no la puede tener: `profesionales.porcentaje_com` es
+ * la comision de cada barbero, y RLS filtra filas, no columnas-. PostgREST no
+ * falla, devuelve null y sigue, asi que la tarjeta salia con la tijera y el
+ * precio y sin decir de que servicio se trataba.
+ *
+ * `fn_mis_turnos()` resuelve los nombres del lado de la base y expone solo lo
+ * que el cliente puede ver. Ver la migracion 18.
  */
 export async function misTurnos(): Promise<{
   proximos: TurnoDelCliente[];
@@ -322,22 +289,34 @@ export async function misTurnos(): Promise<{
   if (MODO_DEMO) return turnosPortalDemo();
 
   const supabase = await clienteServidor();
-  const { data, error } = await supabase
-    .from('citas')
-    .select(SELECT_TURNO)
-    .eq('deleted', false)
-    .order('fecha_hora', { ascending: false });
+  const { data, error } = await supabase.rpc('fn_mis_turnos');
 
   if (error) throw traducirError(error);
 
-  const turnos = ((data ?? []) as unknown as FilaTurno[]).map(armarTurno);
   const ahora = Date.now();
+
+  const turnos = ((data ?? []) as FilaTurno[]).map<TurnoDelCliente>((f) => ({
+    idCita: f.id_cita,
+    fechaHora: f.fecha_hora,
+    fechaHoraFin: f.fecha_hora_fin,
+    estado: f.estado,
+    duracionTotalMin: f.duracion_total_min,
+    total: f.total,
+    observaciones: f.observaciones,
+    reservadoEn: f.reservado_en,
+    servicios: f.servicios ?? [],
+    // Un turno ya pasado no se cancela aunque siga en `pendiente`: se marca
+    // `no_asistio` desde el mostrador. Ofrecer cancelarlo seria ofrecer una
+    // salida limpia a quien falto.
+    cancelable: CANCELABLES.includes(f.estado) && new Date(f.fecha_hora).getTime() > ahora,
+  }));
 
   const vigente = (t: TurnoDelCliente) =>
     new Date(t.fechaHora).getTime() >= ahora && CANCELABLES.includes(t.estado);
 
   return {
-    // Los proximos se leen de mas cerca a mas lejos; los pasados, al reves.
+    // La funcion devuelve de mas nuevo a mas viejo. Los proximos se leen al
+    // reves: primero el que viene antes.
     proximos: turnos.filter(vigente).reverse(),
     pasados: turnos.filter((t) => !vigente(t)),
   };
@@ -379,23 +358,34 @@ export async function reservarTurno(entrada: EntradaReserva): Promise<number> {
     throw new ErrorAplicacion('Su cuenta todavia no esta habilitada para reservar turnos.');
   }
 
-  // El catalogo se lee de la vista publica y no de `servicios`: es la unica
-  // que el rol cliente puede leer, y ya filtra por activo y no borrado.
-  const { data: servicio, error: errorServicio } = await supabase
-    .from('v_publico_servicios')
-    .select('duracion_min, precio_base')
-    .eq('id_servicio', entrada.idServicio)
-    .maybeSingle();
-
-  if (errorServicio) throw traducirError(errorServicio);
-  if (!servicio) {
-    throw new ErrorAplicacion('Ese servicio ya no esta disponible.', 'RN-013');
+  if (!entrada.idsServicio.length) {
+    throw new ErrorAplicacion('El turno debe incluir al menos un servicio.');
   }
 
-  const { duracion_min, precio_base } = servicio as {
-    duracion_min: number;
-    precio_base: number;
-  };
+  // El catalogo se lee de la vista publica y no de `servicios`: es la unica
+  // que el rol cliente puede leer, y ya filtra por activo y no borrado.
+  const { data: catalogo, error: errorServicio } = await supabase
+    .from('v_publico_servicios')
+    .select('id_servicio, duracion_min, precio_base')
+    .in('id_servicio', entrada.idsServicio);
+
+  if (errorServicio) throw traducirError(errorServicio);
+
+  const porId = new Map(
+    ((catalogo ?? []) as Array<{
+      id_servicio: number;
+      duracion_min: number;
+      precio_base: number;
+    }>).map((s) => [s.id_servicio, s]),
+  );
+
+  // Se comprueban TODOS antes de escribir nada: descubrir a mitad de camino
+  // que el tercer servicio ya no existe dejaria la cita a medio armar.
+  for (const id of entrada.idsServicio) {
+    if (!porId.has(id)) {
+      throw new ErrorAplicacion('Uno de los servicios elegidos ya no esta disponible.', 'RN-013');
+    }
+  }
 
   const { data: cita, error: errorCita } = await supabase
     .from('citas')
@@ -414,14 +404,19 @@ export async function reservarTurno(entrada: EntradaReserva): Promise<number> {
 
   const idCita = (cita as { id_cita: number }).id_cita;
 
-  const { error: errorDetalle } = await supabase.from('detalle_cita').insert({
-    id_cita: idCita,
-    id_servicio: entrada.idServicio,
-    id_profesional: entrada.idProfesional,
-    duracion_min,
-    precio_unit: precio_base,
-    subtotal: precio_base,
-  });
+  const { error: errorDetalle } = await supabase.from('detalle_cita').insert(
+    entrada.idsServicio.map((id) => {
+      const s = porId.get(id)!;
+      return {
+        id_cita: idCita,
+        id_servicio: id,
+        id_profesional: entrada.idProfesional,
+        duracion_min: s.duracion_min,
+        precio_unit: s.precio_base,
+        subtotal: s.precio_base,
+      };
+    }),
+  );
 
   if (errorDetalle) {
     await supabase.from('citas').delete().eq('id_cita', idCita);

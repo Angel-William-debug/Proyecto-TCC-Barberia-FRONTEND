@@ -53,12 +53,18 @@ export async function accionRegistrarCliente(datos: FormData): Promise<Resultado
  */
 export async function accionReservarTurno(datos: FormData): Promise<ResultadoAccion> {
   const fechaHora = texto(datos, 'fechaHora');
-  const idServicio = numero(datos, 'idServicio');
   const idProfesional = numero(datos, 'idProfesional');
+
+  // Los servicios llegan como campos repetidos con el mismo nombre, que es
+  // como el navegador envia una lista sin necesidad de JavaScript.
+  const idsServicio = datos
+    .getAll('idServicio')
+    .map((v) => Number(String(v)))
+    .filter((n) => Number.isFinite(n));
 
   const v = new Validacion();
   v.exigir(Boolean(fechaHora), 'fechaHora', 'Elija un horario disponible.');
-  v.exigir(idServicio != null, 'idServicio', 'Elija el servicio que quiere.');
+  v.exigir(idsServicio.length > 0, 'idServicio', 'Elija al menos un servicio.');
   v.exigir(idProfesional != null, 'idProfesional', 'Elija con quién se quiere atender.');
 
   if (v.hayErrores) return v.resultado;
@@ -66,7 +72,7 @@ export async function accionReservarTurno(datos: FormData): Promise<ResultadoAcc
   return ejecutar(PORTAL, () =>
     reservarTurno({
       fechaHora,
-      idServicio: idServicio!,
+      idsServicio,
       idProfesional: idProfesional!,
       observaciones: textoOpcional(datos, 'observaciones') ?? undefined,
     }),
