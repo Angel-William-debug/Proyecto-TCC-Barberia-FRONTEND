@@ -10,7 +10,13 @@ import { BotonSalir } from '@/componentes/armazon/boton-salir';
 import { CampanaAlertas } from '@/componentes/armazon/campana-alertas';
 import { MarcoLateral } from '@/componentes/armazon/marco-lateral';
 import { SelectorTema } from '@/componentes/armazon/selector-tema';
-import { gruposPara, menuPara } from '@/lib/navegacion';
+import {
+  RUTAS_AREA_CONFIGURACION,
+  SALIDA_AREA_CONFIGURACION,
+  gruposConfiguracionPara,
+  gruposPara,
+  menuPara,
+} from '@/lib/navegacion';
 
 /**
  * Ninguna vista del panel se puede prerenderizar: todas dependen de la sesión
@@ -78,6 +84,14 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
   const entradas = menuPara(usuario.rol);
   const grupos = gruposPara(usuario.rol);
 
+  // El area de configuracion existe solo para quien tiene el modulo. La
+  // recepcionista alcanza la Papelera y nada mas: encerrarle esa unica
+  // pantalla detras de una puerta -con su barra propia y su «Volver al
+  // sistema»- seria un paso de mas para llegar al mismo lado. La ve suelta en
+  // la barra del sistema, como estaba antes. Ver `gruposPara`.
+  const tieneConfiguracion = entradas.some((e) => e.modulo === 'configuracion');
+  const areaConfiguracion = tieneConfiguracion ? gruposConfiguracionPara(usuario.rol) : [];
+
   // La campanita solo se ofrece a quien ya tiene Inventario en su menu: el
   // enlace que abre lleva ahi, y mostrarla a quien no puede entrar solo
   // generaria una alerta sin adonde ir.
@@ -89,6 +103,15 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
   return (
     <MarcoLateral
       grupos={grupos}
+      area={
+        areaConfiguracion.length > 0
+          ? {
+              rutas: RUTAS_AREA_CONFIGURACION,
+              grupos: areaConfiguracion,
+              volver: { etiqueta: 'Volver al sistema', ruta: SALIDA_AREA_CONFIGURACION },
+            }
+          : undefined
+      }
       usuario={{ nombre: usuario.nombre, rol: usuario.rol }}
       inicio="/panel/agenda"
       aviso={MODO_DEMO ? <AvisoDemo /> : undefined}

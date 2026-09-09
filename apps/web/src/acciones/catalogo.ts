@@ -212,7 +212,7 @@ const RUTA: Record<TablaEscribible, string> = {
   proveedores: '/panel/compras',
   categorias_servicio: '/panel/servicios',
   categorias_producto: '/panel/inventario',
-  metodos_pago: '/panel/configuracion',
+  metodos_pago: '/panel/configuracion/metodos-pago',
   servicio_producto: '/panel/servicios',
   cobros_cliente: '/panel/cobros',
   facturas: '/panel/facturas',

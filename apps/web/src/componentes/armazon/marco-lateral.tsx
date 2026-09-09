@@ -28,9 +28,25 @@ import { BarraLateral, type GrupoBarra } from './barra-lateral';
  * 2. EN MÓVIL LA BARRA ES UN CAJÓN. Por debajo de `lg` desaparece y se abre
  *    desde el botón de la barra superior, sobre un velo. Se cierra al navegar,
  *    con Escape, y al tocar fuera.
+ *
+ * 3. HAY UN ÁREA QUE REEMPLAZA LA BARRA. Al entrar en Configuración, la barra
+ *    del sistema deja lugar a la del área, con su propio juego de grupos y un
+ *    enlace «Volver al sistema» arriba. Se resuelve acá, mirando la ruta, y no
+ *    con dos layouts de Next.js: dos layouts obligarían a resolver la sesión
+ *    dos veces por petición -`usuarioActual()` no está memorizada- y a mover de
+ *    carpeta las diecisiete rutas del panel. Ver `RUTAS_AREA_CONFIGURACION`.
  */
+/** Un juego de navegación que reemplaza al del sistema mientras se está adentro. */
+export interface AreaBarra {
+  /** Las rutas que pertenecen al área. Una ruta y sus hijas cuentan. */
+  rutas: string[];
+  grupos: GrupoBarra[];
+  volver: { etiqueta: string; ruta: string };
+}
+
 export function MarcoLateral({
   grupos,
+  area,
   usuario,
   inicio,
   acciones,
@@ -40,6 +56,8 @@ export function MarcoLateral({
   children,
 }: {
   grupos: GrupoBarra[];
+  /** El área que se adueña de la barra en sus rutas. Hoy, Configuración. */
+  area?: AreaBarra;
   usuario: { nombre: string; rol: NombreRol };
   /** Adonde lleva el logotipo de la barra lateral. */
   inicio: string;
@@ -51,6 +69,15 @@ export function MarcoLateral({
 }) {
   const [abierto, setAbierto] = useState(false);
   const ruta = usePathname();
+
+  // Adentro del área, la barra es la del área. Se compara con la ruta exacta
+  // y con el prefijo seguido de barra, no con `startsWith` a secas: si no,
+  // `/panel/usuarios-invitados` -una ruta que hoy no existe pero podría-
+  // entraría al área por parecerse de nombre.
+  const enArea =
+    area?.rutas.some((r) => ruta === r || ruta.startsWith(`${r}/`)) ?? false;
+  const gruposVisibles = enArea && area ? area.grupos : grupos;
+  const volver = enArea ? area?.volver : undefined;
 
   // Navegar cierra el cajón. Sin esto, al elegir una sección el usuario se
   // queda mirando el menú en lugar de la pantalla que pidió.
@@ -83,7 +110,12 @@ export function MarcoLateral({
       <div className="flex min-h-0 flex-1">
         {/* Barra lateral de escritorio: fija, nunca se desplaza con el contenido */}
         <div className="hidden lg:flex">
-          <BarraLateral grupos={grupos} usuario={usuario} inicio={inicio} />
+          <BarraLateral
+            grupos={gruposVisibles}
+            usuario={usuario}
+            inicio={inicio}
+            volver={volver}
+          />
         </div>
 
       {/* Cajón de móvil */}
@@ -96,7 +128,12 @@ export function MarcoLateral({
             className="absolute inset-0 bg-[var(--fondo-velo)]"
           />
           <div className="animate-in slide-in-from-left relative h-full w-[264px] duration-200">
-            <BarraLateral grupos={grupos} usuario={usuario} inicio={inicio} />
+            <BarraLateral
+              grupos={gruposVisibles}
+              usuario={usuario}
+              inicio={inicio}
+              volver={volver}
+            />
             <div className="absolute top-3 -right-12">
               <BotonIcono
                 icono="x"

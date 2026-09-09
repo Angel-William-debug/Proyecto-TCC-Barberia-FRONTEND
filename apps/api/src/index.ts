@@ -134,8 +134,12 @@ export {
   obtenerConfiguracion,
   actualizarConfiguracion,
   listarHorarios,
+  actualizarHorarios,
   listarMetodosPago,
+  listarMetodosPagoTodos,
+  actualizarMetodosPago,
   type EntradaConfiguracion,
+  type EntradaHorario,
 } from './modulos/configuracion';
 
 // --- Usuarios y roles --------------------------------------------------------
