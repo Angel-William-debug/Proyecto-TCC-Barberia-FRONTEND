@@ -15,6 +15,7 @@
  */
 
 import {
+  ArrowLeft,
   ArrowLeftRight,
   Ban,
   Bell,
@@ -56,6 +57,7 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  Store,
   Sun,
   Tag,
   Trash2,
@@ -84,6 +86,7 @@ export const ICONOS = {
   'credit-card': CreditCard,
   'hand-coins': HandCoins,
   settings: Settings,
+  store: Store,
   'shield-check': ShieldCheck,
   clock: Clock,
   package: Package,
@@ -124,6 +127,7 @@ export const ICONOS = {
   'chevron-right': ChevronRight,
   'chevron-down': ChevronDown,
   'chevrons-left': ChevronsLeft,
+  'arrow-left': ArrowLeft,
   'log-out': LogOut,
   'loader-circle': LoaderCircle,
   inbox: Inbox,
@@ -165,6 +169,7 @@ export const ICONO_DE: Record<string, NombreIcono> = {
   metodosPago: 'credit-card',
   comisiones: 'hand-coins',
   configuracion: 'settings',
+  establecimiento: 'store',
   usuarios: 'shield-check',
   horarios: 'clock',
   inventario: 'package',

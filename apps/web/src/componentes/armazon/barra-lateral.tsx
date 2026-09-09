@@ -20,6 +20,9 @@ import { LogoHorizontal, Isotipo } from '@/componentes/marca/logo';
  * `usePathname` marca la entrada activa. `aria-current="page"` es lo que
  * permite a un lector de pantalla anunciar en que seccion esta el usuario, y
  * no puede sustituirse por un cambio de color.
+ *
+ * El area de configuracion la usa con `volver`: la misma barra, otro juego de
+ * grupos y un enlace de salida arriba de todo. Ver `MarcoLateral`.
  */
 export interface EntradaBarra {
   etiqueta: string;
@@ -47,12 +50,19 @@ export function BarraLateral({
   grupos,
   usuario,
   inicio,
+  volver,
   colapsada = false,
 }: {
   grupos: GrupoBarra[];
   usuario: { nombre: string; rol: NombreRol };
   /** Adonde lleva el logotipo. Distinto en cada mitad del sistema. */
   inicio: string;
+  /**
+   * Enlace de salida, arriba de los grupos. Solo lo pasa un area: hoy, la de
+   * configuracion. Sin el, quien entra queda sin una forma evidente de
+   * regresar y termina usando el boton Atras del navegador.
+   */
+  volver?: { etiqueta: string; ruta: string };
   colapsada?: boolean;
 }) {
   const ruta = usePathname();
@@ -72,6 +82,24 @@ export function BarraLateral({
           {colapsada ? <Isotipo className="h-7 w-7" /> : <LogoHorizontal />}
         </Link>
       </div>
+
+      {volver && (
+        <div className="border-borde-sutil border-b px-3 pb-3">
+          <Link
+            href={volver.ruta}
+            title={colapsada ? volver.etiqueta : undefined}
+            className={cn(
+              'text-cuerpo-sm text-secundario hover:bg-elevado hover:text-principal',
+              'flex h-9 items-center gap-2 rounded-md px-3',
+              'transition-colors duration-[var(--movimiento-rapido)]',
+              colapsada && 'justify-center px-0',
+            )}
+          >
+            <Icono nombre="arrow-left" tamano="sm" />
+            {!colapsada && volver.etiqueta}
+          </Link>
+        </div>
+      )}
 
       {/* Cada grupo es su propia `nav` con su nombre accesible, y no una sola
           lista con encabezados sueltos: asi un lector de pantalla puede

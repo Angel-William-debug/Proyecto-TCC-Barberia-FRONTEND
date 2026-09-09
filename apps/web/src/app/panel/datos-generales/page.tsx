@@ -124,7 +124,7 @@ export default async function DatosGenerales() {
       nombre: 'Métodos de pago',
       descripcion: 'Con qué se puede cobrar un turno y pagarle a un proveedor.',
       icono: 'credit-card',
-      ruta: '/panel/configuracion',
+      ruta: '/panel/configuracion/metodos-pago',
       cantidad: metodos.length,
       unidad: ['método', 'métodos'],
     },

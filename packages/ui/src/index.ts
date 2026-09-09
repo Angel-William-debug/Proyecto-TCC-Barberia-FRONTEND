@@ -43,6 +43,7 @@ export {
   CuerpoFormulario,
   AvisoFormulario,
 } from './componentes/campos/grupos';
+export { BarraGuardar, type PropsBarraGuardar } from './componentes/barra-guardar';
 export {
   Tarjeta,
   TarjetaEncabezado,
