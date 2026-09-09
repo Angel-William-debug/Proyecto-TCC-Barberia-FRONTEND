@@ -12,17 +12,28 @@
  * COMO FUNCIONA
  *
  *  1. Se arma una matriz cliente x servicio con la frecuencia de cada
- *     servicio en `historial_servicio`, normalizada por el total de visitas
- *     de cada cliente.
- *  2. K-Means (con inicializacion k-means++) agrupa a los clientes en hasta
- *     `K_CLUSTERS_MAX` grupos segun que servicios suelen pedir.
+ *     servicio en `historial_servicio`, con decaimiento por antiguedad -una
+ *     visita de hace `VIDA_MEDIA_MESES` pesa la mitad que una de hoy, para
+ *     que el gusto actual del cliente pese mas que todo su historico- y
+ *     normalizada por el total de visitas de cada cliente.
+ *  2. K-Means (con inicializacion k-means++) agrupa a los clientes segun que
+ *     servicios suelen pedir. El numero de grupos `k` no es fijo: se prueba
+ *     cada valor entre 2 y `K_CLUSTERS_MAX` y se elige el que da mejor
+ *     indice de silueta (que tan bien separados quedan los grupos). Cada
+ *     intento de K-Means corre `REINICIOS_KMEANS` veces con centroides
+ *     iniciales distintos y se conserva el de menor inercia, porque
+ *     k-means++ sigue dependiendo de un sorteo inicial y una sola corrida
+ *     puede converger a un agrupamiento mediocre.
  *  3. Dentro del grupo del cliente objetivo, cada companero "vota" por los
  *     servicios que probo, con un peso igual a su similitud coseno con el
  *     objetivo -un companero identico pesa 1, uno sin nada en comun no
  *     aporta-. Es el filtrado colaborativo: se recomienda lo que le gusto a
  *     clientes parecidos, no lo mas vendido en general.
  *  4. Se descartan los servicios que el cliente ya probo y se devuelven los
- *     mejores puntuados, normalizados a 0-1.
+ *     mejores puntuados, normalizados a 0-1. Si nadie en el grupo tiene
+ *     similitud con el cliente objetivo (grupo nuevo, sin companeros
+ *     parecidos), se cae a `ALGORITMO_FALLBACK`: los servicios mas pedidos
+ *     por toda la clientela, para no dejar la pantalla vacia.
  *
  * RN-009 exige un minimo de 3 servicios en el historial del cliente antes de
  * generar algo; la base lo hace cumplir de nuevo al insertar
@@ -40,8 +51,24 @@ import { uno } from '../compartido/relaciones';
 
 const MIN_SERVICIOS_HISTORIAL = 3;
 const K_CLUSTERS_MAX = 5;
+const REINICIOS_KMEANS = 10;
 const TOP_N_RECOMENDACIONES = 5;
-const ALGORITMO = 'kmeans_colaborativo_v1';
+const ALGORITMO = 'kmeans_colaborativo_v2';
+const ALGORITMO_FALLBACK = 'mas_pedidos_v1';
+
+const VIDA_MEDIA_MESES = 6;
+const DIAS_POR_MES = 30.44;
+const MS_POR_DIA = 1000 * 60 * 60 * 24;
+
+/**
+ * Peso de una visita segun su antiguedad: 1 si es de hoy, 0.5 si tiene
+ * `VIDA_MEDIA_MESES` meses, 0.25 al doble de esa antiguedad, etc.
+ */
+function pesoPorRecencia(fechaRealizacion: string): number {
+  const dias = (Date.now() - new Date(fechaRealizacion).getTime()) / MS_POR_DIA;
+  const meses = Math.max(0, dias / DIAS_POR_MES);
+  return 0.5 ** (meses / VIDA_MEDIA_MESES);
+}
 
 function distanciaEuclidiana(a: number[], b: number[]): number {
   let suma = 0;
@@ -134,6 +161,143 @@ function kMeans(vectores: number[][], k: number, iteraciones = 25): number[] {
   return asignaciones;
 }
 
+/** Suma de distancias al cuadrado de cada punto al centroide de su propio cluster. */
+function calcularInercia(vectores: number[][], asignaciones: number[], k: number): number {
+  const dim = vectores[0]?.length ?? 0;
+  const sumas: number[][] = Array.from({ length: k }, () => new Array(dim).fill(0));
+  const conteos = new Array(k).fill(0);
+
+  vectores.forEach((v, i) => {
+    const c = asignaciones[i]!;
+    conteos[c] += 1;
+    v.forEach((valor, d) => {
+      sumas[c]![d]! += valor;
+    });
+  });
+
+  const centroides = sumas.map((suma, c) => (conteos[c] > 0 ? suma.map((s) => s / conteos[c]) : suma));
+
+  return vectores.reduce(
+    (total, v, i) => total + distanciaEuclidiana(v, centroides[asignaciones[i]!]!) ** 2,
+    0,
+  );
+}
+
+/**
+ * Corre K-Means `REINICIOS_KMEANS` veces con centroides iniciales distintos y
+ * devuelve la asignacion de menor inercia. k-means++ reduce el riesgo de un
+ * mal sorteo inicial, pero no lo elimina: una sola corrida puede converger a
+ * un minimo local mediocre.
+ */
+function kMeansEstable(vectores: number[][], k: number): number[] {
+  let mejorAsignacion: number[] = [];
+  let mejorInercia = Infinity;
+
+  for (let intento = 0; intento < REINICIOS_KMEANS; intento++) {
+    const asignacion = kMeans(vectores, k);
+    const inercia = calcularInercia(vectores, asignacion, k);
+    if (inercia < mejorInercia) {
+      mejorInercia = inercia;
+      mejorAsignacion = asignacion;
+    }
+  }
+
+  return mejorAsignacion;
+}
+
+/**
+ * Indice de silueta promedio: para cada punto compara que tan cerca esta de
+ * su propio cluster (a) contra el cluster ajeno mas cercano (b). Va de -1 a
+ * 1; mas alto significa grupos mas compactos y mas separados entre si. Sirve
+ * para comparar agrupamientos con distinto `k` sin depender de una formula
+ * fija como antes (`min(5, clientes / 2)`).
+ */
+function silueta(vectores: number[][], asignaciones: number[]): number {
+  const n = vectores.length;
+  let sumaSiluetas = 0;
+
+  for (let i = 0; i < n; i++) {
+    const clusterI = asignaciones[i]!;
+    let distanciaIntra = 0;
+    let miembrosIntra = 0;
+    const acumuladoInter = new Map<number, { suma: number; n: number }>();
+
+    for (let j = 0; j < n; j++) {
+      if (i === j) continue;
+      const d = distanciaEuclidiana(vectores[i]!, vectores[j]!);
+      if (asignaciones[j] === clusterI) {
+        distanciaIntra += d;
+        miembrosIntra += 1;
+      } else {
+        const acumulado = acumuladoInter.get(asignaciones[j]!) ?? { suma: 0, n: 0 };
+        acumulado.suma += d;
+        acumulado.n += 1;
+        acumuladoInter.set(asignaciones[j]!, acumulado);
+      }
+    }
+
+    const a = miembrosIntra > 0 ? distanciaIntra / miembrosIntra : 0;
+    const distanciasInter = [...acumuladoInter.values()].map((v) => v.suma / v.n);
+    const b = distanciasInter.length > 0 ? Math.min(...distanciasInter) : 0;
+
+    sumaSiluetas += a === 0 && b === 0 ? 0 : (b - a) / Math.max(a, b);
+  }
+
+  return n > 0 ? sumaSiluetas / n : 0;
+}
+
+/**
+ * Prueba cada `k` entre 2 y `K_CLUSTERS_MAX` (acotado por la cantidad de
+ * clientes) y devuelve el agrupamiento con mejor indice de silueta. Con muy
+ * pocos clientes no hay margen para comparar: todos van a un unico grupo.
+ */
+function elegirMejorAgrupamiento(vectores: number[][]): number[] {
+  const n = vectores.length;
+  const kMaximo = Math.max(1, Math.min(K_CLUSTERS_MAX, Math.floor(n / 2)));
+
+  if (kMaximo < 2) return kMeansEstable(vectores, 1);
+
+  let mejorAsignacion = kMeansEstable(vectores, 2);
+  let mejorSilueta = silueta(vectores, mejorAsignacion);
+
+  for (let k = 3; k <= kMaximo; k++) {
+    const asignacion = kMeansEstable(vectores, k);
+    const puntaje = silueta(vectores, asignacion);
+    if (puntaje > mejorSilueta) {
+      mejorSilueta = puntaje;
+      mejorAsignacion = asignacion;
+    }
+  }
+
+  return mejorAsignacion;
+}
+
+/**
+ * Los servicios mas pedidos por toda la clientela, sin distinguir gustos
+ * individuales. Es el respaldo cuando el filtrado colaborativo no encuentra
+ * a nadie parecido al cliente objetivo -mejor una recomendacion generica que
+ * ninguna-.
+ */
+function serviciosMasPedidos(
+  filas: Array<{ id_servicio: number }>,
+  idsServicio: number[],
+  serviciosDelCliente: Set<number>,
+): Array<{ idServicio: number; score: number }> {
+  const conteoGlobal = new Map<number, number>();
+  for (const f of filas) {
+    conteoGlobal.set(f.id_servicio, (conteoGlobal.get(f.id_servicio) ?? 0) + 1);
+  }
+
+  const maximo = Math.max(...conteoGlobal.values(), 1);
+
+  return idsServicio
+    .filter((id) => !serviciosDelCliente.has(id))
+    .map((idServicio) => ({ idServicio, score: (conteoGlobal.get(idServicio) ?? 0) / maximo }))
+    .filter((r) => r.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, TOP_N_RECOMENDACIONES);
+}
+
 /**
  * Genera y guarda las recomendaciones de un cliente. Reemplaza las
  * anteriores: son un calculo derivado del historial, no un registro que deba
@@ -146,10 +310,14 @@ export async function generarRecomendaciones(idCliente: number): Promise<Recomen
 
   const { data: historial, error: errorHistorial } = await supabase
     .from('historial_servicio')
-    .select('id_cliente, id_servicio');
+    .select('id_cliente, id_servicio, fecha_realizacion');
   if (errorHistorial) throw traducirError(errorHistorial);
 
-  const filas = (historial ?? []) as Array<{ id_cliente: number; id_servicio: number }>;
+  const filas = (historial ?? []) as Array<{
+    id_cliente: number;
+    id_servicio: number;
+    fecha_realizacion: string;
+  }>;
   const historialCliente = filas.filter((f) => f.id_cliente === idCliente);
 
   if (historialCliente.length < MIN_SERVICIOS_HISTORIAL) {
@@ -172,9 +340,10 @@ export async function generarRecomendaciones(idCliente: number): Promise<Recomen
   const idsServicio = (catalogo ?? []).map((s) => s.id_servicio);
   const indicePorServicio = new Map(idsServicio.map((id, i) => [id, i]));
 
-  // Matriz cliente x servicio, normalizada por el total de visitas de cada
-  // cliente para que uno muy frecuente no domine la distancia solo por tener
-  // numeros mas grandes.
+  // Matriz cliente x servicio, con cada visita pesada por antiguedad y
+  // normalizada por el total de visitas (ya pesadas) de cada cliente, para
+  // que uno muy frecuente no domine la distancia solo por tener numeros mas
+  // grandes.
   const conteoPorCliente = new Map<number, number[]>();
   const totalPorCliente = new Map<number, number>();
   for (const f of filas) {
@@ -183,9 +352,10 @@ export async function generarRecomendaciones(idCliente: number): Promise<Recomen
     if (!conteoPorCliente.has(f.id_cliente)) {
       conteoPorCliente.set(f.id_cliente, new Array(idsServicio.length).fill(0));
     }
+    const peso = pesoPorRecencia(f.fecha_realizacion);
     const conteo = conteoPorCliente.get(f.id_cliente)!;
-    conteo[idx] = (conteo[idx] ?? 0) + 1;
-    totalPorCliente.set(f.id_cliente, (totalPorCliente.get(f.id_cliente) ?? 0) + 1);
+    conteo[idx] = (conteo[idx] ?? 0) + peso;
+    totalPorCliente.set(f.id_cliente, (totalPorCliente.get(f.id_cliente) ?? 0) + peso);
   }
 
   const idsClientes = [...conteoPorCliente.keys()];
@@ -199,8 +369,7 @@ export async function generarRecomendaciones(idCliente: number): Promise<Recomen
     return []; // sin otros clientes con quien comparar: no hay filtrado colaborativo posible
   }
 
-  const k = Math.max(1, Math.min(K_CLUSTERS_MAX, Math.floor(idsClientes.length / 2)));
-  const asignaciones = kMeans(vectores, k);
+  const asignaciones = elegirMejorAgrupamiento(vectores);
 
   const indiceObjetivo = idsClientes.indexOf(idCliente);
   const clusterObjetivo = indiceObjetivo >= 0 ? asignaciones[indiceObjetivo]! : null;
@@ -223,15 +392,22 @@ export async function generarRecomendaciones(idCliente: number): Promise<Recomen
     pesoTotal += similitud;
   });
 
-  if (pesoTotal === 0) return [];
+  let algoritmoUsado: string = ALGORITMO;
+  let elegidas: Array<{ idServicio: number; score: number }>;
 
-  const maximo = Math.max(...puntajePorServicio, 1e-9);
-
-  const elegidas = idsServicio
-    .map((idServicio, idx) => ({ idServicio, score: puntajePorServicio[idx] / maximo }))
-    .filter((r) => !serviciosDelCliente.has(r.idServicio) && r.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, TOP_N_RECOMENDACIONES);
+  if (pesoTotal === 0) {
+    // Nadie en el grupo se parece al cliente objetivo: sin filtrado
+    // colaborativo posible. Se cae a lo mas pedido en general.
+    algoritmoUsado = ALGORITMO_FALLBACK;
+    elegidas = serviciosMasPedidos(filas, idsServicio, serviciosDelCliente);
+  } else {
+    const maximo = Math.max(...puntajePorServicio, 1e-9);
+    elegidas = idsServicio
+      .map((idServicio, idx) => ({ idServicio, score: puntajePorServicio[idx] / maximo }))
+      .filter((r) => !serviciosDelCliente.has(r.idServicio) && r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, TOP_N_RECOMENDACIONES);
+  }
 
   if (elegidas.length === 0) return [];
 
@@ -246,7 +422,7 @@ export async function generarRecomendaciones(idCliente: number): Promise<Recomen
       id_cliente: idCliente,
       id_servicio: r.idServicio,
       score_relevancia: Math.round(r.score * 10000) / 10000,
-      algoritmo: ALGORITMO,
+      algoritmo: algoritmoUsado,
     })),
   );
   if (errorInsercion) throw traducirError(errorInsercion);
