@@ -6,7 +6,7 @@ import { useState, useTransition } from 'react';
 import type { TablaEscribible } from '@barber-shop/api';
 import { Boton } from '@barber-shop/ui';
 
-import { restaurarRegistro } from '@/acciones/catalogo';
+import { restaurarRegistro } from '@/acciones/borrado';
 
 /**
  * Restaurar puede fallar legítimamente: si mientras el registro estuvo

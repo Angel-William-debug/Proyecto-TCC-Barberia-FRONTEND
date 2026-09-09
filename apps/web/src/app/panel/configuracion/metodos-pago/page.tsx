@@ -2,7 +2,7 @@ import { listarMetodosPagoTodos } from '@barber-shop/api';
 import { EstadoVacio, Tarjeta } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { AjustesMetodosPago } from '@/componentes/formularios/ajustes-metodos-pago';
+import { AjustesMetodosPago } from '@/componentes/configuracion/ajustes-metodos-pago';
 
 export const metadata = { title: 'Métodos de pago' };
 

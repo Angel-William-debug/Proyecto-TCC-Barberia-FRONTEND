@@ -1,10 +1,19 @@
 /** Accion de servidor de las compras (CU-017). */
 'use server';
 
-import { crearPagoProveedor, crearPedido, exigirSesion } from '@barber-shop/api';
+import { actualizar, crear, crearPagoProveedor, crearPedido, exigirSesion } from '@barber-shop/api';
 import { ESTADOS_PEDIDO, type EstadoPedido } from '@barber-shop/tipos';
 
-import { Validacion, ejecutar, lineas, numero, texto } from './base';
+import {
+  CORREO,
+  Validacion,
+  booleano,
+  ejecutar,
+  lineas,
+  numero,
+  texto,
+  textoOpcional,
+} from './base';
 import type { ResultadoAccion } from './base';
 
 /** Alta de una orden de compra (CU-017). */
@@ -80,5 +89,32 @@ export async function guardarPagoProveedor(datos: FormData): Promise<ResultadoAc
 
   return ejecutar('/panel/compras', () =>
     crearPagoProveedor({ idPedido: idPedido!, idMetodoPago: idMetodoPago!, monto: monto! }),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Proveedores — CU-016
+// ---------------------------------------------------------------------------
+
+export async function guardarProveedor(datos: FormData): Promise<ResultadoAccion> {
+  const id = numero(datos, 'id_proveedor');
+  const nombre = texto(datos, 'nombre');
+  const email = textoOpcional(datos, 'email');
+
+  const v = new Validacion();
+  v.exigir(nombre.length >= 3, 'nombre', 'Ingrese el nombre del proveedor.');
+  v.exigir(!email || CORREO.test(email), 'email', 'Ingrese un correo con el formato nombre@dominio.com');
+  if (v.hayErrores) return v.resultado;
+
+  const fila = {
+    nombre,
+    email,
+    telefono: textoOpcional(datos, 'telefono'),
+    direccion: textoOpcional(datos, 'direccion'),
+    estado: booleano(datos, 'estado'),
+  };
+
+  return ejecutar('/panel/compras', () =>
+    id ? actualizar('proveedores', id, fila) : crear('proveedores', fila),
   );
 }

@@ -5,8 +5,8 @@ import { useState } from 'react';
 import type { Proveedor } from '@barber-shop/tipos';
 import { Boton, BotonIcono, Campo, CampoArea, GrupoCampos, Interruptor } from '@barber-shop/ui';
 
-import { guardarProveedor } from '@/acciones/catalogo';
-import { PanelFormulario } from './panel-formulario';
+import { guardarProveedor } from '@/acciones/compras';
+import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
 
 /** CU-016 — alta y edicion de proveedores. */
 export function FormularioProveedor({ proveedor }: { proveedor?: Proveedor }) {

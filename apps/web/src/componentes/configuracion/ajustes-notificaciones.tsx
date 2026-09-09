@@ -11,7 +11,7 @@ import {
 } from '@barber-shop/ui';
 
 import { guardarNotificaciones } from '@/acciones/configuracion';
-import { FormularioAjustes } from './formulario-ajustes';
+import { PantallaAjustes } from '@/componentes/compartido/pantalla-ajustes';
 
 /**
  * CU-020 - parametros de notificacion (RN-042).
@@ -27,7 +27,7 @@ export function AjustesNotificaciones({
   configuracion: ConfiguracionSistema;
 }) {
   return (
-    <FormularioAjustes id="ajustes-notificaciones" accion={guardarNotificaciones}>
+    <PantallaAjustes id="ajustes-notificaciones" accion={guardarNotificaciones}>
       {(errores) => (
         <Tarjeta>
           <TarjetaEncabezado
@@ -63,6 +63,6 @@ export function AjustesNotificaciones({
           </TarjetaCuerpo>
         </Tarjeta>
       )}
-    </FormularioAjustes>
+    </PantallaAjustes>
   );
 }

@@ -33,10 +33,10 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { BotonBorrar } from '@/componentes/formularios/boton-borrar';
-import { FormularioOrden } from '@/componentes/formularios/formulario-orden';
-import { FormularioPagoProveedor } from '@/componentes/formularios/formulario-pago-proveedor';
-import { FormularioProveedor } from '@/componentes/formularios/formulario-proveedor';
+import { BotonBorrar } from '@/componentes/compartido/boton-borrar';
+import { FormularioOrdenCompra } from '@/componentes/compras/formulario-orden-compra';
+import { FormularioPagoProveedor } from '@/componentes/compras/formulario-pago-proveedor';
+import { FormularioProveedor } from '@/componentes/compras/formulario-proveedor';
 import { comunes, fecha, lista, texto, type Parametros } from '@/lib/filtros';
 
 const ETIQUETA_ESTADO_PAGO: Record<string, string> = {
@@ -102,7 +102,7 @@ export default async function PaginaCompras({
           comprometido,
         )} comprometidos`}
         accion={
-          <FormularioOrden
+          <FormularioOrdenCompra
             proveedores={proveedoresTodos}
             productos={productos.map((p) => ({
               id_producto: p.id_producto,

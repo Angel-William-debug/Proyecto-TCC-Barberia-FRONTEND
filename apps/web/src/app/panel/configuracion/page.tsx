@@ -2,7 +2,7 @@ import { obtenerConfiguracion } from '@barber-shop/api';
 import { EstadoVacio, Tarjeta } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { AjustesEstablecimiento } from '@/componentes/formularios/ajustes-establecimiento';
+import { AjustesEstablecimiento } from '@/componentes/configuracion/ajustes-establecimiento';
 
 export const metadata = { title: 'Datos del establecimiento' };
 

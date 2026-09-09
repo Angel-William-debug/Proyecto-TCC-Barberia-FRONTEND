@@ -6,7 +6,7 @@ import type { MetodoPago, VistaCobroPendiente } from '@barber-shop/tipos';
 import { Boton, Campo, CampoSelector, FilaCampos, GrupoCampos, fechaHora, guaranies } from '@barber-shop/ui';
 
 import { guardarCobro } from '@/acciones/cobros';
-import { PanelFormulario } from './panel-formulario';
+import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
 
 /** CU-008 — registro de un cobro sobre un turno completado. */
 export function FormularioCobro({

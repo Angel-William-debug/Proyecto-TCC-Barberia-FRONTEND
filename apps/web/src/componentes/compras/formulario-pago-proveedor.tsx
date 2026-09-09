@@ -6,7 +6,7 @@ import type { MetodoPago, PedidoPendientePago } from '@barber-shop/tipos';
 import { Boton, Campo, CampoSelector, FilaCampos, GrupoCampos, fechaCorta, guaranies } from '@barber-shop/ui';
 
 import { guardarPagoProveedor } from '@/acciones/compras';
-import { PanelFormulario } from './panel-formulario';
+import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
 
 /** CU-018 — registro de un pago a un proveedor sobre una orden recibida (RN-028). */
 export function FormularioPagoProveedor({

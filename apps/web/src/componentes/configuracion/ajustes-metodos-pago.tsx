@@ -6,7 +6,7 @@ import type { MetodoPago } from '@barber-shop/tipos';
 import { Interruptor, Tarjeta, TarjetaCuerpo, TarjetaEncabezado } from '@barber-shop/ui';
 
 import { guardarMetodosPago } from '@/acciones/configuracion';
-import { FormularioAjustes } from './formulario-ajustes';
+import { PantallaAjustes } from '@/componentes/compartido/pantalla-ajustes';
 
 /**
  * CU-020 - metodos de pago habilitados.
@@ -22,7 +22,7 @@ import { FormularioAjustes } from './formulario-ajustes';
  */
 export function AjustesMetodosPago({ metodos }: { metodos: MetodoPago[] }) {
   return (
-    <FormularioAjustes id="ajustes-metodos-pago" accion={guardarMetodosPago}>
+    <PantallaAjustes id="ajustes-metodos-pago" accion={guardarMetodosPago}>
       {() => (
         <Tarjeta>
           <TarjetaEncabezado
@@ -38,7 +38,7 @@ export function AjustesMetodosPago({ metodos }: { metodos: MetodoPago[] }) {
           </TarjetaCuerpo>
         </Tarjeta>
       )}
-    </FormularioAjustes>
+    </PantallaAjustes>
   );
 }
 

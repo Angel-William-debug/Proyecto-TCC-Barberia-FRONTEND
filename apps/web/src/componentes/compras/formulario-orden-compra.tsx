@@ -8,7 +8,7 @@ import {
 } from '@barber-shop/ui';
 
 import { guardarOrden } from '@/acciones/compras';
-import { PanelFormulario } from './panel-formulario';
+import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
 
 /** Producto del catalogo, con lo minimo que el formulario necesita. */
 export interface ProductoParaOrden {
@@ -52,7 +52,7 @@ const ETIQUETA_ESTADO: Record<string, string> = {
  * cotiza lo que quiere, y forzar el precio registrado obligaria a editar el
  * producto antes de poder cargar la orden.
  */
-export function FormularioOrden({
+export function FormularioOrdenCompra({
   proveedores,
   productos,
   fechaHoy,

@@ -11,7 +11,7 @@ import {
 } from '@barber-shop/api';
 import type { AlertaDeLista, RecetaLinea } from '@barber-shop/tipos';
 
-import { Validacion, ejecutar, numero, texto, textoOpcional } from './base';
+import { Validacion, booleano, ejecutar, numero, texto, textoOpcional } from './base';
 import type { ResultadoAccion } from './base';
 
 // ---------------------------------------------------------------------------
@@ -82,4 +82,55 @@ export async function obtenerAlertas(soloNoResueltas: boolean): Promise<AlertaDe
 export async function resolverAlerta(idAlerta: number): Promise<ResultadoAccion> {
   await exigirSesion();
   return ejecutar('/panel/inventario', () => marcarAlertaResuelta(idAlerta));
+}
+
+// ---------------------------------------------------------------------------
+// Productos
+// ---------------------------------------------------------------------------
+
+export async function guardarProducto(datos: FormData): Promise<ResultadoAccion> {
+  const id = numero(datos, 'id_producto');
+  const nombre = texto(datos, 'nombre');
+  const categoria = numero(datos, 'id_categoria_p');
+  const precio = numero(datos, 'precio_unitario');
+  const minimo = numero(datos, 'stock_minimo');
+  const maximo = numero(datos, 'stock_maximo');
+  const cantidadUsoEstandar = numero(datos, 'cantidad_uso_estandar');
+
+  const v = new Validacion();
+  v.exigir(nombre.length >= 3, 'nombre', 'Ingrese el nombre del producto.');
+  v.exigir(categoria !== null, 'id_categoria_p', 'Elija una categoría.');
+  v.exigir(precio !== null && precio >= 0, 'precio_unitario', 'El precio no puede ser negativo.');
+  v.exigir(minimo !== null && minimo >= 0, 'stock_minimo', 'El stock mínimo no puede ser negativo.');
+  v.exigir(
+    maximo === null || (minimo !== null && maximo >= minimo),
+    'stock_maximo',
+    'El stock máximo debe ser mayor o igual al mínimo.',
+  );
+  v.exigir(
+    cantidadUsoEstandar === null || cantidadUsoEstandar > 0,
+    'cantidad_uso_estandar',
+    'La equivalencia debe ser mayor a cero.',
+  );
+  if (v.hayErrores) return v.resultado;
+
+  const fila = {
+    nombre,
+    id_categoria_p: categoria,
+    descripcion: textoOpcional(datos, 'descripcion'),
+    unidad_medida: textoOpcional(datos, 'unidad_medida'),
+    unidad_uso: textoOpcional(datos, 'unidad_uso'),
+    cantidad_uso_estandar: cantidadUsoEstandar,
+    precio_unitario: precio,
+    stock_minimo: minimo,
+    stock_maximo: maximo,
+    estado: booleano(datos, 'estado'),
+  };
+
+  // El stock actual NO se edita desde este formulario: se mueve con entradas,
+  // salidas y ajustes, que dejan su rastro en movimientos_inventario. Un campo
+  // editable aca permitiria cambiar el stock sin dejar constancia de por que.
+  return ejecutar('/panel/inventario', () =>
+    id ? actualizar('productos', id, fila) : crear('productos', { ...fila, stock_actual: 0 }),
+  );
 }

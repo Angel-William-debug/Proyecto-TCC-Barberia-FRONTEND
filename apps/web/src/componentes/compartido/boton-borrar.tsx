@@ -6,7 +6,7 @@ import { useState, useTransition } from 'react';
 import type { TablaEscribible } from '@barber-shop/api';
 import { BotonIcono } from '@barber-shop/ui';
 
-import { borrarRegistro } from '@/acciones/catalogo';
+import { borrarRegistro } from '@/acciones/borrado';
 
 /**
  * Botón de borrar genérico, para las pantallas de catálogo. Pide

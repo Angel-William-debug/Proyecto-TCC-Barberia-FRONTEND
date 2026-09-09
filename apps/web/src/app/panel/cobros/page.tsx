@@ -24,8 +24,8 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { BotonEmitirFactura } from '@/componentes/formularios/boton-emitir-factura';
-import { FormularioCobro } from '@/componentes/formularios/formulario-cobro';
+import { BotonEmitirFactura } from '@/componentes/cobros/boton-emitir-factura';
+import { FormularioCobro } from '@/componentes/cobros/formulario-cobro';
 import { comunes, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Cobros' };

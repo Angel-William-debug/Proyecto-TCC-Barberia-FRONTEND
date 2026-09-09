@@ -5,8 +5,8 @@ import { useState } from 'react';
 import type { Cliente } from '@barber-shop/tipos';
 import { Boton, BotonIcono, Campo, CampoArea, FilaCampos, GrupoCampos, Interruptor } from '@barber-shop/ui';
 
-import { guardarCliente } from '@/acciones/catalogo';
-import { PanelFormulario } from './panel-formulario';
+import { guardarCliente } from '@/acciones/clientes';
+import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
 
 /**
  * CU-002 — alta y edicion de clientes.

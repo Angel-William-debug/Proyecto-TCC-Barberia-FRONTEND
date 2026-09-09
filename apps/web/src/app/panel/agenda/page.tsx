@@ -29,9 +29,9 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { FormularioTurno } from '@/componentes/formularios/formulario-turno';
-import { PanelCierreServicio } from '@/componentes/formularios/panel-cierre-servicio';
-import { FiltroFecha } from '@/componentes/filtros/filtro-fecha';
+import { FormularioTurno } from '@/componentes/agenda/formulario-turno';
+import { PanelCierreServicio } from '@/componentes/agenda/panel-cierre-servicio';
+import { FiltroFecha } from '@/componentes/agenda/filtro-fecha';
 import { fecha as leerFecha, lista, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Agenda' };

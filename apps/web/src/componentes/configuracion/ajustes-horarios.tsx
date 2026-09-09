@@ -14,7 +14,7 @@ import {
 } from '@barber-shop/ui';
 
 import { guardarHorarios } from '@/acciones/configuracion';
-import { FormularioAjustes } from './formulario-ajustes';
+import { PantallaAjustes } from '@/componentes/compartido/pantalla-ajustes';
 
 /**
  * CU-020 - horario de atencion.
@@ -40,7 +40,7 @@ import { FormularioAjustes } from './formulario-ajustes';
  */
 export function AjustesHorarios({ horarios }: { horarios: HorarioAtencion[] }) {
   return (
-    <FormularioAjustes id="ajustes-horarios" accion={guardarHorarios}>
+    <PantallaAjustes id="ajustes-horarios" accion={guardarHorarios}>
       {(errores) => (
         <Tarjeta>
           <TarjetaEncabezado
@@ -56,7 +56,7 @@ export function AjustesHorarios({ horarios }: { horarios: HorarioAtencion[] }) {
           </TarjetaCuerpo>
         </Tarjeta>
       )}
-    </FormularioAjustes>
+    </PantallaAjustes>
   );
 }
 

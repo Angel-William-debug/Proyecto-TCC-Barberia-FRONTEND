@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Boton, Campo, CampoArea, GrupoCampos } from '@barber-shop/ui';
 
 import { guardarCategoriaProducto } from '@/acciones/inventario';
-import { PanelFormulario } from './panel-formulario';
+import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
 
 /** CU-010 — alta rapida de una categoria de producto, desde Inventario. */
 export function FormularioCategoriaProducto() {

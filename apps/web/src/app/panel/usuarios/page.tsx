@@ -21,7 +21,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { FormularioUsuario } from '@/componentes/formularios/formulario-usuario';
+import { FormularioUsuario } from '@/componentes/usuarios/formulario-usuario';
 import { ETIQUETAS_ACTIVO, OPCIONES_ACTIVO, comunes, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Usuarios' };

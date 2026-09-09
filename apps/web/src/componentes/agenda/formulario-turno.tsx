@@ -8,7 +8,7 @@ import {
 } from '@barber-shop/ui';
 
 import { guardarTurno } from '@/acciones/agenda';
-import { PanelFormulario } from './panel-formulario';
+import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
 
 /** Una linea del turno. `clave` solo existe para React, no se envia. */
 interface LineaServicio {

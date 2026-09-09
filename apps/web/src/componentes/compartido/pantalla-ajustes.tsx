@@ -34,7 +34,7 @@ import type { ResultadoAccion } from '@/acciones/base';
  * nada: la pantalla se queda exactamente igual, porque los valores ya estaban
  * escritos en los campos.
  */
-export interface PropsFormularioAjustes {
+export interface PropsPantallaAjustes {
   /** Identificador del `form`. La barra alcanza el boton por este atributo. */
   id: string;
   /** La accion de servidor que guarda esta pantalla. */
@@ -43,7 +43,7 @@ export interface PropsFormularioAjustes {
   children: (errores: Record<string, string>) => ReactNode;
 }
 
-export function FormularioAjustes({ id, accion, children }: PropsFormularioAjustes) {
+export function PantallaAjustes({ id, accion, children }: PropsPantallaAjustes) {
   const [enviando, iniciar] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [errores, setErrores] = useState<Record<string, string>>({});

@@ -2,7 +2,7 @@ import { obtenerConfiguracion } from '@barber-shop/api';
 import { EstadoVacio, Tarjeta } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { AjustesNotificaciones } from '@/componentes/formularios/ajustes-notificaciones';
+import { AjustesNotificaciones } from '@/componentes/configuracion/ajustes-notificaciones';
 
 export const metadata = { title: 'Notificaciones' };
 

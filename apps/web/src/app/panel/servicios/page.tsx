@@ -21,9 +21,9 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { BotonBorrar } from '@/componentes/formularios/boton-borrar';
-import { FormularioServicio } from '@/componentes/formularios/formulario-servicio';
-import { PanelReceta } from '@/componentes/formularios/panel-receta';
+import { BotonBorrar } from '@/componentes/compartido/boton-borrar';
+import { FormularioServicio } from '@/componentes/servicios/formulario-servicio';
+import { PanelReceta } from '@/componentes/servicios/panel-receta';
 import {
   ETIQUETAS_ACTIVO,
   OPCIONES_ACTIVO,

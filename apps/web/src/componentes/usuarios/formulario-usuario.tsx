@@ -6,7 +6,7 @@ import type { Rol, VistaUsuarioPorRol } from '@barber-shop/tipos';
 import { Boton, BotonIcono, Campo, CampoSelector, GrupoCampos, Interruptor } from '@barber-shop/ui';
 
 import { actualizarUsuario, guardarUsuario } from '@/acciones/usuarios';
-import { PanelFormulario } from './panel-formulario';
+import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
 
 /**
  * CU-019 — alta de un usuario y cambio de rol o estado.

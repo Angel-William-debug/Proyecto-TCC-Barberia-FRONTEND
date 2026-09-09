@@ -31,10 +31,10 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { BotonBorrar } from '@/componentes/formularios/boton-borrar';
-import { BotonResolverAlerta } from '@/componentes/formularios/boton-resolver-alerta';
-import { FormularioCategoriaProducto } from '@/componentes/formularios/formulario-categoria-producto';
-import { FormularioProducto } from '@/componentes/formularios/formulario-producto';
+import { BotonBorrar } from '@/componentes/compartido/boton-borrar';
+import { BotonResolverAlerta } from '@/componentes/inventario/boton-resolver-alerta';
+import { FormularioCategoriaProducto } from '@/componentes/inventario/formulario-categoria-producto';
+import { FormularioProducto } from '@/componentes/inventario/formulario-producto';
 import { comunes, fecha, lista, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Inventario' };

@@ -17,7 +17,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { BotonRestaurar } from '@/componentes/formularios/boton-restaurar';
+import { BotonRestaurar } from '@/componentes/compartido/boton-restaurar';
 import { texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Papelera' };

@@ -21,7 +21,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { TarjetaRecomendaciones } from '@/componentes/formularios/tarjeta-recomendaciones';
+import { TarjetaRecomendaciones } from '@/componentes/clientes/tarjeta-recomendaciones';
 
 export const metadata = { title: 'Perfil del cliente' };
 

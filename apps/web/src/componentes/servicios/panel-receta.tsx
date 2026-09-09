@@ -22,7 +22,7 @@ import {
   cantidad,
 } from '@barber-shop/ui';
 
-import { borrarRegistro } from '@/acciones/catalogo';
+import { borrarRegistro } from '@/acciones/borrado';
 import { guardarLineaReceta, obtenerReceta } from '@/acciones/inventario';
 
 export interface ProductoParaReceta {

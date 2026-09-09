@@ -7,8 +7,8 @@ import {
   AvisoFormulario, Boton, BotonIcono, Campo, CampoArea, CampoSelector, FilaCampos, GrupoCampos, Interruptor,
 } from '@barber-shop/ui';
 
-import { guardarProducto } from '@/acciones/catalogo';
-import { PanelFormulario } from './panel-formulario';
+import { guardarProducto } from '@/acciones/inventario';
+import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
 
 /**
  * Modulo 6 — alta y edicion de productos.

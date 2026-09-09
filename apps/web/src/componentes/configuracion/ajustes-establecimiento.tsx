@@ -12,7 +12,7 @@ import {
 } from '@barber-shop/ui';
 
 import { guardarDatosEstablecimiento } from '@/acciones/configuracion';
-import { FormularioAjustes } from './formulario-ajustes';
+import { PantallaAjustes } from '@/componentes/compartido/pantalla-ajustes';
 
 /**
  * CU-020 - datos del establecimiento.
@@ -27,7 +27,7 @@ export function AjustesEstablecimiento({
   configuracion: ConfiguracionSistema;
 }) {
   return (
-    <FormularioAjustes id="ajustes-establecimiento" accion={guardarDatosEstablecimiento}>
+    <PantallaAjustes id="ajustes-establecimiento" accion={guardarDatosEstablecimiento}>
       {(errores) => (
         <>
           <Tarjeta>
@@ -122,6 +122,6 @@ export function AjustesEstablecimiento({
           </Tarjeta>
         </>
       )}
-    </FormularioAjustes>
+    </PantallaAjustes>
   );
 }

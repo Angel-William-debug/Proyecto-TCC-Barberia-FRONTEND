@@ -2,7 +2,7 @@ import { listarHorarios } from '@barber-shop/api';
 import { EstadoVacio, Tarjeta } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { AjustesHorarios } from '@/componentes/formularios/ajustes-horarios';
+import { AjustesHorarios } from '@/componentes/configuracion/ajustes-horarios';
 
 export const metadata = { title: 'Horarios de atención' };
 

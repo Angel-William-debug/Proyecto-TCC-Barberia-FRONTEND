@@ -25,7 +25,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { PanelLiquidacion } from '@/componentes/formularios/panel-liquidacion';
+import { PanelLiquidacion } from '@/componentes/comisiones/panel-liquidacion';
 import { comunes, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Comisiones' };
