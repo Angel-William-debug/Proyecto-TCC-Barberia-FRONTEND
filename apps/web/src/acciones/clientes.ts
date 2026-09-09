@@ -8,7 +8,7 @@
  */
 'use server';
 
-import { actualizar, crear } from '@barber-shop/api';
+import { actualizarCliente, crearCliente } from '@barber-shop/api';
 
 import { CORREO, Validacion, booleano, ejecutar, numero, texto, textoOpcional } from './base';
 import type { ResultadoAccion } from './base';
@@ -25,17 +25,17 @@ export async function guardarCliente(datos: FormData): Promise<ResultadoAccion> 
   v.exigir(!email || CORREO.test(email), 'email', 'Ingrese un correo con el formato nombre@dominio.com');
   if (v.hayErrores) return v.resultado;
 
-  const fila = {
+  const entrada = {
     nombre,
     telefono,
     email,
     direccion: textoOpcional(datos, 'direccion'),
-    fecha_nacimiento: textoOpcional(datos, 'fecha_nacimiento'),
-    notas_internas: textoOpcional(datos, 'notas_internas'),
+    fechaNacimiento: textoOpcional(datos, 'fecha_nacimiento'),
+    notasInternas: textoOpcional(datos, 'notas_internas'),
     estado: booleano(datos, 'estado'),
   };
 
   return ejecutar('/panel/clientes', () =>
-    id ? actualizar('clientes', id, fila) : crear('clientes', fila),
+    id ? actualizarCliente(id, entrada) : crearCliente(entrada),
   );
 }

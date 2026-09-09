@@ -11,7 +11,7 @@
  */
 'use server';
 
-import { actualizar, crear } from '@barber-shop/api';
+import { actualizarBarbero, crearBarbero } from '@barber-shop/api';
 
 import { Validacion, booleano, ejecutar, numero, texto, textoOpcional } from './base';
 import type { ResultadoAccion } from './base';
@@ -30,15 +30,15 @@ export async function guardarBarbero(datos: FormData): Promise<ResultadoAccion> 
   );
   if (v.hayErrores) return v.resultado;
 
-  const fila = {
+  const entrada = {
     nombre,
     especialidad: textoOpcional(datos, 'especialidad'),
     tipo: textoOpcional(datos, 'tipo'),
-    porcentaje_com: comision,
+    porcentajeComision: comision!,
     estado: booleano(datos, 'estado'),
   };
 
   return ejecutar('/panel/barberos', () =>
-    id ? actualizar('profesionales', id, fila) : crear('profesionales', fila),
+    id ? actualizarBarbero(id, entrada) : crearBarbero(entrada),
   );
 }

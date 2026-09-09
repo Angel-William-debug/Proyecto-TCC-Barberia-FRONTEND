@@ -55,13 +55,27 @@ export {
   obtenerCliente,
   desactivarCliente,
   listarHistorialCliente,
+  crearCliente,
+  actualizarCliente,
+  type EntradaCliente,
 } from './modulos/clientes';
 
 // --- Servicios -------------------------------------------------------------
-export { listarServicios, listarCategoriasServicio } from './modulos/servicios';
+export {
+  listarServicios,
+  listarCategoriasServicio,
+  crearServicio,
+  actualizarServicio,
+  type EntradaServicio,
+} from './modulos/servicios';
 
 // --- Barberos --------------------------------------------------------------
-export { listarProfesionales } from './modulos/barberos';
+export {
+  listarProfesionales,
+  crearBarbero,
+  actualizarBarbero,
+  type EntradaBarbero,
+} from './modulos/barberos';
 
 // --- Cobros ----------------------------------------------------------------
 export { listarCobros, listarCitasPendientesDeCobro, crearCobro } from './modulos/cobros';
@@ -85,6 +99,15 @@ export {
   listarRecetaServicio,
   listarAlertas,
   marcarAlertaResuelta,
+  crearProducto,
+  actualizarProducto,
+  crearCategoriaProducto,
+  actualizarCategoriaProducto,
+  crearLineaReceta,
+  actualizarLineaReceta,
+  type EntradaProducto,
+  type EntradaCategoriaProducto,
+  type EntradaLineaReceta,
 } from './modulos/inventario';
 
 // --- Compras ---------------------------------------------------------------
@@ -98,6 +121,9 @@ export {
   type EntradaNuevoPedido,
   type LineaPedido,
   type EntradaNuevoPagoProveedor,
+  crearProveedor,
+  actualizarProveedor,
+  type EntradaProveedor,
 } from './modulos/compras';
 
 // --- Recomendaciones ---------------------------------------------------------
@@ -147,16 +173,33 @@ export {
   listarUsuarios,
   listarRoles,
   crearUsuario,
+  actualizarUsuario,
   type EntradaNuevoUsuario,
+  type CambiosUsuario,
 } from './modulos/usuarios';
 
 // --- Auditoria -------------------------------------------------------------
 export { listarAuditoria } from './modulos/auditoria';
 
-// --- Escritura generica ----------------------------------------------------
+// --- Borrado logico --------------------------------------------------------
+/**
+ * `crear` y `actualizar` NO se exportan, y es deliberado.
+ *
+ * Son el escritor generico: reciben el nombre de una tabla y un objeto con sus
+ * columnas. Mientras salieron de aca, `apps/web` los llamaba directamente y por
+ * eso conocia ocho nombres de tabla y sus columnas -`notas_internas`,
+ * `porcentaje_com`, `id_categoria_p`-. Cerrar la puerta es lo que convierte la
+ * regla 1 en algo que el compilador hace cumplir en vez de una intencion.
+ *
+ * Quien necesite escribir una entidad usa la funcion de su modulo:
+ * `crearCliente`, `actualizarProducto`, `crearBarbero`. Ellas si los llaman,
+ * desde adentro del paquete.
+ *
+ * El borrado logico es la excepcion legitima: `BotonBorrar` y `BotonRestaurar`
+ * son un solo componente que sirve a ocho catalogos, y recibe el nombre de la
+ * tabla como dato. Ahi la genericidad es el punto, no una fuga.
+ */
 export {
-  crear,
-  actualizar,
   borrarLogico,
   restaurar,
   listarBorrados,

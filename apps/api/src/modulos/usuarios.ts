@@ -44,7 +44,7 @@ import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { clienteAdmin } from '../supabase/cliente-admin';
 import { ErrorAplicacion, traducirError } from '../errores';
-import { rechazarSiEsDemo } from '../compartido/escritura';
+import { actualizar, rechazarSiEsDemo } from '../compartido/escritura';
 import { coincideEstado, coincideTexto, type FiltroTabla } from '../compartido/filtros';
 
 export async function listarRoles(): Promise<Rol[]> {
@@ -145,4 +145,25 @@ export async function crearUsuario(entrada: EntradaNuevoUsuario): Promise<number
   }
 
   return (usuario as { id_usuario: number }).id_usuario;
+}
+
+// ---------------------------------------------------------------------------
+// Cambio de rol y de estado (CU-019 A2, A3)
+// ---------------------------------------------------------------------------
+
+/**
+ * Lo unico editable de un usuario ya creado.
+ *
+ * El nombre y el correo no estan: identifican la cuenta de Supabase Auth, y
+ * cambiarlos desde aca dejaria la ficha de `usuarios` desincronizada de su
+ * cuenta real. La contrasena tampoco: la cambia su dueno.
+ */
+export interface CambiosUsuario {
+  idRol: number;
+  estado: boolean;
+}
+
+/** Cambio de rol o de estado (CU-019 A2, A3). No toca Auth. */
+export async function actualizarUsuario(id: number, cambios: CambiosUsuario): Promise<void> {
+  return actualizar('usuarios', id, { id_rol: cambios.idRol, estado: cambios.estado });
 }

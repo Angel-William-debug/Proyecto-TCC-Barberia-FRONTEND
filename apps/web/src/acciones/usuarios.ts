@@ -1,7 +1,7 @@
 /** Accion de servidor de usuarios y roles (CU-019). */
 'use server';
 
-import { actualizar, crearUsuario, exigirSesion } from '@barber-shop/api';
+import { actualizarUsuario, crearUsuario, exigirSesion } from '@barber-shop/api';
 
 import { CORREO, Validacion, booleano, ejecutar, numero, texto } from './base';
 import type { ResultadoAccion } from './base';
@@ -47,7 +47,7 @@ export async function guardarUsuario(datos: FormData): Promise<ResultadoAccion> 
 }
 
 /** Cambio de rol o de estado (CU-019 A2, A3). No toca Auth: solo la ficha de `usuarios`. */
-export async function actualizarUsuario(datos: FormData): Promise<ResultadoAccion> {
+export async function guardarCambiosUsuario(datos: FormData): Promise<ResultadoAccion> {
   await exigirSesion();
 
   const id = numero(datos, 'id_usuario');
@@ -59,6 +59,6 @@ export async function actualizarUsuario(datos: FormData): Promise<ResultadoAccio
   if (v.hayErrores) return v.resultado;
 
   return ejecutar('/panel/usuarios', () =>
-    actualizar('usuarios', id!, { id_rol: idRol, estado: booleano(datos, 'estado') }),
+    actualizarUsuario(id!, { idRol: idRol!, estado: booleano(datos, 'estado') }),
   );
 }

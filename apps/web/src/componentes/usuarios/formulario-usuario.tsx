@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { Rol, VistaUsuarioPorRol } from '@barber-shop/tipos';
 import { Boton, BotonIcono, Campo, CampoSelector, GrupoCampos, Interruptor } from '@barber-shop/ui';
 
-import { actualizarUsuario, guardarUsuario } from '@/acciones/usuarios';
+import { guardarCambiosUsuario, guardarUsuario } from '@/acciones/usuarios';
 import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
 
 /**
@@ -50,7 +50,7 @@ export function FormularioUsuario({ usuario, roles }: { usuario?: VistaUsuarioPo
             ? 'El nombre y el correo no se editan acá: identifican la cuenta de Auth.'
             : 'La cuenta queda lista para usarse. Entréguele la contraseña a la persona; la puede cambiar cuando quiera desde «Recuperar contraseña».'
         }
-        accion={editando ? actualizarUsuario : guardarUsuario}
+        accion={editando ? guardarCambiosUsuario : guardarUsuario}
         textoGuardar={editando ? 'Guardar cambios' : 'Crear usuario'}
       >
         {(errores) => (

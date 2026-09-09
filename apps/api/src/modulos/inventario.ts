@@ -25,7 +25,7 @@ import { MOVIMIENTOS_DEMO } from '../demo/datos-operacion';
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { traducirError } from '../errores';
-import { rechazarSiEsDemo } from '../compartido/escritura';
+import { actualizar, crear, rechazarSiEsDemo } from '../compartido/escritura';
 import { coincideEstado, coincideTexto, entreFechas, type FiltroTabla } from '../compartido/filtros';
 import { uno } from '../compartido/relaciones';
 
@@ -213,4 +213,104 @@ export async function marcarAlertaResuelta(idAlerta: number): Promise<void> {
     .eq('id_alerta', idAlerta);
 
   if (error) throw traducirError(error);
+}
+
+// ---------------------------------------------------------------------------
+// Alta y edicion de productos, categorias y lineas de receta
+// ---------------------------------------------------------------------------
+
+export interface EntradaProducto {
+  nombre: string;
+  idCategoria: number;
+  descripcion: string | null;
+  unidadMedida: string | null;
+  unidadUso: string | null;
+  cantidadUsoEstandar: number | null;
+  precioUnitario: number;
+  stockMinimo: number;
+  stockMaximo: number | null;
+  estado: boolean;
+}
+
+/** El unico lugar del sistema donde se nombran las columnas de `productos`. */
+function filaProducto(e: EntradaProducto) {
+  return {
+    nombre: e.nombre,
+    id_categoria_p: e.idCategoria,
+    descripcion: e.descripcion,
+    unidad_medida: e.unidadMedida,
+    unidad_uso: e.unidadUso,
+    cantidad_uso_estandar: e.cantidadUsoEstandar,
+    precio_unitario: e.precioUnitario,
+    stock_minimo: e.stockMinimo,
+    stock_maximo: e.stockMaximo,
+    estado: e.estado,
+  };
+}
+
+/**
+ * Alta de un producto. Devuelve su id.
+ *
+ * `stock_actual` arranca en cero y NO se puede fijar de entrada: el stock se
+ * mueve con entradas, salidas y ajustes, que dejan su rastro en
+ * `movimientos_inventario`. Permitir un valor inicial seria una via para
+ * cambiar el stock sin dejar constancia de por que.
+ */
+export async function crearProducto(entrada: EntradaProducto): Promise<number> {
+  return crear('productos', { ...filaProducto(entrada), stock_actual: 0 });
+}
+
+/** Edicion de un producto. El stock no se toca desde aca, por lo mismo. */
+export async function actualizarProducto(id: number, entrada: EntradaProducto): Promise<void> {
+  return actualizar('productos', id, filaProducto(entrada));
+}
+
+export interface EntradaCategoriaProducto {
+  nombre: string;
+  descripcion: string | null;
+}
+
+/** Alta de una categoria de producto (CU-010). Devuelve su id. */
+export async function crearCategoriaProducto(entrada: EntradaCategoriaProducto): Promise<number> {
+  return crear('categorias_producto', { ...entrada, estado: true });
+}
+
+/** Edicion de una categoria de producto (CU-010). */
+export async function actualizarCategoriaProducto(
+  id: number,
+  entrada: EntradaCategoriaProducto,
+): Promise<void> {
+  return actualizar('categorias_producto', id, { ...entrada, estado: true });
+}
+
+/** Una linea de la receta: que producto consume un servicio, y cuanto. */
+export interface EntradaLineaReceta {
+  idServicio: number;
+  idProducto: number;
+  cantidadEstandar: number;
+  unidadUso: string | null;
+}
+
+/** El unico lugar donde se nombran las columnas de `servicio_producto`. */
+function filaLineaReceta(e: EntradaLineaReceta) {
+  return {
+    id_servicio: e.idServicio,
+    id_producto: e.idProducto,
+    cantidad_estandar: e.cantidadEstandar,
+    unidad_uso: e.unidadUso,
+    estado: true,
+  };
+}
+
+/** Alta de una linea de receta (CU-003). Devuelve su id. */
+export async function crearLineaReceta(entrada: EntradaLineaReceta): Promise<number> {
+  return crear('servicio_producto', filaLineaReceta(entrada));
+}
+
+/** Edicion de una linea de receta (CU-003). */
+export async function actualizarLineaReceta(
+  id: number,
+  entrada: EntradaLineaReceta,
+): Promise<void> {
+  return actualizar('servicio_producto', id, filaLineaReceta(entrada));
 }

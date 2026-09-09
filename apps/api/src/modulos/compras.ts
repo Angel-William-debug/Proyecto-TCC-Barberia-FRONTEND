@@ -18,7 +18,7 @@ import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { ErrorAplicacion, traducirError } from '../errores';
 import { coincideEstado, coincideTexto, entreFechas, type FiltroTabla } from '../compartido/filtros';
-import { rechazarSiEsDemo } from '../compartido/escritura';
+import { actualizar, crear, rechazarSiEsDemo } from '../compartido/escritura';
 import { uno } from '../compartido/relaciones';
 
 export async function listarProveedores(filtro: FiltroTabla = {}): Promise<Proveedor[]> {
@@ -271,4 +271,26 @@ export async function crearPagoProveedor(entrada: EntradaNuevoPagoProveedor): Pr
 
   if (error) throw traducirError(error);
   return (data as { id_pago_prov: number }).id_pago_prov;
+}
+
+// ---------------------------------------------------------------------------
+// Alta y edicion de proveedores (CU-016)
+// ---------------------------------------------------------------------------
+
+export interface EntradaProveedor {
+  nombre: string;
+  email: string | null;
+  telefono: string | null;
+  direccion: string | null;
+  estado: boolean;
+}
+
+/** Alta de un proveedor (CU-016). Devuelve su id. */
+export async function crearProveedor(entrada: EntradaProveedor): Promise<number> {
+  return crear('proveedores', { ...entrada });
+}
+
+/** Edicion de un proveedor (CU-016). */
+export async function actualizarProveedor(id: number, entrada: EntradaProveedor): Promise<void> {
+  return actualizar('proveedores', id, { ...entrada });
 }

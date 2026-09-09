@@ -8,7 +8,7 @@
  */
 'use server';
 
-import { actualizar, crear } from '@barber-shop/api';
+import { actualizarServicio, crearServicio } from '@barber-shop/api';
 
 import { Validacion, booleano, ejecutar, numero, texto, textoOpcional } from './base';
 import type { ResultadoAccion } from './base';
@@ -27,16 +27,16 @@ export async function guardarServicio(datos: FormData): Promise<ResultadoAccion>
   v.exigir(precio !== null && precio >= 0, 'precio_base', 'El precio no puede ser negativo.');
   if (v.hayErrores) return v.resultado;
 
-  const fila = {
+  const entrada = {
     nombre,
-    id_categoria: categoria,
+    idCategoria: categoria!,
     descripcion: textoOpcional(datos, 'descripcion'),
-    duracion_min: duracion,
-    precio_base: precio,
+    duracionMin: duracion!,
+    precioBase: precio!,
     estado: booleano(datos, 'estado'),
   };
 
   return ejecutar('/panel/servicios', () =>
-    id ? actualizar('servicios', id, fila) : crear('servicios', fila),
+    id ? actualizarServicio(id, entrada) : crearServicio(entrada),
   );
 }

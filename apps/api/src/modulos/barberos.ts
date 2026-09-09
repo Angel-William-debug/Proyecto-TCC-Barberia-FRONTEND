@@ -13,6 +13,7 @@ import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { traducirError } from '../errores';
 import { coincideEstado, coincideTexto, type FiltroTabla } from '../compartido/filtros';
+import { actualizar, crear } from '../compartido/escritura';
 
 export interface FiltroProfesionales extends FiltroTabla {
   /** Tipo de contratación: barbero, barbero senior, especialista, externo. */
@@ -46,4 +47,44 @@ export async function listarProfesionales(
   const { data, error } = await consulta;
   if (error) throw traducirError(error);
   return filtrar((data ?? []) as Profesional[]);
+}
+
+// ---------------------------------------------------------------------------
+// Alta y edicion (CU-004)
+// ---------------------------------------------------------------------------
+
+export interface EntradaBarbero {
+  nombre: string;
+  especialidad: string | null;
+  tipo: string | null;
+  /** Porcentaje de comision, entre 0 y 100. */
+  porcentajeComision: number;
+  estado: boolean;
+}
+
+/**
+ * El unico lugar del sistema donde se nombra la tabla `profesionales`.
+ *
+ * En pantalla se lee «Barbero» (13.3 del sistema de diseno); en la base la
+ * tabla se llama `profesionales`. Esa distancia se salva aca y en ningun otro
+ * lado.
+ */
+function filaBarbero(e: EntradaBarbero) {
+  return {
+    nombre: e.nombre,
+    especialidad: e.especialidad,
+    tipo: e.tipo,
+    porcentaje_com: e.porcentajeComision,
+    estado: e.estado,
+  };
+}
+
+/** Alta de un barbero (CU-004). Devuelve su id. */
+export async function crearBarbero(entrada: EntradaBarbero): Promise<number> {
+  return crear('profesionales', filaBarbero(entrada));
+}
+
+/** Edicion de un barbero (CU-004). */
+export async function actualizarBarbero(id: number, entrada: EntradaBarbero): Promise<void> {
+  return actualizar('profesionales', id, filaBarbero(entrada));
 }

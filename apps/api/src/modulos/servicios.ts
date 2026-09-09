@@ -13,6 +13,7 @@ import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { traducirError } from '../errores';
 import { coincideEstado, coincideTexto, type FiltroTabla } from '../compartido/filtros';
+import { actualizar, crear } from '../compartido/escritura';
 
 export interface FiltroServicios extends FiltroTabla {
   /** Identificador de categoría, como texto porque viene de la URL. */
@@ -59,4 +60,39 @@ export async function listarCategoriasServicio(): Promise<CategoriaServicio[]> {
 
   if (error) throw traducirError(error);
   return (data ?? []) as CategoriaServicio[];
+}
+
+// ---------------------------------------------------------------------------
+// Alta y edicion (CU-003)
+// ---------------------------------------------------------------------------
+
+export interface EntradaServicio {
+  nombre: string;
+  idCategoria: number;
+  descripcion: string | null;
+  duracionMin: number;
+  precioBase: number;
+  estado: boolean;
+}
+
+/** El unico lugar del sistema donde se nombran las columnas de `servicios`. */
+function filaServicio(e: EntradaServicio) {
+  return {
+    nombre: e.nombre,
+    id_categoria: e.idCategoria,
+    descripcion: e.descripcion,
+    duracion_min: e.duracionMin,
+    precio_base: e.precioBase,
+    estado: e.estado,
+  };
+}
+
+/** Alta de un servicio (CU-003). Devuelve su id. */
+export async function crearServicio(entrada: EntradaServicio): Promise<number> {
+  return crear('servicios', filaServicio(entrada));
+}
+
+/** Edicion de un servicio (CU-003). */
+export async function actualizarServicio(id: number, entrada: EntradaServicio): Promise<void> {
+  return actualizar('servicios', id, filaServicio(entrada));
 }

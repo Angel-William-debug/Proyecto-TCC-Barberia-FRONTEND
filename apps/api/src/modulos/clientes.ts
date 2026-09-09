@@ -5,7 +5,7 @@ import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { traducirError } from '../errores';
 import { coincideEstado, coincideTexto, entreFechas, paginar } from '../compartido/filtros';
-import { rechazarSiEsDemo } from '../compartido/escritura';
+import { actualizar, crear, rechazarSiEsDemo } from '../compartido/escritura';
 import { uno } from '../compartido/relaciones';
 
 const POR_PAGINA = 25;
@@ -154,13 +154,59 @@ export async function desactivarCliente(idCliente: number): Promise<void> {
 }
 
 /*
- * El alta, la edicion, el borrado logico y la restauracion NO viven aca.
+ * El BORRADO logico y la restauracion no viven aca: los hace la capa generica
+ * de `compartido/escritura.ts`, identica para las ocho tablas escribibles.
  *
- * Los hace la capa generica de `compartido/escritura.ts`, que es identica para
- * las ocho tablas escribibles y ademas rechaza la escritura en modo
- * demostracion. Habia cuatro copias especificas de cliente que hacian lo mismo
- * sin ese guardia; se eliminaron.
+ * El alta y la edicion SI viven aca desde el 9/9/2026, pero solo el mapeo de
+ * columnas: la mecanica de escribir -el guardia de modo demostracion, el
+ * traductor de errores- sigue siendo la generica, que se llama desde abajo.
+ * Antes ese mapeo estaba en `apps/web/src/acciones/clientes.ts`, que por eso
+ * conocia el nombre de la tabla y de sus siete columnas.
  *
- * `desactivarCliente` se queda porque NO es lo mismo: desactivar es un estado
- * de negocio (CU-002 A3) y borrar es una baja.
+ * `desactivarCliente` es aparte: desactivar es un estado de negocio
+ * (CU-002 A3) y borrar es una baja.
  */
+
+// ---------------------------------------------------------------------------
+// Alta y edicion (CU-002)
+// ---------------------------------------------------------------------------
+
+/**
+ * Un cliente tal como lo describe quien lo carga.
+ *
+ * Los nombres son los del dominio, no los de la base: `fechaNacimiento`, no
+ * `fecha_nacimiento`. Esa traduccion es justamente lo que hace que el nombre
+ * de la columna no salga de este archivo.
+ */
+export interface EntradaCliente {
+  nombre: string;
+  telefono: string;
+  email: string | null;
+  direccion: string | null;
+  fechaNacimiento: string | null;
+  notasInternas: string | null;
+  estado: boolean;
+}
+
+/** El unico lugar del sistema donde se nombran las columnas de `clientes`. */
+function filaCliente(e: EntradaCliente) {
+  return {
+    nombre: e.nombre,
+    telefono: e.telefono,
+    email: e.email,
+    direccion: e.direccion,
+    fecha_nacimiento: e.fechaNacimiento,
+    notas_internas: e.notasInternas,
+    estado: e.estado,
+  };
+}
+
+/** Alta de un cliente (CU-002). Devuelve su id. */
+export async function crearCliente(entrada: EntradaCliente): Promise<number> {
+  return crear('clientes', filaCliente(entrada));
+}
+
+/** Edicion de un cliente (CU-002). */
+export async function actualizarCliente(id: number, entrada: EntradaCliente): Promise<void> {
+  return actualizar('clientes', id, filaCliente(entrada));
+}

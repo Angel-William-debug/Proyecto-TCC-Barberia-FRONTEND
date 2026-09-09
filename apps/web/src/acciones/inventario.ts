@@ -2,8 +2,12 @@
 'use server';
 
 import {
-  actualizar,
-  crear,
+  actualizarCategoriaProducto,
+  actualizarLineaReceta,
+  actualizarProducto,
+  crearCategoriaProducto,
+  crearLineaReceta,
+  crearProducto,
   exigirSesion,
   listarAlertas,
   listarRecetaServicio,
@@ -35,16 +39,15 @@ export async function guardarLineaReceta(datos: FormData): Promise<ResultadoAcci
   v.exigir(cantidad !== null && cantidad > 0, 'cantidad_estandar', 'La cantidad debe ser mayor a cero.');
   if (v.hayErrores) return v.resultado;
 
-  const fila = {
-    id_servicio: idServicio,
-    id_producto: idProducto,
-    cantidad_estandar: cantidad,
-    unidad_uso: textoOpcional(datos, 'unidad_uso'),
-    estado: true,
+  const entrada = {
+    idServicio: idServicio!,
+    idProducto: idProducto!,
+    cantidadEstandar: cantidad!,
+    unidadUso: textoOpcional(datos, 'unidad_uso'),
   };
 
   return ejecutar('/panel/servicios', () =>
-    id ? actualizar('servicio_producto', id, fila) : crear('servicio_producto', fila),
+    id ? actualizarLineaReceta(id, entrada) : crearLineaReceta(entrada),
   );
 }
 
@@ -60,14 +63,13 @@ export async function guardarCategoriaProducto(datos: FormData): Promise<Resulta
   v.exigir(nombre.length >= 3, 'nombre', 'Ingrese el nombre de la categoría.');
   if (v.hayErrores) return v.resultado;
 
-  const fila = {
+  const entrada = {
     nombre,
     descripcion: textoOpcional(datos, 'descripcion'),
-    estado: true,
   };
 
   return ejecutar('/panel/inventario', () =>
-    id ? actualizar('categorias_producto', id, fila) : crear('categorias_producto', fila),
+    id ? actualizarCategoriaProducto(id, entrada) : crearCategoriaProducto(entrada),
   );
 }
 
@@ -114,23 +116,22 @@ export async function guardarProducto(datos: FormData): Promise<ResultadoAccion>
   );
   if (v.hayErrores) return v.resultado;
 
-  const fila = {
+  const entrada = {
     nombre,
-    id_categoria_p: categoria,
+    idCategoria: categoria!,
     descripcion: textoOpcional(datos, 'descripcion'),
-    unidad_medida: textoOpcional(datos, 'unidad_medida'),
-    unidad_uso: textoOpcional(datos, 'unidad_uso'),
-    cantidad_uso_estandar: cantidadUsoEstandar,
-    precio_unitario: precio,
-    stock_minimo: minimo,
-    stock_maximo: maximo,
+    unidadMedida: textoOpcional(datos, 'unidad_medida'),
+    unidadUso: textoOpcional(datos, 'unidad_uso'),
+    cantidadUsoEstandar,
+    precioUnitario: precio!,
+    stockMinimo: minimo!,
+    stockMaximo: maximo,
     estado: booleano(datos, 'estado'),
   };
 
-  // El stock actual NO se edita desde este formulario: se mueve con entradas,
-  // salidas y ajustes, que dejan su rastro en movimientos_inventario. Un campo
-  // editable aca permitiria cambiar el stock sin dejar constancia de por que.
+  // El stock actual no se edita desde este formulario, y tampoco se puede fijar
+  // al dar de alta: eso lo garantiza `crearProducto`, no esta accion.
   return ejecutar('/panel/inventario', () =>
-    id ? actualizar('productos', id, fila) : crear('productos', { ...fila, stock_actual: 0 }),
+    id ? actualizarProducto(id, entrada) : crearProducto(entrada),
   );
 }

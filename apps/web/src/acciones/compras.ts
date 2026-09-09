@@ -1,7 +1,13 @@
 /** Accion de servidor de las compras (CU-017). */
 'use server';
 
-import { actualizar, crear, crearPagoProveedor, crearPedido, exigirSesion } from '@barber-shop/api';
+import {
+  actualizarProveedor,
+  crearPagoProveedor,
+  crearPedido,
+  crearProveedor,
+  exigirSesion,
+} from '@barber-shop/api';
 import { ESTADOS_PEDIDO, type EstadoPedido } from '@barber-shop/tipos';
 
 import {
@@ -106,7 +112,7 @@ export async function guardarProveedor(datos: FormData): Promise<ResultadoAccion
   v.exigir(!email || CORREO.test(email), 'email', 'Ingrese un correo con el formato nombre@dominio.com');
   if (v.hayErrores) return v.resultado;
 
-  const fila = {
+  const entrada = {
     nombre,
     email,
     telefono: textoOpcional(datos, 'telefono'),
@@ -115,6 +121,6 @@ export async function guardarProveedor(datos: FormData): Promise<ResultadoAccion
   };
 
   return ejecutar('/panel/compras', () =>
-    id ? actualizar('proveedores', id, fila) : crear('proveedores', fila),
+    id ? actualizarProveedor(id, entrada) : crearProveedor(entrada),
   );
 }
