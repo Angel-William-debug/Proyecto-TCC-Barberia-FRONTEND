@@ -132,8 +132,10 @@ export default async function PaginaUsuarios({
       </Tarjeta>
 
       <p className="text-cuerpo-sm text-terciario mt-4">
-        El alta manda una invitación de Supabase Auth; la persona elige su propia contraseña
-        (RN-047). Desactivar (RN-003) conserva la cuenta y el historial de acciones.
+        El alta crea la credencial en Supabase Auth con una contraseña inicial que usted
+        elige y le entrega a la persona; ella la cambia cuando quiera desde «Recuperar
+        contraseña». La contraseña nunca se guarda en la ficha del usuario (RN-047).
+        Desactivar (RN-003) conserva la cuenta y el historial de acciones.
       </p>
     </>
   );

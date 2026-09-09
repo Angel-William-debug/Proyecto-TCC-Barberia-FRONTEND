@@ -8,9 +8,34 @@
  * que respeta la politica RLS `admin_total` de esa tabla (solo el
  * Administrador puede escribir en `usuarios` y en `roles`).
  *
- * No se fija contrasena desde aca (RN-047): `inviteUserByEmail` manda un
- * enlace de Supabase Auth para que la persona elija la suya. Es el mismo
- * mecanismo nativo de Supabase, no depende de Resend.
+ * EL ALTA CREA LA CUENTA, NO LA INVITA
+ *
+ * Hasta el 9/9/2026 usaba `inviteUserByEmail`: se mandaba un correo y la
+ * persona elegia su contrasena. Eso era el codigo apartandose del documento,
+ * no al reves. CU-019 dice, en sus propias palabras: paso 3 «Hace clic en
+ * Nuevo Usuario», paso 4 «Completa nombre, email y selecciona el rol», paso 6
+ * «El sistema CREA LA CREDENCIAL en Supabase Auth y vincula auth_uid». En
+ * ningun paso aparece una invitacion.
+ *
+ * Y no habia regla que lo exigiera: RN-047 dice «la contrasena no se almacena
+ * en USUARIOS; el usuario se vincula a Supabase Auth mediante auth_uid», que
+ * es sobre DONDE vive la contrasena, no sobre quien la elige. Se sigue
+ * cumpliendo igual: la credencial la guarda Auth y `public.usuarios` solo
+ * tiene el `auth_uid`.
+ *
+ * En la practica la invitacion tampoco servia. La barberia da de alta a un
+ * barbero que esta parado al lado del mostrador, y esperar a que abra su
+ * correo -si es que lo tiene, y si no cae en la carpeta de no deseados- lo
+ * deja sin poder entrar el mismo dia que empieza a trabajar. Peor: si la
+ * invitacion se pierde, no hay forma de reenviarla desde la interfaz.
+ *
+ * Ahora el Administrador fija una contrasena inicial y se la entrega en mano.
+ * La persona la cambia cuando quiera desde «Recuperar contrasena», que es el
+ * mecanismo nativo de Supabase Auth y sigue estando.
+ *
+ * `email_confirm: true` porque el Administrador da fe de la direccion: sin eso
+ * la cuenta queda sin confirmar y no puede iniciar sesion hasta que alguien
+ * abra un correo, que es exactamente lo que se quiso evitar.
  */
 
 import type { Rol, VistaUsuarioPorRol } from '@barber-shop/tipos';
@@ -64,6 +89,8 @@ export interface EntradaNuevoUsuario {
   nombre: string;
   email: string;
   idRol: number;
+  /** Contrasena inicial. La fija el Administrador y la persona la cambia despues. */
+  password: string;
 }
 
 /**
@@ -78,19 +105,26 @@ export async function crearUsuario(entrada: EntradaNuevoUsuario): Promise<number
 
   const admin = clienteAdmin();
 
-  const { data: invitado, error: errorInvitacion } = await admin.auth.admin.inviteUserByEmail(
-    entrada.email,
-  );
+  const { data: creado, error: errorAuth } = await admin.auth.admin.createUser({
+    email: entrada.email,
+    password: entrada.password,
+    email_confirm: true,
+    user_metadata: { nombre: entrada.nombre },
+  });
 
-  if (errorInvitacion || !invitado.user) {
+  if (errorAuth || !creado.user) {
+    // Aca SI se dice que el correo ya existe, al reves que en el registro del
+    // portal: quien esta mirando esta pantalla es el Administrador y ya tiene
+    // la lista completa de usuarios delante. Ocultarselo solo lo dejaria sin
+    // entender por que no puede dar de alta a alguien.
     throw new ErrorAplicacion(
-      errorInvitacion?.message?.includes('already been registered')
-        ? 'Ya existe un usuario de Auth con ese correo.'
-        : 'No se pudo invitar al usuario. Verifique el correo e intente nuevamente.',
+      errorAuth?.message?.includes('already been registered')
+        ? 'Ya existe una cuenta con ese correo.'
+        : 'No se pudo crear el usuario. Verifique el correo e intente nuevamente.',
     );
   }
 
-  const authUid = invitado.user.id;
+  const authUid = creado.user.id;
   const supabase = await clienteServidor();
 
   const { data: usuario, error: errorUsuario } = await supabase

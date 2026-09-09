@@ -11,10 +11,14 @@ import { PanelFormulario } from './panel-formulario';
 /**
  * CU-019 — alta de un usuario y cambio de rol o estado.
  *
+ * El alta CREA la cuenta con una contraseña inicial; no manda una invitación.
+ * El porqué del cambio está en `apps/api/src/modulos/usuarios.ts`.
+ *
  * Al editar no se toca el nombre ni el correo: son los datos con los que
  * Supabase Auth identifica a la persona, y cambiarlos desde acá dejaría la
- * ficha de `usuarios` desincronizada de su cuenta real. Solo se cambia el rol
- * (CU-019 A3) y el estado (CU-019 A2).
+ * ficha de `usuarios` desincronizada de su cuenta real. Tampoco se toca la
+ * contraseña: cambiarla es de la persona, desde «Recuperar contraseña». Solo
+ * se cambia el rol (CU-019 A3) y el estado (CU-019 A2).
  */
 export function FormularioUsuario({ usuario, roles }: { usuario?: VistaUsuarioPorRol; roles: Rol[] }) {
   const [abierto, setAbierto] = useState(false);
@@ -33,21 +37,21 @@ export function FormularioUsuario({ usuario, roles }: { usuario?: VistaUsuarioPo
         />
       ) : (
         <Boton variante="primario" icono="plus" onClick={() => setAbierto(true)}>
-          Invitar usuario
+          Crear usuario
         </Boton>
       )}
 
       <PanelFormulario
         abierto={abierto}
         onCerrar={() => setAbierto(false)}
-        titulo={editando ? `Editar ${usuario!.nombre}` : 'Invitar usuario'}
+        titulo={editando ? `Editar ${usuario!.nombre}` : 'Crear usuario'}
         descripcion={
           editando
             ? 'El nombre y el correo no se editan acá: identifican la cuenta de Auth.'
-            : 'Se manda un correo de invitación de Supabase Auth. La persona elige su propia contraseña (RN-047).'
+            : 'La cuenta queda lista para usarse. Entréguele la contraseña a la persona; la puede cambiar cuando quiera desde «Recuperar contraseña».'
         }
         accion={editando ? actualizarUsuario : guardarUsuario}
-        textoGuardar={editando ? 'Guardar cambios' : 'Enviar invitación'}
+        textoGuardar={editando ? 'Guardar cambios' : 'Crear usuario'}
       >
         {(errores) => (
           <>
@@ -79,6 +83,31 @@ export function FormularioUsuario({ usuario, roles }: { usuario?: VistaUsuarioPo
                 </>
               )}
             </GrupoCampos>
+
+            {!editando && (
+              <GrupoCampos
+                titulo="Contraseña inicial"
+                descripcion="La elige usted y se la entrega a la persona, que la puede cambiar después. No se guarda en la ficha del usuario: la administra Supabase Auth (RN-047)."
+              >
+                <Campo
+                  etiqueta="Contraseña"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  ayuda="Al menos 8 caracteres"
+                  error={errores.password}
+                  required
+                />
+                <Campo
+                  etiqueta="Repetir contraseña"
+                  name="repetir"
+                  type="password"
+                  autoComplete="new-password"
+                  error={errores.repetir}
+                  required
+                />
+              </GrupoCampos>
+            )}
 
             <GrupoCampos titulo="Rol y acceso">
               <CampoSelector

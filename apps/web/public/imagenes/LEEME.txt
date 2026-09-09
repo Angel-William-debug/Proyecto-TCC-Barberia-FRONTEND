@@ -14,3 +14,14 @@ FOTOS DE LA PORTADA
 Recortadas 3:4 desde originales de 3200x2133. Si hace falta rehacer un
 encuadre, el script vive en el historial de la conversacion: recorta al alto
 completo y corre la ventana horizontalmente segun donde este la accion.
+
+EL ICONO DEL NAVEGADOR NO VIVE ACA
+----------------------------------
+El icono de la pestana no se sirve desde /imagenes/: Next.js lo toma por
+convencion de archivo desde apps/web/src/app/, y ahi hay que dejarlo.
+
+    src/app/icon.png         256x256   pestana, marcador, Android
+    src/app/apple-icon.png   180x180   pantalla de inicio de iOS
+
+Los dos salen de imagenes-originales/icon_barberia.png con el script que
+recorta el halo, reencuadra y pinta el fondo con --carbon-900.

@@ -25,7 +25,7 @@ import { accionRegistrarCliente } from '@/acciones/portal';
  *
  * EL ROL NO ES UN CAMPO DE ESTE FORMULARIO, y no por descuido. Quien se
  * registra por su cuenta es siempre un cliente; el personal de la barberia lo
- * da de alta el Administrador desde `/panel/usuarios`, por invitacion. Si el
+ * da de alta el Administrador desde `/panel/usuarios`. Si el
  * rol se pudiera elegir aca, cualquiera se haria administrador.
  */
 export function FormularioCrearCuenta() {
