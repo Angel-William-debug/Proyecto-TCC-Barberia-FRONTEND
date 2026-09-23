@@ -74,6 +74,7 @@ export {
   FiltrosActivos,
   type PropsFiltrosActivos,
 } from './componentes/filtros/filtros-activos';
+export { Paginacion, type PropsPaginacion } from './componentes/filtros/paginacion';
 export {
   Tabla,
   TablaEncabezado,

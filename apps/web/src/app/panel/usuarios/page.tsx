@@ -6,6 +6,7 @@ import {
   ChipEstado,
   EstadoVacio,
   FiltrosActivos,
+  Paginacion,
   SelectorFiltro,
   SelectorMultiple,
   Tabla,
@@ -22,7 +23,14 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { FormularioUsuario } from '@/componentes/usuarios/formulario-usuario';
-import { ETIQUETAS_ACTIVO, OPCIONES_ACTIVO, comunes, texto, type Parametros } from '@/lib/filtros';
+import {
+  ETIQUETAS_ACTIVO,
+  OPCIONES_ACTIVO,
+  comunes,
+  paginarFilas,
+  texto,
+  type Parametros,
+} from '@/lib/filtros';
 
 export const metadata = { title: 'Usuarios' };
 
@@ -50,6 +58,8 @@ export default async function PaginaUsuarios({
   const filtro = { ...comunes(params), rol: texto(params, 'rol') };
 
   const [usuarios, roles] = await Promise.all([listarUsuarios(filtro), listarRoles()]);
+
+  const pagUsuarios = paginarFilas(usuarios, params);
 
   return (
     <>
@@ -97,7 +107,7 @@ export default async function PaginaUsuarios({
                 />
               </TdCompleta>
             ) : (
-              usuarios.map((u) => (
+              pagUsuarios.filas.map((u) => (
                 <Tr key={u.id_usuario} interactiva>
                   <Td className="font-medium" etiqueta="Usuario">
                     {u.nombre}
@@ -129,6 +139,7 @@ export default async function PaginaUsuarios({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagUsuarios.paginacion} />
       </Tarjeta>
 
       <p className="text-cuerpo-sm text-terciario mt-4">

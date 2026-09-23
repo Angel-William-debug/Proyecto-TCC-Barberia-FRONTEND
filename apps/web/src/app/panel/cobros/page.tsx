@@ -7,6 +7,7 @@ import {
   EstadoVacio,
   FiltrosActivos,
   PRESENTACION_COBRO,
+  Paginacion,
   RangoFechas,
   SelectorFiltro,
   SelectorMultiple,
@@ -26,7 +27,12 @@ import {
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { BotonEmitirFactura } from '@/componentes/cobros/boton-emitir-factura';
 import { FormularioCobro } from '@/componentes/cobros/formulario-cobro';
-import { comunes, texto, type Parametros } from '@/lib/filtros';
+import {
+  comunes,
+  paginarFilas,
+  texto,
+  type Parametros,
+} from '@/lib/filtros';
 
 export const metadata = { title: 'Cobros' };
 
@@ -60,6 +66,8 @@ export default async function PaginaCobros({
   const pendiente = cobros
     .filter((c) => c.estado === 'pendiente')
     .reduce((suma, c) => suma + c.monto, 0);
+
+  const pagCobros = paginarFilas(cobros, params);
 
   return (
     <>
@@ -133,7 +141,7 @@ export default async function PaginaCobros({
                 />
               </TdCompleta>
             ) : (
-              cobros.map((c) => (
+              pagCobros.filas.map((c) => (
                 <Tr key={c.id_cobro} interactiva>
                   <Td className="font-mono" etiqueta="Turno">{identificador(c.id_cita)}</Td>
                   <Td className="font-medium" etiqueta="Cliente">{c.nombre_cliente}</Td>
@@ -153,6 +161,7 @@ export default async function PaginaCobros({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagCobros.paginacion} />
       </Tarjeta>
 
       <p className="text-cuerpo-sm text-terciario mt-4">

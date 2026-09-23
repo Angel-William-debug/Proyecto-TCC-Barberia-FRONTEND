@@ -17,6 +17,7 @@ import {
   CampoBusqueda,
   EstadoVacio,
   Indicador,
+  Paginacion,
   RangoFechas,
   SelectorFiltro,
   Tabla,
@@ -34,7 +35,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { fecha, texto, type Parametros } from '@/lib/filtros';
+import { fecha, paginarFilas, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Reportes' };
 
@@ -99,6 +100,9 @@ export default async function PaginaReportes({
   if (filtroReporte.desde) queryExportar.set('desde', filtroReporte.desde);
   if (filtroReporte.hasta) queryExportar.set('hasta', filtroReporte.hasta);
   if (filtroReporte.busqueda) queryExportar.set('q', filtroReporte.busqueda);
+
+  // La vista previa se pagina; la exportacion a Excel y PDF lleva todas las filas.
+  const pagPrevia = paginarFilas(previsualizacion.filas, params);
 
   return (
     <>
@@ -274,7 +278,7 @@ export default async function PaginaReportes({
                 />
               </TdCompleta>
             ) : (
-              previsualizacion.filas.map((fila, i) => (
+              pagPrevia.filas.map((fila, i) => (
                 <Tr key={i}>
                   {previsualizacion.columnas.map((c) => (
                     <Td key={c.clave} numerico={c.numerico} etiqueta={c.titulo}>
@@ -286,6 +290,7 @@ export default async function PaginaReportes({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagPrevia.paginacion} />
       </Tarjeta>
     </>
   );

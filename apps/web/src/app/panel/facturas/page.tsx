@@ -9,6 +9,7 @@ import {
   ChipEstado,
   EstadoVacio,
   FiltrosActivos,
+  Paginacion,
   RangoFechas,
   SelectorMultiple,
   Tabla,
@@ -25,7 +26,11 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { comunes, type Parametros } from '@/lib/filtros';
+import {
+  comunes,
+  paginarFilas,
+  type Parametros,
+} from '@/lib/filtros';
 
 export const metadata = { title: 'Facturas' };
 
@@ -50,6 +55,8 @@ export default async function PaginaFacturas({
   const totalEmitido = facturas
     .filter((f) => f.estado === 'emitida')
     .reduce((suma, f) => suma + f.total, 0);
+
+  const pagFacturas = paginarFilas(facturas, params);
 
   return (
     <>
@@ -114,7 +121,7 @@ export default async function PaginaFacturas({
                 />
               </TdCompleta>
             ) : (
-              facturas.map((f) => (
+              pagFacturas.filas.map((f) => (
                 <Tr key={f.id_factura} interactiva>
                   <Td className="font-mono" etiqueta="N.o">
                     {String(f.id_factura).padStart(6, '0')}
@@ -150,6 +157,7 @@ export default async function PaginaFacturas({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagFacturas.paginacion} />
       </Tarjeta>
     </>
   );

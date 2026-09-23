@@ -61,7 +61,7 @@ export function entreFechas(fecha: string | null, desde?: string, hasta?: string
 }
 
 /** Corta un arreglo en la página pedida y devuelve el envoltorio paginado. */
-export function paginar<T>(filas: T[], pagina = 1, porPagina = 25) {
+export function paginar<T>(filas: T[], pagina = 1, porPagina = 10) {
   const p = Math.max(1, pagina);
   const desde = (p - 1) * porPagina;
 

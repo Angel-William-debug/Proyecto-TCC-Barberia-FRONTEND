@@ -13,6 +13,7 @@ import {
   FiltrosActivos,
   Icono,
   PRESENTACION_STOCK,
+  Paginacion,
   RangoFechas,
   SelectorMultiple,
   Tabla,
@@ -35,7 +36,13 @@ import { BotonBorrar } from '@/componentes/compartido/boton-borrar';
 import { BotonResolverAlerta } from '@/componentes/inventario/boton-resolver-alerta';
 import { FormularioCategoriaProducto } from '@/componentes/inventario/formulario-categoria-producto';
 import { FormularioProducto } from '@/componentes/inventario/formulario-producto';
-import { comunes, fecha, lista, type Parametros } from '@/lib/filtros';
+import {
+  comunes,
+  fecha,
+  lista,
+  paginarFilas,
+  type Parametros,
+} from '@/lib/filtros';
 
 export const metadata = { title: 'Inventario' };
 
@@ -101,6 +108,9 @@ export default async function PaginaInventario({
     salida: 'trending-down',
     ajuste: 'arrow-left-right',
   } as const;
+
+  const pagProductos = paginarFilas(productos, params);
+  const pagMovimientos = paginarFilas(movimientos, params, 'pagina_movimientos');
 
   return (
     <>
@@ -181,7 +191,7 @@ export default async function PaginaInventario({
                 />
               </TdCompleta>
             ) : (
-              productos.map((p) => (
+              pagProductos.filas.map((p) => (
                 <Tr key={p.id_producto} interactiva>
                   <Td className="font-medium" etiqueta="Producto">{p.nombre}</Td>
                   <Td numerico className={p.stock_actual <= 0 ? 'text-peligro font-medium' : ''} etiqueta="Stock actual">
@@ -205,6 +215,7 @@ export default async function PaginaInventario({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagProductos.paginacion} />
       </Tarjeta>
 
       <Tarjeta>
@@ -247,7 +258,7 @@ export default async function PaginaInventario({
                 />
               </TdCompleta>
             ) : (
-              movimientos.map((m) => (
+              pagMovimientos.filas.map((m) => (
                 <Tr key={m.id_movimiento}>
                   <Td className="text-secundario" etiqueta="Fecha">{fechaHora(m.fecha)}</Td>
                   <Td className="font-medium" etiqueta="Producto">{m.nombre_producto}</Td>
@@ -265,6 +276,7 @@ export default async function PaginaInventario({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagMovimientos.paginacion} />
       </Tarjeta>
 
       <Tarjeta className="mt-6">

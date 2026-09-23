@@ -54,7 +54,14 @@ export function useFiltros() {
 
       // Cambiar un filtro siempre vuelve a la primera página. Quedarse en la
       // página 4 de un resultado que ahora tiene una sola es desconcertante.
-      if (!('pagina' in cambios)) siguientes.delete('pagina');
+      // Vale para todas las tablas de la pantalla: las que tienen dos usan
+      // `pagina` y `pagina_<tabla>`.
+      const esPaginacion = Object.keys(cambios).some((c) => c.startsWith('pagina'));
+      if (!esPaginacion) {
+        for (const clave of [...siguientes.keys()]) {
+          if (clave === 'pagina' || clave.startsWith('pagina_')) siguientes.delete(clave);
+        }
+      }
 
       const consulta = siguientes.toString();
       router.push(consulta ? `${ruta}?${consulta}` : ruta, { scroll: false });

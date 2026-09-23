@@ -12,6 +12,7 @@ import {
   EstadoVacio,
   FiltrosActivos,
   PRESENTACION_CITA,
+  Paginacion,
   SelectorFiltro,
   SelectorMultiple,
   Tabla,
@@ -32,7 +33,13 @@ import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { FormularioTurno } from '@/componentes/agenda/formulario-turno';
 import { PanelCierreServicio } from '@/componentes/agenda/panel-cierre-servicio';
 import { FiltroFecha } from '@/componentes/agenda/filtro-fecha';
-import { fecha as leerFecha, lista, texto, type Parametros } from '@/lib/filtros';
+import {
+  fecha as leerFecha,
+  lista,
+  paginarFilas,
+  texto,
+  type Parametros,
+} from '@/lib/filtros';
 
 export const metadata = { title: 'Agenda' };
 
@@ -86,6 +93,8 @@ export default async function PaginaAgenda({
   const facturado = citas
     .filter((c) => c.estado === 'completado')
     .reduce((suma, c) => suma + c.total, 0);
+
+  const pagCitas = paginarFilas(citas, params);
 
   return (
     <>
@@ -176,7 +185,7 @@ export default async function PaginaAgenda({
                 />
               </TdCompleta>
             ) : (
-              citas.map((c) => (
+              pagCitas.filas.map((c) => (
                 <Tr key={c.id_cita} interactiva>
                   <Td className="font-mono font-medium" etiqueta="Hora">{hora(c.fecha_hora)}</Td>
                   <Td className="font-medium" etiqueta="Cliente">{c.cliente.nombre}</Td>
@@ -203,6 +212,7 @@ export default async function PaginaAgenda({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagCitas.paginacion} />
       </Tarjeta>
     </>
   );

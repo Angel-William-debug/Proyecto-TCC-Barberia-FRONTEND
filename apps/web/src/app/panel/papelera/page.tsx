@@ -3,6 +3,7 @@ import type { TablaEscribible } from '@barber-shop/api';
 import {
   BarraFiltros,
   EstadoVacio,
+  Paginacion,
   SelectorFiltro,
   Tabla,
   TablaCuerpo,
@@ -18,7 +19,11 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { BotonRestaurar } from '@/componentes/compartido/boton-restaurar';
-import { texto, type Parametros } from '@/lib/filtros';
+import {
+  paginarFilas,
+  texto,
+  type Parametros,
+} from '@/lib/filtros';
 
 export const metadata = { title: 'Papelera' };
 
@@ -72,6 +77,8 @@ export default async function PaginaPapelera({
 
   const registros = await listarBorrados(tabla);
 
+  const pagRegistros = paginarFilas(registros, params);
+
   return (
     <>
       <EncabezadoVista
@@ -102,7 +109,7 @@ export default async function PaginaPapelera({
                 />
               </TdCompleta>
             ) : (
-              registros.map((r) => (
+              pagRegistros.filas.map((r) => (
                 <Tr key={r.id}>
                   <Td className="font-medium" etiqueta="Nombre">
                     {r.nombre}
@@ -118,6 +125,7 @@ export default async function PaginaPapelera({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagRegistros.paginacion} />
 
         <p className="text-cuerpo-sm text-terciario mt-4 px-1">
           {plural(registros.length, 'registro borrado', 'registros borrados')} en este catálogo.

@@ -5,6 +5,7 @@ import {
   ChipEstado,
   EstadoVacio,
   FiltrosActivos,
+  Paginacion,
   SelectorFiltro,
   SelectorMultiple,
   Tabla,
@@ -28,6 +29,7 @@ import {
   ETIQUETAS_ACTIVO,
   OPCIONES_ACTIVO,
   comunes,
+  paginarFilas,
   texto,
   type Parametros,
 } from '@/lib/filtros';
@@ -53,6 +55,8 @@ export default async function PaginaServicios({
   const productosActivos = productos
     .filter((p) => p.estado)
     .map((p) => ({ id_producto: p.id_producto, nombre: p.nombre }));
+
+  const pagServicios = paginarFilas(servicios, params);
 
   return (
     <>
@@ -111,7 +115,7 @@ export default async function PaginaServicios({
                 />
               </TdCompleta>
             ) : (
-              servicios.map((s) => (
+              pagServicios.filas.map((s) => (
                 <Tr key={s.id_servicio} interactiva>
                   <Td className="font-medium" etiqueta="Servicio">
                     {s.nombre}
@@ -151,6 +155,7 @@ export default async function PaginaServicios({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagServicios.paginacion} />
       </Tarjeta>
     </>
   );

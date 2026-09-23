@@ -5,6 +5,7 @@ import { listarHistorialCliente, listarRecomendaciones, obtenerCliente } from '@
 import {
   BotonIcono,
   EstadoVacio,
+  Paginacion,
   Tabla,
   TablaCuerpo,
   TablaEncabezado,
@@ -22,6 +23,7 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { TarjetaRecomendaciones } from '@/componentes/clientes/tarjeta-recomendaciones';
+import { paginarFilas, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Perfil del cliente' };
 
@@ -32,10 +34,13 @@ export const metadata = { title: 'Perfil del cliente' };
  */
 export default async function PaginaPerfilCliente({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Parametros>;
 }) {
   const { id } = await params;
+  const consulta = await searchParams;
   const idCliente = Number(id);
   if (!Number.isFinite(idCliente)) notFound();
 
@@ -47,6 +52,7 @@ export default async function PaginaPerfilCliente({
     listarRecomendaciones(idCliente).catch(() => []),
   ]);
 
+  const pagHistorial = paginarFilas(historial, consulta);
   const totalGastado = historial.reduce((suma, h) => suma + h.costo_cobrado, 0);
 
   return (
@@ -105,7 +111,7 @@ export default async function PaginaPerfilCliente({
                   />
                 </TdCompleta>
               ) : (
-                historial.map((h, i) => (
+                pagHistorial.filas.map((h, i) => (
                   <Tr key={i}>
                     <Td className="text-secundario" etiqueta="Fecha">
                       {fechaCorta(h.fecha_realizacion)}
@@ -124,6 +130,7 @@ export default async function PaginaPerfilCliente({
               )}
             </TablaCuerpo>
           </Tabla>
+          <Paginacion {...pagHistorial.paginacion} />
         </Tarjeta>
 
         <TarjetaRecomendaciones idCliente={idCliente} iniciales={recomendaciones} />

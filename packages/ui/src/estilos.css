@@ -126,6 +126,39 @@
     outline: none;
   }
 
+  /* La mano sobre todo lo que se puede tocar. Tailwind 4 dejo de ponerla en
+     los botones -su preflight los deja con el cursor por defecto, como el
+     navegador-, y sin ella el usuario no sabe que puede hacer clic hasta que
+     lo hace. Se declara aca, una vez, y no en cada componente: el dia que
+     aparezca un control nuevo ya nace con la mano. `:where()` la deja con
+     especificidad 0 para que una clase `cursor-*` la pueda cambiar. */
+  :where(
+      a[href],
+      button,
+      summary,
+      select,
+      label:has(> input[type='checkbox'], > input[type='radio']),
+      input[type='checkbox'],
+      input[type='radio'],
+      input[type='date'],
+      input[type='file'],
+      [role='button'],
+      [role='tab'],
+      [role='menuitem'],
+      [role='option'],
+      [role='switch']
+    ) {
+    cursor: pointer;
+  }
+
+  /* Lo deshabilitado dice que no, en vez de prometer un clic que no pasa. */
+  :where(button, select, input, textarea, [role='button'], [aria-disabled='true']):is(
+      :disabled,
+      [aria-disabled='true']
+    ) {
+    cursor: not-allowed;
+  }
+
   h1,
   h2,
   h3,

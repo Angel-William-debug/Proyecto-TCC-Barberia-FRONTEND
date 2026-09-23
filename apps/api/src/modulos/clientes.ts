@@ -8,7 +8,9 @@ import { coincideEstado, coincideTexto, entreFechas, paginar } from '../comparti
 import { actualizar, crear, rechazarSiEsDemo } from '../compartido/escritura';
 import { uno } from '../compartido/relaciones';
 
-const POR_PAGINA = 25;
+// Diez, como todas las tablas del panel (FILAS_POR_PAGINA en apps/web). Aca
+// se repite porque Clientes es la unica que pagina en la consulta.
+const POR_PAGINA = 10;
 
 /**
  * Listado paginado de clientes (CU-002).

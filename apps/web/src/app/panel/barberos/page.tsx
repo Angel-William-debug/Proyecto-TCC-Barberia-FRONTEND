@@ -5,6 +5,7 @@ import {
   ChipEstado,
   EstadoVacio,
   FiltrosActivos,
+  Paginacion,
   SelectorFiltro,
   SelectorMultiple,
   Tabla,
@@ -27,6 +28,7 @@ import {
   ETIQUETAS_ACTIVO,
   OPCIONES_ACTIVO,
   comunes,
+  paginarFilas,
   texto,
   type Parametros,
 } from '@/lib/filtros';
@@ -57,6 +59,8 @@ export default async function PaginaBarberos({
   const filtro = { ...comunes(params), tipo: texto(params, 'tipo') };
 
   const barberos = await listarProfesionales(filtro);
+
+  const pagBarberos = paginarFilas(barberos, params);
 
   return (
     <>
@@ -114,7 +118,7 @@ export default async function PaginaBarberos({
                 />
               </TdCompleta>
             ) : (
-              barberos.map((b) => (
+              pagBarberos.filas.map((b) => (
                 <Tr key={b.id_profesional} interactiva>
                   <Td etiqueta="Barbero">
                     <span className="flex items-center gap-3">
@@ -150,6 +154,7 @@ export default async function PaginaBarberos({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagBarberos.paginacion} />
       </Tarjeta>
     </>
   );

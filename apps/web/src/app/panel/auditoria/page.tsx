@@ -6,6 +6,7 @@ import {
   ChipEstado,
   EstadoVacio,
   FiltrosActivos,
+  Paginacion,
   RangoFechas,
   SelectorFiltro,
   SelectorMultiple,
@@ -23,7 +24,13 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
-import { comunes, lista, texto, type Parametros } from '@/lib/filtros';
+import {
+  comunes,
+  lista,
+  paginarFilas,
+  texto,
+  type Parametros,
+} from '@/lib/filtros';
 
 export const metadata = { title: 'Auditoría' };
 
@@ -74,6 +81,8 @@ export default async function PaginaAuditoria({
     acciones: lista(params, 'accion'),
     tabla: texto(params, 'tabla'),
   });
+
+  const pagRegistros = paginarFilas(registros, params);
 
   return (
     <>
@@ -126,7 +135,7 @@ export default async function PaginaAuditoria({
                 />
               </TdCompleta>
             ) : (
-              registros.map((r) => (
+              pagRegistros.filas.map((r) => (
                 <Tr key={r.id_auditoria}>
                   <Td className="text-secundario whitespace-nowrap" etiqueta="Fecha">
                     {fechaHora(r.fecha_accion)}
@@ -151,6 +160,7 @@ export default async function PaginaAuditoria({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagRegistros.paginacion} />
       </Tarjeta>
     </>
   );

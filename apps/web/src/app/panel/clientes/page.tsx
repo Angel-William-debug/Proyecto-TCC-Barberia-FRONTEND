@@ -3,12 +3,12 @@ import Link from 'next/link';
 import { listarClientes } from '@barber-shop/api';
 import {
   BarraFiltros,
-  Boton,
   BotonIcono,
   CampoBusqueda,
   ChipEstado,
   EstadoVacio,
   FiltrosActivos,
+  Paginacion,
   RangoFechas,
   SelectorMultiple,
   Tabla,
@@ -136,31 +136,12 @@ export default async function PaginaClientes({
           </TablaCuerpo>
         </Tabla>
 
-        {resultado.totalPaginas > 1 && (
-          <div className="border-borde-sutil flex items-center justify-between border-t px-4 py-3">
-            <p className="text-cuerpo-sm text-terciario">
-              Página {resultado.pagina} de {resultado.totalPaginas}
-            </p>
-            <div className="flex gap-2">
-              <Boton
-                variante="secundario"
-                tamano="sm"
-                icono="chevron-left"
-                disabled={resultado.pagina <= 1}
-              >
-                Anterior
-              </Boton>
-              <Boton
-                variante="secundario"
-                tamano="sm"
-                iconoDerecha="chevron-right"
-                disabled={resultado.pagina >= resultado.totalPaginas}
-              >
-                Siguiente
-              </Boton>
-            </div>
-          </div>
-        )}
+        <Paginacion
+          pagina={resultado.pagina}
+          totalPaginas={resultado.totalPaginas}
+          total={resultado.total}
+          porPagina={resultado.porPagina}
+        />
       </Tarjeta>
     </>
   );

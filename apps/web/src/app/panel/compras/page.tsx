@@ -14,6 +14,7 @@ import {
   EstadoVacio,
   FiltrosActivos,
   PRESENTACION_PEDIDO,
+  Paginacion,
   RangoFechas,
   SelectorFiltro,
   SelectorMultiple,
@@ -28,8 +29,8 @@ import {
   Tr,
   fechaCorta,
   guaranies,
-  plural,
   identificador,
+  plural,
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
@@ -37,7 +38,14 @@ import { BotonBorrar } from '@/componentes/compartido/boton-borrar';
 import { FormularioOrdenCompra } from '@/componentes/compras/formulario-orden-compra';
 import { FormularioPagoProveedor } from '@/componentes/compras/formulario-pago-proveedor';
 import { FormularioProveedor } from '@/componentes/compras/formulario-proveedor';
-import { comunes, fecha, lista, texto, type Parametros } from '@/lib/filtros';
+import {
+  comunes,
+  fecha,
+  lista,
+  paginarFilas,
+  texto,
+  type Parametros,
+} from '@/lib/filtros';
 
 const ETIQUETA_ESTADO_PAGO: Record<string, string> = {
   pendiente: 'Pendiente',
@@ -93,6 +101,9 @@ export default async function PaginaCompras({
 
   const enCurso = pedidos.filter((p) => p.estado === 'pedido' || p.estado === 'recibido');
   const comprometido = enCurso.reduce((suma, p) => suma + p.total, 0);
+
+  const pagPedidos = paginarFilas(pedidos, params);
+  const pagProveedores = paginarFilas(proveedores, params, 'pagina_proveedores');
 
   return (
     <>
@@ -164,7 +175,7 @@ export default async function PaginaCompras({
                 />
               </TdCompleta>
             ) : (
-              pedidos.map((p) => (
+              pagPedidos.filas.map((p) => (
                 <Tr key={p.id_pedido} interactiva>
                   <Td className="font-mono" etiqueta="Orden">{identificador(p.id_pedido)}</Td>
                   <Td className="font-medium" etiqueta="Proveedor">{p.nombre_proveedor}</Td>
@@ -182,6 +193,7 @@ export default async function PaginaCompras({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagPedidos.paginacion} />
       </Tarjeta>
 
       <Tarjeta>
@@ -218,7 +230,7 @@ export default async function PaginaCompras({
                 />
               </TdCompleta>
             ) : (
-              proveedores.map((p) => (
+              pagProveedores.filas.map((p) => (
                 <Tr key={p.id_proveedor} interactiva>
                   <Td className="font-medium" etiqueta="Proveedor">{p.nombre}</Td>
                   <Td className="font-mono" etiqueta="Teléfono">{p.telefono ?? '—'}</Td>
@@ -235,6 +247,7 @@ export default async function PaginaCompras({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagProveedores.paginacion} />
       </Tarjeta>
 
       <Tarjeta className="mt-6">

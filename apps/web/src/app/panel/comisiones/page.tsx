@@ -7,6 +7,7 @@ import {
   EstadoVacio,
   FiltrosActivos,
   PRESENTACION_COMISION,
+  Paginacion,
   RangoFechas,
   SelectorFiltro,
   SelectorMultiple,
@@ -26,7 +27,12 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { PanelLiquidacion } from '@/componentes/comisiones/panel-liquidacion';
-import { comunes, texto, type Parametros } from '@/lib/filtros';
+import {
+  comunes,
+  paginarFilas,
+  texto,
+  type Parametros,
+} from '@/lib/filtros';
 
 export const metadata = { title: 'Comisiones' };
 
@@ -62,6 +68,8 @@ export default async function PaginaComisiones({
   const totalPendiente = detalle
     .filter((c) => c.estado === 'pendiente')
     .reduce((suma, c) => suma + c.monto, 0);
+
+  const pagDetalle = paginarFilas(detalle, params);
 
   return (
     <>
@@ -154,7 +162,7 @@ export default async function PaginaComisiones({
                 />
               </TdCompleta>
             ) : (
-              detalle.map((c) => (
+              pagDetalle.filas.map((c) => (
                 <Tr key={c.id_pago_prof} interactiva>
                   <Td className="font-medium" etiqueta="Barbero">{c.nombre_profesional}</Td>
                   <Td className="text-secundario" etiqueta="Servicio">{c.nombre_servicio}</Td>
@@ -174,6 +182,7 @@ export default async function PaginaComisiones({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagDetalle.paginacion} />
       </Tarjeta>
     </>
   );
