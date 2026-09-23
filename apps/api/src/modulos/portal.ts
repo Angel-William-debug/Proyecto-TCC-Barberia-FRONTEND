@@ -217,7 +217,7 @@ export async function horariosPublicos(): Promise<VistaPublicoHorario[]> {
 // ---------------------------------------------------------------------------
 
 /**
- * Franjas libres de un dia para un servicio.
+ * Franjas de un dia para un servicio.
  *
  * El calculo entero vive en `fn_turnos_disponibles`, en la base. Podria
  * hacerse aca -traer las citas del dia y cruzarlas contra el horario- y seria
@@ -228,19 +228,25 @@ export async function horariosPublicos(): Promise<VistaPublicoHorario[]> {
  * `barberos_disponibles` de cada franja es su capacidad: cuantas reservas
  * simultaneas entran ahi. Con cuatro barberos activos son cuatro turnos en
  * paralelo, y si uno se desactiva pasan a ser tres sin tocar nada.
+ *
+ * Con `incluirLlenas` vienen tambien las franjas con cero lugares. La reserva
+ * del portal las pide asi para poder decir «Lleno» en vez de hacer desaparecer
+ * la hora, que el cliente leeria como "a esa hora no se atiende".
  */
 export async function turnosDisponibles(
   fecha: string,
   duracionMin: number,
-  idProfesional?: number,
+  opciones: { idProfesional?: number; incluirLlenas?: boolean } = {},
 ): Promise<FranjaDisponible[]> {
-  if (MODO_DEMO) return franjasDemo(fecha, duracionMin, idProfesional);
+  const { idProfesional, incluirLlenas = false } = opciones;
+  if (MODO_DEMO) return franjasDemo(fecha, duracionMin, idProfesional, incluirLlenas);
 
   const supabase = await clienteServidor();
   const { data, error } = await supabase.rpc('fn_turnos_disponibles', {
     p_fecha: fecha,
     p_duracion_min: duracionMin,
     p_id_profesional: idProfesional ?? null,
+    p_incluir_llenas: incluirLlenas,
   });
 
   if (error) throw traducirError(error);

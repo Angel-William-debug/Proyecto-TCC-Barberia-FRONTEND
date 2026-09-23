@@ -96,18 +96,18 @@ function conHora(dia: string, hora: number, minuto: number): Date {
 }
 
 /**
- * Franjas libres ficticias, con la misma forma que devuelve
- * `fn_turnos_disponibles`.
+ * Franjas ficticias, con la misma forma que devuelve `fn_turnos_disponibles`.
  *
  * Se ocupan a proposito algunas horas -las de mas demanda- para que la
- * pantalla muestre los dos casos: franjas con los tres barberos libres y
- * franjas con uno solo. Una grilla donde todo esta disponible no demuestra
- * nada.
+ * pantalla muestre los tres casos: franjas con los tres barberos libres,
+ * franjas con uno solo y, a las 18, franjas llenas. Una lista donde todo esta
+ * disponible no demuestra nada.
  */
 export function franjasDemo(
   fecha: string,
   duracionMin: number,
   idProfesional?: number,
+  incluirLlenas = false,
 ): FranjaDisponible[] {
   const horario = HORARIOS_PORTAL_DEMO[conHora(fecha, 12, 0).getDay()];
   if (!horario?.activo) return [];
@@ -125,12 +125,14 @@ export function franjasDemo(
     const inicio = conHora(fecha, Math.floor(minutos / 60), minutos % 60);
     if (inicio.getTime() <= Date.now()) continue;
 
-    // Entre las 17 y las 19 queda un solo barbero; al mediodia, dos.
+    // A las 18 no queda nadie, a las 17 y a las 19 un solo barbero, y al
+    // mediodia uno ocupado.
     const hora = inicio.getHours();
-    const ocupados = hora >= 17 ? barberos.length - 1 : hora === 12 ? 1 : 0;
+    const ocupados =
+      hora === 18 ? barberos.length : hora >= 17 ? barberos.length - 1 : hora === 12 ? 1 : 0;
     const libres = barberos.slice(ocupados);
 
-    if (!libres.length) continue;
+    if (!libres.length && !incluirLlenas) continue;
 
     franjas.push({
       inicio: inicio.toISOString(),

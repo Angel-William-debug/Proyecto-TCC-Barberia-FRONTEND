@@ -842,6 +842,10 @@ export interface VistaPublicoHorario {
  * `barberos_disponibles` es la capacidad real de esa franja: cuantos turnos
  * simultaneos entran. No sale de un cupo configurado sino de cuantos barberos
  * activos quedan libres, asi que baja sola cuando uno se desactiva.
+ *
+ * Con `p_incluir_llenas = true` tambien vienen las franjas en cero, con
+ * `ids_barberos` vacio. Los barberos ocupados no se devuelven: son los de
+ * `v_publico_barberos` que no estan en `ids_barberos`.
  */
 export interface FranjaDisponible {
   /** ISO 8601 con zona. Es lo que se manda como `fecha_hora` al agendar. */
