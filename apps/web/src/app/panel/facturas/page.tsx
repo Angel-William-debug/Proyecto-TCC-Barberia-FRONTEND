@@ -82,11 +82,12 @@ export default async function PaginaFacturas({
       </div>
 
       <Tarjeta>
-        <BarraFiltros>
-          <CampoBusqueda placeholder="Nombre del cliente" />
-          <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ESTADO} />
-          <RangoFechas etiqueta="Fecha de emisión" />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda placeholder="Nombre del cliente" />}
+          fecha={<RangoFechas etiqueta="Fecha de emisión" />}
+          avanzados={<SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ESTADO} />}
+          parametrosAvanzados={['estado']}
+        />
 
         <FiltrosActivos
           total={facturas.length}

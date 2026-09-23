@@ -7,6 +7,7 @@ import {
   EstadoVacio,
   FiltrosActivos,
   Paginacion,
+  RangoFechas,
   SelectorFiltro,
   SelectorMultiple,
   Tabla,
@@ -70,11 +71,17 @@ export default async function PaginaUsuarios({
       />
 
       <Tarjeta>
-        <BarraFiltros>
-          <CampoBusqueda placeholder="Nombre o correo" />
-          <SelectorFiltro nombre="rol" etiqueta="Rol" textoTodos="Todos los roles" opciones={OPCIONES_ROL} />
-          <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ACTIVO} />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda placeholder="Nombre o correo" />}
+          fecha={<RangoFechas etiqueta="Fecha de alta" />}
+          avanzados={
+            <>
+              <SelectorFiltro nombre="rol" etiqueta="Rol" textoTodos="Todos los roles" opciones={OPCIONES_ROL} />
+              <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ACTIVO} />
+            </>
+          }
+          parametrosAvanzados={['rol', 'estado']}
+        />
 
         <FiltrosActivos
           total={usuarios.length}
@@ -83,6 +90,8 @@ export default async function PaginaUsuarios({
             q: { titulo: 'Búsqueda' },
             rol: { titulo: 'Rol', valores: ETIQUETA_ROL },
             estado: { titulo: 'Estado', valores: ETIQUETAS_ACTIVO },
+            desde: { titulo: 'Desde' },
+            hasta: { titulo: 'Hasta' },
           }}
         />
 

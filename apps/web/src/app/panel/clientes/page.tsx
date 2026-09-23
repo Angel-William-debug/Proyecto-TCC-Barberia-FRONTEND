@@ -63,11 +63,12 @@ export default async function PaginaClientes({
       />
 
       <Tarjeta>
-        <BarraFiltros>
-          <CampoBusqueda placeholder="Nombre, teléfono o correo" />
-          <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ACTIVO} />
-          <RangoFechas etiqueta="Fecha de registro" />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda placeholder="Nombre, teléfono o correo" />}
+          fecha={<RangoFechas etiqueta="Fecha de registro" />}
+          avanzados={<SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ACTIVO} />}
+          parametrosAvanzados={['estado']}
+        />
 
         <FiltrosActivos
           total={resultado.total}

@@ -12,7 +12,7 @@ import { CATEGORIAS_SERVICIO_DEMO, SERVICIOS_DEMO } from '../demo/datos-catalogo
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { traducirError } from '../errores';
-import { coincideEstado, coincideTexto, type FiltroTabla } from '../compartido/filtros';
+import { coincideEstado, coincideTexto, entreFechas, type FiltroTabla } from '../compartido/filtros';
 import { actualizar, crear } from '../compartido/escritura';
 
 export interface FiltroServicios extends FiltroTabla {
@@ -28,7 +28,9 @@ export async function listarServicios(filtro: FiltroServicios = {}): Promise<Ser
       (s) =>
         coincideTexto([s.nombre, s.descripcion], filtro.busqueda) &&
         coincideEstado(activo(s.estado), filtro.estados) &&
-        (!filtro.categoria || String(s.id_categoria) === filtro.categoria),
+        (!filtro.categoria || String(s.id_categoria) === filtro.categoria) &&
+        // La fecha estandar de un catalogo es la de alta (seccion 9.9).
+        entreFechas(s.created_at, filtro.desde, filtro.hasta),
     );
 
   if (MODO_DEMO) return filtrar(SERVICIOS_DEMO);

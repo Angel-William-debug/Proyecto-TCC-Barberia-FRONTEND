@@ -95,17 +95,22 @@ export default async function PaginaCobros({
       </div>
 
       <Tarjeta>
-        <BarraFiltros>
-          <CampoBusqueda placeholder="Nombre del cliente" />
-          <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ESTADO} />
-          <SelectorFiltro
-            nombre="metodo"
-            etiqueta="Método de pago"
-            textoTodos="Todos los métodos"
-            opciones={metodos.map((m) => ({ valor: m.nombre, etiqueta: m.nombre }))}
-          />
-          <RangoFechas etiqueta="Fecha de pago" />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda placeholder="Nombre del cliente" />}
+          fecha={<RangoFechas etiqueta="Fecha de pago" />}
+          avanzados={
+            <>
+              <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ESTADO} />
+              <SelectorFiltro
+                nombre="metodo"
+                etiqueta="Método de pago"
+                textoTodos="Todos los métodos"
+                opciones={metodos.map((m) => ({ valor: m.nombre, etiqueta: m.nombre }))}
+              />
+            </>
+          }
+          parametrosAvanzados={['estado', 'metodo']}
+        />
 
         <FiltrosActivos
           total={cobros.length}

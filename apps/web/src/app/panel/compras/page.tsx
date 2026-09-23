@@ -84,9 +84,14 @@ export default async function PaginaCompras({
     await Promise.all([
       listarPedidos({ ...base, proveedor: texto(params, 'proveedor') }),
       listarProveedores(),
-      listarProveedores({ busqueda: texto(params, 'prov_q') }),
+      listarProveedores({
+        busqueda: texto(params, 'prov_q'),
+        desde: fecha(params, 'prov_desde'),
+        hasta: fecha(params, 'prov_hasta'),
+      }),
       listarProductosConNivel({}),
       listarPagosProveedor({
+        busqueda: texto(params, 'pago_q'),
         estados: lista(params, 'pago_estado'),
         desde: fecha(params, 'pago_desde'),
         hasta: fecha(params, 'pago_hasta'),
@@ -104,6 +109,7 @@ export default async function PaginaCompras({
 
   const pagPedidos = paginarFilas(pedidos, params);
   const pagProveedores = paginarFilas(proveedores, params, 'pagina_proveedores');
+  const pagPagos = paginarFilas(pagos, params, 'pagina_pagos');
 
   return (
     <>
@@ -131,17 +137,22 @@ export default async function PaginaCompras({
       <Tarjeta className="mb-6">
         <TarjetaEncabezado titulo="Órdenes de compra" />
 
-        <BarraFiltros>
-          <CampoBusqueda placeholder="Nombre del proveedor" />
-          <SelectorFiltro
-            nombre="proveedor"
-            etiqueta="Proveedor"
-            textoTodos="Todos los proveedores"
-            opciones={proveedoresTodos.map((p) => ({ valor: p.nombre, etiqueta: p.nombre }))}
-          />
-          <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ESTADO} />
-          <RangoFechas etiqueta="Fecha del pedido" />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda placeholder="Nombre del proveedor" />}
+          fecha={<RangoFechas etiqueta="Fecha del pedido" />}
+          avanzados={
+            <>
+              <SelectorFiltro
+                nombre="proveedor"
+                etiqueta="Proveedor"
+                textoTodos="Todos los proveedores"
+                opciones={proveedoresTodos.map((p) => ({ valor: p.nombre, etiqueta: p.nombre }))}
+              />
+              <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ESTADO} />
+            </>
+          }
+          parametrosAvanzados={['proveedor', 'estado']}
+        />
 
         <FiltrosActivos
           total={pedidos.length}
@@ -202,14 +213,19 @@ export default async function PaginaCompras({
           accion={<FormularioProveedor />}
         />
 
-        <BarraFiltros>
-          <CampoBusqueda nombre="prov_q" placeholder="Nombre, correo o teléfono" />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda nombre="prov_q" placeholder="Nombre, correo o teléfono" />}
+          fecha={<RangoFechas etiqueta="Fecha de alta" nombreDesde="prov_desde" nombreHasta="prov_hasta" />}
+        />
 
         <FiltrosActivos
           total={proveedores.length}
           sustantivo={['proveedor', 'proveedores']}
-          etiquetas={{ prov_q: { titulo: 'Búsqueda' } }}
+          etiquetas={{
+            prov_q: { titulo: 'Búsqueda' },
+            prov_desde: { titulo: 'Desde' },
+            prov_hasta: { titulo: 'Hasta' },
+          }}
         />
 
         <Tabla titulo="Proveedores registrados">
@@ -259,19 +275,24 @@ export default async function PaginaCompras({
           }
         />
 
-        <BarraFiltros>
-          <SelectorMultiple
-            nombre="pago_estado"
-            etiqueta="Estado"
-            opciones={ESTADOS_PAGO_PROVEEDOR.map((e) => ({ valor: e, etiqueta: ETIQUETA_ESTADO_PAGO[e]! }))}
-          />
-          <RangoFechas etiqueta="Fecha de pago" nombreDesde="pago_desde" nombreHasta="pago_hasta" />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda nombre="pago_q" placeholder="Nombre del proveedor" />}
+          fecha={<RangoFechas etiqueta="Fecha de pago" nombreDesde="pago_desde" nombreHasta="pago_hasta" />}
+          avanzados={
+            <SelectorMultiple
+              nombre="pago_estado"
+              etiqueta="Estado"
+              opciones={ESTADOS_PAGO_PROVEEDOR.map((e) => ({ valor: e, etiqueta: ETIQUETA_ESTADO_PAGO[e]! }))}
+            />
+          }
+          parametrosAvanzados={['pago_estado']}
+        />
 
         <FiltrosActivos
           total={pagos.length}
           sustantivo={['pago', 'pagos']}
           etiquetas={{
+            pago_q: { titulo: 'Búsqueda' },
             pago_estado: { titulo: 'Estado', valores: ETIQUETA_ESTADO_PAGO },
             pago_desde: { titulo: 'Desde' },
             pago_hasta: { titulo: 'Hasta' },
@@ -297,7 +318,7 @@ export default async function PaginaCompras({
                 />
               </TdCompleta>
             ) : (
-              pagos.map((p) => (
+              pagPagos.filas.map((p) => (
                 <Tr key={p.id_pago_prov}>
                   <Td className="font-medium" etiqueta="Proveedor">{p.nombre_proveedor}</Td>
                   <Td className="font-mono" etiqueta="Orden">{identificador(p.id_pedido)}</Td>
@@ -322,6 +343,7 @@ export default async function PaginaCompras({
             )}
           </TablaCuerpo>
         </Tabla>
+        <Paginacion {...pagPagos.paginacion} />
       </Tarjeta>
     </>
   );

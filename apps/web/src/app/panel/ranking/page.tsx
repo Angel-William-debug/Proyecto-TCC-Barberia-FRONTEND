@@ -65,15 +65,17 @@ export default async function Ranking({
         descripcion="Desempeño del equipo, ordenado por el criterio que se elija."
       />
 
-      <BarraFiltros>
-        <SelectorFiltro
-          nombre="criterio"
-          etiqueta="Ordenar por"
-          opciones={CRITERIOS_RANKING.map((c) => ({ valor: c, etiqueta: TITULOS_CRITERIO[c] }))}
-          textoTodos="Servicios realizados"
-        />
-        <RangoFechas />
-      </BarraFiltros>
+      <BarraFiltros
+        fijos={
+          <SelectorFiltro
+            nombre="criterio"
+            etiqueta="Ordenar por"
+            opciones={CRITERIOS_RANKING.map((c) => ({ valor: c, etiqueta: TITULOS_CRITERIO[c] }))}
+            textoTodos="Servicios realizados"
+          />
+        }
+        fecha={<RangoFechas />}
+      />
 
       {/* Se avisa lo que el filtro de fechas alcanza y lo que no. Un filtro que
           solo afecta a una columna y no lo dice es peor que no tenerlo: el

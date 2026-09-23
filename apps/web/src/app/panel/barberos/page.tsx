@@ -6,6 +6,7 @@ import {
   EstadoVacio,
   FiltrosActivos,
   Paginacion,
+  RangoFechas,
   SelectorFiltro,
   SelectorMultiple,
   Tabla,
@@ -75,16 +76,17 @@ export default async function PaginaBarberos({
       />
 
       <Tarjeta>
-        <BarraFiltros>
-          <CampoBusqueda placeholder="Nombre o especialidad" />
-          <SelectorFiltro
-            nombre="tipo"
-            etiqueta="Tipo"
-            textoTodos="Todos los tipos"
-            opciones={TIPOS}
-          />
-          <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ACTIVO} />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda placeholder="Nombre o especialidad" />}
+          fecha={<RangoFechas etiqueta="Fecha de alta" />}
+          avanzados={
+            <>
+              <SelectorFiltro nombre="tipo" etiqueta="Tipo" textoTodos="Todos los tipos" opciones={TIPOS} />
+              <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ACTIVO} />
+            </>
+          }
+          parametrosAvanzados={['tipo', 'estado']}
+        />
 
         <FiltrosActivos
           total={barberos.length}
@@ -96,6 +98,8 @@ export default async function PaginaBarberos({
               valores: Object.fromEntries(TIPOS.map((t) => [t.valor, t.etiqueta])),
             },
             estado: { titulo: 'Estado', valores: ETIQUETAS_ACTIVO },
+            desde: { titulo: 'Desde' },
+            hasta: { titulo: 'Hasta' },
           }}
         />
 

@@ -32,7 +32,7 @@ export function FiltrosActivos({
   total,
   sustantivo = ['resultado', 'resultados'],
 }: PropsFiltrosActivos) {
-  const { params, aplicar, limpiar } = useFiltros();
+  const { params, aplicar } = useFiltros();
 
   const activos: Array<{ clave: string; texto: string }> = [];
 
@@ -71,7 +71,14 @@ export function FiltrosActivos({
         </button>
       ))}
 
-      <Boton variante="terciario" tamano="sm" onClick={limpiar}>
+      {/* Borra solo lo que estos chips muestran. Antes vaciaba la URL entera,
+          y en una pantalla con dos tablas limpiar una borraba los filtros de
+          la otra, y en la agenda, el dia elegido. */}
+      <Boton
+        variante="terciario"
+        tamano="sm"
+        onClick={() => aplicar(Object.fromEntries(Object.keys(etiquetas).map((c) => [c, null])))}
+      >
         Limpiar todo
       </Boton>
     </div>

@@ -6,6 +6,7 @@ import {
   EstadoVacio,
   FiltrosActivos,
   Paginacion,
+  RangoFechas,
   SelectorFiltro,
   SelectorMultiple,
   Tabla,
@@ -67,19 +68,25 @@ export default async function PaginaServicios({
       />
 
       <Tarjeta>
-        <BarraFiltros>
-          <CampoBusqueda placeholder="Nombre o descripción" />
-          <SelectorFiltro
-            nombre="categoria"
-            etiqueta="Categoría"
-            textoTodos="Todas las categorías"
-            opciones={categorias.map((c) => ({
-              valor: String(c.id_categoria),
-              etiqueta: c.nombre,
-            }))}
-          />
-          <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ACTIVO} />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda placeholder="Nombre o descripción" />}
+          fecha={<RangoFechas etiqueta="Fecha de alta" />}
+          avanzados={
+            <>
+              <SelectorFiltro
+                nombre="categoria"
+                etiqueta="Categoría"
+                textoTodos="Todas las categorías"
+                opciones={categorias.map((c) => ({
+                  valor: String(c.id_categoria),
+                  etiqueta: c.nombre,
+                }))}
+              />
+              <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ACTIVO} />
+            </>
+          }
+          parametrosAvanzados={['categoria', 'estado']}
+        />
 
         <FiltrosActivos
           total={servicios.length}
@@ -93,6 +100,8 @@ export default async function PaginaServicios({
               ),
             },
             estado: { titulo: 'Estado', valores: ETIQUETAS_ACTIVO },
+            desde: { titulo: 'Desde' },
+            hasta: { titulo: 'Hasta' },
           }}
         />
 

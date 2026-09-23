@@ -19,6 +19,7 @@
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { ErrorAplicacion, traducirError } from '../errores';
+import { coincideTexto, entreFechas, type FiltroTabla } from './filtros';
 
 /** Tablas que admiten escritura desde un formulario. */
 export type TablaEscribible =
@@ -187,7 +188,10 @@ export interface RegistroBorrado {
  * generica para las once. Restaurar trae el registro completo de vuelta;
  * verlo en detalle no es lo que hace falta desde acá.
  */
-export async function listarBorrados(tabla: TablaEscribible): Promise<RegistroBorrado[]> {
+export async function listarBorrados(
+  tabla: TablaEscribible,
+  filtro: Pick<FiltroTabla, 'busqueda' | 'desde' | 'hasta'> = {},
+): Promise<RegistroBorrado[]> {
   if (MODO_DEMO) return [];
 
   const supabase = await clienteServidor();
@@ -206,11 +210,17 @@ export async function listarBorrados(tabla: TablaEscribible): Promise<RegistroBo
 
   const filas = (data ?? []) as unknown as Array<Record<string, unknown>>;
 
-  return filas.map((fila) => {
-    return {
+  // Busqueda por nombre y fecha de borrado, la fecha estandar de la papelera
+  // (seccion 9.9). En memoria: son a lo sumo 200 filas.
+  return filas
+    .map((fila) => ({
       id: fila[pk] as number,
       nombre: String(fila[columnaNombre] ?? '—'),
       deletedAt: (fila.deleted_at as string | null) ?? null,
-    };
-  });
+    }))
+    .filter(
+      (r) =>
+        coincideTexto([r.nombre], filtro.busqueda) &&
+        entreFechas(r.deletedAt, filtro.desde, filtro.hasta),
+    );
 }

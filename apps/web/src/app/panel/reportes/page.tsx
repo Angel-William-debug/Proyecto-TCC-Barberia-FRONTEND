@@ -224,16 +224,18 @@ export default async function PaginaReportes({
           descripcion="Clientes, proveedores, cobros, inventario, comisiones o el general de KPIs mensuales"
         />
 
-        <BarraFiltros>
-          <SelectorFiltro
-            nombre="tipo"
-            etiqueta="Tipo de reporte"
-            textoTodos={TITULOS_TIPO_REPORTE.general}
-            opciones={OPCIONES_TIPO}
-          />
-          <CampoBusqueda placeholder="Buscar dentro del reporte" />
-          <RangoFechas etiqueta="Rango de fechas" />
-        </BarraFiltros>
+        <BarraFiltros
+          fijos={
+            <SelectorFiltro
+              nombre="tipo"
+              etiqueta="Tipo de reporte"
+              textoTodos={TITULOS_TIPO_REPORTE.general}
+              opciones={OPCIONES_TIPO}
+            />
+          }
+          busqueda={<CampoBusqueda placeholder="Buscar dentro del reporte" />}
+          fecha={<RangoFechas etiqueta="Rango de fechas" />}
+        />
 
         <div className="flex flex-wrap items-center justify-between gap-3 px-1 pt-2 pb-4">
           <p className="text-cuerpo-sm text-terciario">

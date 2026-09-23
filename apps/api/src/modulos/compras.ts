@@ -22,25 +22,29 @@ import { actualizar, crear, rechazarSiEsDemo } from '../compartido/escritura';
 import { uno } from '../compartido/relaciones';
 
 export async function listarProveedores(filtro: FiltroTabla = {}): Promise<Proveedor[]> {
-  if (MODO_DEMO) {
-    return PROVEEDORES_DEMO.filter((p) =>
-      coincideTexto([p.nombre, p.email, p.telefono], filtro.busqueda),
+  // El marcador de la busqueda promete nombre, correo o telefono; antes la
+  // consulta real solo miraba el nombre. Se filtra en memoria por los tres,
+  // igual que en el modo demostracion, mas la fecha de alta.
+  const filtrar = (filas: Proveedor[]) =>
+    filas.filter(
+      (p) =>
+        coincideTexto([p.nombre, p.email, p.telefono], filtro.busqueda) &&
+        entreFechas(p.created_at, filtro.desde, filtro.hasta),
     );
-  }
+
+  if (MODO_DEMO) return filtrar(PROVEEDORES_DEMO);
 
   const supabase = await clienteServidor();
 
-  let consulta = supabase
+  const { data, error } = await supabase
     .from('proveedores')
     .select('*')
     .eq('deleted', false)
     .eq('estado', true)
     .order('nombre');
-  if (filtro.busqueda) consulta = consulta.ilike('nombre', `%${filtro.busqueda}%`);
 
-  const { data, error } = await consulta;
   if (error) throw traducirError(error);
-  return (data ?? []) as Proveedor[];
+  return filtrar((data ?? []) as Proveedor[]);
 }
 
 export interface FiltroPedidos extends FiltroTabla {

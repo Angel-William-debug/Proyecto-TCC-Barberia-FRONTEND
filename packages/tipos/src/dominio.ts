@@ -297,6 +297,8 @@ export interface FiltroAgenda {
   hasta: string;
   idProfesional?: number;
   estados?: EstadoCita[];
+  /** Texto libre: cliente, telefono o servicio. */
+  busqueda?: string;
 }
 
 /** Respuesta paginada de cualquier listado. */

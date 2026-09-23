@@ -45,7 +45,7 @@ import { clienteServidor } from '../supabase/cliente-servidor';
 import { clienteAdmin } from '../supabase/cliente-admin';
 import { ErrorAplicacion, traducirError } from '../errores';
 import { actualizar, rechazarSiEsDemo } from '../compartido/escritura';
-import { coincideEstado, coincideTexto, type FiltroTabla } from '../compartido/filtros';
+import { coincideEstado, coincideTexto, entreFechas, type FiltroTabla } from '../compartido/filtros';
 
 export async function listarRoles(): Promise<Rol[]> {
   if (MODO_DEMO) return [];
@@ -81,7 +81,8 @@ export async function listarUsuarios(filtro: FiltroUsuarios = {}): Promise<Vista
     (u) =>
       coincideTexto([u.nombre, u.email], filtro.busqueda) &&
       coincideEstado(u.estado ? 'activo' : 'inactivo', filtro.estados) &&
-      (!filtro.rol || u.rol === filtro.rol),
+      (!filtro.rol || u.rol === filtro.rol) &&
+      entreFechas(u.created_at, filtro.desde, filtro.hasta),
   );
 }
 

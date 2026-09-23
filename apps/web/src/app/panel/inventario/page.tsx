@@ -36,13 +36,7 @@ import { BotonBorrar } from '@/componentes/compartido/boton-borrar';
 import { BotonResolverAlerta } from '@/componentes/inventario/boton-resolver-alerta';
 import { FormularioCategoriaProducto } from '@/componentes/inventario/formulario-categoria-producto';
 import { FormularioProducto } from '@/componentes/inventario/formulario-producto';
-import {
-  comunes,
-  fecha,
-  lista,
-  paginarFilas,
-  type Parametros,
-} from '@/lib/filtros';
+import { comunes, fecha, lista, paginarFilas, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Inventario' };
 
@@ -87,6 +81,7 @@ export default async function PaginaInventario({
   const [productos, movimientos, categorias, alertas] = await Promise.all([
     listarProductosConNivel({ busqueda: base.busqueda, niveles: lista(params, 'nivel') }),
     listarMovimientos({
+      busqueda: texto(params, 'mov_q'),
       tipos: lista(params, 'mov_tipo'),
       desde: fecha(params, 'mov_desde'),
       hasta: fecha(params, 'mov_hasta'),
@@ -158,10 +153,11 @@ export default async function PaginaInventario({
       <Tarjeta className="mb-6">
         <TarjetaEncabezado titulo="Productos" descripcion="Stock actual y nivel calculado" />
 
-        <BarraFiltros>
-          <CampoBusqueda placeholder="Nombre del producto" />
-          <SelectorMultiple nombre="nivel" etiqueta="Nivel de stock" opciones={OPCIONES_NIVEL} />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda placeholder="Nombre del producto" />}
+          avanzados={<SelectorMultiple nombre="nivel" etiqueta="Nivel de stock" opciones={OPCIONES_NIVEL} />}
+          parametrosAvanzados={['nivel']}
+        />
 
         <FiltrosActivos
           total={productos.length}
@@ -224,15 +220,18 @@ export default async function PaginaInventario({
           descripcion="Entradas por compra, salidas por consumo y ajustes manuales"
         />
 
-        <BarraFiltros>
-          <SelectorMultiple nombre="mov_tipo" etiqueta="Tipo" opciones={OPCIONES_TIPO} />
-          <RangoFechas etiqueta="Fecha" nombreDesde="mov_desde" nombreHasta="mov_hasta" />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda nombre="mov_q" placeholder="Producto o motivo" />}
+          fecha={<RangoFechas etiqueta="Fecha" nombreDesde="mov_desde" nombreHasta="mov_hasta" />}
+          avanzados={<SelectorMultiple nombre="mov_tipo" etiqueta="Tipo" opciones={OPCIONES_TIPO} />}
+          parametrosAvanzados={['mov_tipo']}
+        />
 
         <FiltrosActivos
           total={movimientos.length}
           sustantivo={['movimiento', 'movimientos']}
           etiquetas={{
+            mov_q: { titulo: 'Búsqueda' },
             mov_tipo: { titulo: 'Tipo', valores: ETIQUETA_TIPO },
             mov_desde: { titulo: 'Desde' },
             mov_hasta: { titulo: 'Hasta' },

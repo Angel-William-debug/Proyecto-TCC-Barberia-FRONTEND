@@ -12,6 +12,7 @@ import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { ErrorAplicacion, traducirError } from '../errores';
 import { rechazarSiEsDemo } from '../compartido/escritura';
+import { coincideTexto } from '../compartido/filtros';
 import { uno } from '../compartido/relaciones';
 import { usuarioActual } from './sesion';
 
@@ -97,6 +98,17 @@ function componer(fila: FilaCruda): CitaCompleta {
 }
 
 export async function listarAgenda(filtro: FiltroAgenda): Promise<CitaCompleta[]> {
+  // La busqueda se aplica al final y en memoria, por los dos caminos: el
+  // nombre del cliente y del servicio vienen de tablas relacionadas, y un
+  // dia de agenda son decenas de turnos, no miles.
+  const buscar = (citas: CitaCompleta[]) =>
+    citas.filter((c) =>
+      coincideTexto(
+        [c.cliente.nombre, c.cliente.telefono, ...c.servicios.map((s) => s.servicio.nombre)],
+        filtro.busqueda,
+      ),
+    );
+
   if (MODO_DEMO) {
     let demo = agendaDemo(filtro.desde);
     if (filtro.estados?.length) {
@@ -106,7 +118,7 @@ export async function listarAgenda(filtro: FiltroAgenda): Promise<CitaCompleta[]
       const id = filtro.idProfesional;
       demo = demo.filter((c) => c.servicios.some((s) => s.id_profesional === id));
     }
-    return demo;
+    return buscar(demo);
   }
 
   const supabase = await clienteServidor();
@@ -136,7 +148,7 @@ export async function listarAgenda(filtro: FiltroAgenda): Promise<CitaCompleta[]
     citas = citas.filter((c) => c.servicios.some((s) => s.id_profesional === id));
   }
 
-  return citas;
+  return buscar(citas);
 }
 
 export async function obtenerCita(idCita: number): Promise<CitaCompleta | null> {

@@ -12,7 +12,7 @@ import { PROFESIONALES_DEMO } from '../demo/datos-catalogo';
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { traducirError } from '../errores';
-import { coincideEstado, coincideTexto, type FiltroTabla } from '../compartido/filtros';
+import { coincideEstado, coincideTexto, entreFechas, type FiltroTabla } from '../compartido/filtros';
 import { actualizar, crear } from '../compartido/escritura';
 
 export interface FiltroProfesionales extends FiltroTabla {
@@ -31,7 +31,9 @@ export async function listarProfesionales(
       (p) =>
         coincideTexto([p.nombre, p.especialidad], filtro.busqueda) &&
         coincideEstado(activo(p.estado), filtro.estados) &&
-        (!filtro.tipo || p.tipo === filtro.tipo),
+        (!filtro.tipo || p.tipo === filtro.tipo) &&
+        // La fecha estandar de un catalogo es la de alta (seccion 9.9).
+        entreFechas(p.created_at, filtro.desde, filtro.hasta),
     );
 
   if (MODO_DEMO) return filtrar(PROFESIONALES_DEMO);

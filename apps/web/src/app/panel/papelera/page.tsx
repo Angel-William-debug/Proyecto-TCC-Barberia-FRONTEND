@@ -2,8 +2,11 @@ import { listarBorrados } from '@barber-shop/api';
 import type { TablaEscribible } from '@barber-shop/api';
 import {
   BarraFiltros,
+  CampoBusqueda,
   EstadoVacio,
+  FiltrosActivos,
   Paginacion,
+  RangoFechas,
   SelectorFiltro,
   Tabla,
   TablaCuerpo,
@@ -19,11 +22,7 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { BotonRestaurar } from '@/componentes/compartido/boton-restaurar';
-import {
-  paginarFilas,
-  texto,
-  type Parametros,
-} from '@/lib/filtros';
+import { comunes, paginarFilas, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Papelera' };
 
@@ -75,7 +74,8 @@ export default async function PaginaPapelera({
   const tablaParametro = texto(params, 'tabla') ?? '';
   const tabla = esTablaPapelera(tablaParametro) ? tablaParametro : 'clientes';
 
-  const registros = await listarBorrados(tabla);
+  const { busqueda, desde, hasta } = comunes(params);
+  const registros = await listarBorrados(tabla, { busqueda, desde, hasta });
 
   const pagRegistros = paginarFilas(registros, params);
 
@@ -87,9 +87,21 @@ export default async function PaginaPapelera({
       />
 
       <Tarjeta>
-        <BarraFiltros>
-          <SelectorFiltro nombre="tabla" etiqueta="Catálogo" opciones={OPCIONES_TABLA} textoTodos="Clientes" />
-        </BarraFiltros>
+        <BarraFiltros
+          fijos={<SelectorFiltro nombre="tabla" etiqueta="Catálogo" opciones={OPCIONES_TABLA} textoTodos="Clientes" />}
+          busqueda={<CampoBusqueda placeholder="Nombre" />}
+          fecha={<RangoFechas etiqueta="Fecha de borrado" />}
+        />
+
+        <FiltrosActivos
+          total={registros.length}
+          sustantivo={['registro', 'registros']}
+          etiquetas={{
+            q: { titulo: 'Búsqueda' },
+            desde: { titulo: 'Desde' },
+            hasta: { titulo: 'Hasta' },
+          }}
+        />
 
         <Tabla titulo={`Registros borrados de ${ETIQUETA_TABLA[tabla]}`}>
           <TablaEncabezado>

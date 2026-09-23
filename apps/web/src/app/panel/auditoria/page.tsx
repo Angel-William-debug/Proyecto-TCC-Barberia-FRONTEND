@@ -92,17 +92,17 @@ export default async function PaginaAuditoria({
       />
 
       <Tarjeta>
-        <BarraFiltros>
-          <CampoBusqueda placeholder="Usuario o detalle" />
-          <SelectorFiltro
-            nombre="tabla"
-            etiqueta="Tabla"
-            textoTodos="Todas las tablas"
-            opciones={TABLAS}
-          />
-          <SelectorMultiple nombre="accion" etiqueta="Acción" opciones={OPCIONES_ACCION} />
-          <RangoFechas etiqueta="Fecha" />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda placeholder="Usuario o detalle" />}
+          fecha={<RangoFechas etiqueta="Fecha" />}
+          avanzados={
+            <>
+              <SelectorFiltro nombre="tabla" etiqueta="Tabla" textoTodos="Todas las tablas" opciones={TABLAS} />
+              <SelectorMultiple nombre="accion" etiqueta="Acción" opciones={OPCIONES_ACCION} />
+            </>
+          }
+          parametrosAvanzados={['tabla', 'accion']}
+        />
 
         <FiltrosActivos
           total={registros.length}

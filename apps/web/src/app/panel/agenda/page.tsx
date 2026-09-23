@@ -8,6 +8,7 @@ import { ESTADOS_CITA, type EstadoCita } from '@barber-shop/tipos';
 import {
   BarraFiltros,
   Boton,
+  CampoBusqueda,
   ChipEstado,
   EstadoVacio,
   FiltrosActivos,
@@ -83,6 +84,7 @@ export default async function PaginaAgenda({
       hasta: dia,
       estados,
       idProfesional: barbero ? Number(barbero) : undefined,
+      busqueda: texto(params, 'q'),
     }),
     // Sin filtro: el formulario necesita el catalogo completo, no lo que
     // quedo despues de filtrar la agenda.
@@ -129,24 +131,31 @@ export default async function PaginaAgenda({
       </div>
 
       <Tarjeta>
-        <BarraFiltros>
-          <FiltroFecha valor={dia} />
-          <SelectorFiltro
-            nombre="barbero"
-            etiqueta="Barbero"
-            textoTodos="Todos los barberos"
-            opciones={barberos.map((b) => ({
-              valor: String(b.id_profesional),
-              etiqueta: b.nombre,
-            }))}
-          />
-          <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ESTADO} />
-        </BarraFiltros>
+        <BarraFiltros
+          fijos={<FiltroFecha valor={dia} />}
+          busqueda={<CampoBusqueda placeholder="Cliente, teléfono o servicio" />}
+          avanzados={
+            <>
+              <SelectorFiltro
+                nombre="barbero"
+                etiqueta="Barbero"
+                textoTodos="Todos los barberos"
+                opciones={barberos.map((b) => ({
+                  valor: String(b.id_profesional),
+                  etiqueta: b.nombre,
+                }))}
+              />
+              <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ESTADO} />
+            </>
+          }
+          parametrosAvanzados={['barbero', 'estado']}
+        />
 
         <FiltrosActivos
           total={citas.length}
           sustantivo={['turno', 'turnos']}
           etiquetas={{
+            q: { titulo: 'Búsqueda' },
             estado: { titulo: 'Estado', valores: ETIQUETAS_ESTADO },
             barbero: {
               titulo: 'Barbero',

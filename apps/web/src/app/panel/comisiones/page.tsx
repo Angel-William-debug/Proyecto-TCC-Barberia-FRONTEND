@@ -118,17 +118,22 @@ export default async function PaginaComisiones({
       <Tarjeta>
         <TarjetaEncabezado titulo="Detalle" descripcion="Una fila por servicio realizado" />
 
-        <BarraFiltros>
-          <CampoBusqueda placeholder="Barbero o servicio" />
-          <SelectorFiltro
-            nombre="barbero"
-            etiqueta="Barbero"
-            textoTodos="Todos los barberos"
-            opciones={barberos.map((b) => ({ valor: b.nombre, etiqueta: b.nombre }))}
-          />
-          <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ESTADO} />
-          <RangoFechas etiqueta="Fecha del servicio" />
-        </BarraFiltros>
+        <BarraFiltros
+          busqueda={<CampoBusqueda placeholder="Barbero o servicio" />}
+          fecha={<RangoFechas etiqueta="Fecha del servicio" />}
+          avanzados={
+            <>
+              <SelectorFiltro
+                nombre="barbero"
+                etiqueta="Barbero"
+                textoTodos="Todos los barberos"
+                opciones={barberos.map((b) => ({ valor: b.nombre, etiqueta: b.nombre }))}
+              />
+              <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ESTADO} />
+            </>
+          }
+          parametrosAvanzados={['barbero', 'estado']}
+        />
 
         <FiltrosActivos
           total={detalle.length}
