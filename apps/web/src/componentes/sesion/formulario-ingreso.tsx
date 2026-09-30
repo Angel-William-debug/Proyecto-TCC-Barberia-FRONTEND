@@ -42,7 +42,16 @@ export function FormularioIngreso() {
       });
 
       if (errorAuth) {
-        setError('El correo o la contraseña no son correctos.');
+        // Se distingue solo la cuenta sin confirmar: ahi la contraseña puede
+        // estar bien, y decir «no son correctos» manda a la persona a probar
+        // otra en vez de avisar a la barberia. Paso el 30/9/2026. Cualquier
+        // otro fallo sigue siendo el mensaje generico, para no revelar si un
+        // correo tiene cuenta.
+        setError(
+          errorAuth.code === 'email_not_confirmed'
+            ? 'Su cuenta todavía no está confirmada. Avise a la barbería para que la habiliten.'
+            : 'El correo o la contraseña no son correctos.',
+        );
         setEnviando(false);
         return;
       }

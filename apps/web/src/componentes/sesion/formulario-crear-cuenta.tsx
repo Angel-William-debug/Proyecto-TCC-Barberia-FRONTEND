@@ -21,7 +21,9 @@ import { accionRegistrarCliente } from '@/acciones/portal';
  *
  * Ahora el registro publico es del cliente y se completa solo: la accion de
  * servidor crea la credencial, el usuario con rol `cliente` y su ficha, las
- * tres enlazadas. Al confirmar el correo ya puede reservar.
+ * tres enlazadas, y la cuenta nace confirmada: entra y reserva en seguida.
+ * (Hasta el 30/9/2026 este cartel prometia un correo de confirmacion que
+ * nunca salia; ver `registrarCliente()`.)
  *
  * EL ROL NO ES UN CAMPO DE ESTE FORMULARIO, y no por descuido. Quien se
  * registra por su cuenta es siempre un cliente; el personal de la barberia lo
@@ -65,8 +67,7 @@ export function FormularioCrearCuenta() {
         </span>
         <h2 className="text-titulo-3 text-principal mt-4 font-semibold">Cuenta creada</h2>
         <p className="text-cuerpo-sm text-secundario medida-lectura mx-auto mt-2">
-          Le enviamos un correo para confirmar su dirección. Cuando la confirme puede ingresar
-          y reservar su turno.
+          Ya puede ingresar con su correo y su contraseña, y reservar su turno.
         </p>
         <Link href="/ingresar" className="mt-6 inline-block">
           <Boton variante="primario">Ir a iniciar sesión</Boton>

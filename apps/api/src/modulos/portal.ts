@@ -112,11 +112,21 @@ export async function registrarCliente(entrada: EntradaRegistroCliente): Promise
     throw new ErrorAplicacion('No se pudo completar el registro. Intente mas tarde.');
   }
 
-  // `email_confirm: false` deja que Supabase mande el correo de confirmacion.
+  // `email_confirm: true`: la cuenta nace confirmada y el cliente entra en
+  // seguida. Antes era `false`, con la idea de que Supabase mandara el correo
+  // de confirmacion, pero `admin.createUser` NUNCA manda correos: la cuenta
+  // quedaba sin confirmar para siempre y el ingreso la rechazaba. Paso con la
+  // primera cuenta real el 30/9/2026.
+  //
+  // Es la misma decision que el alta de usuarios del personal (`crearUsuario`).
+  // Lo que se pierde es la verificacion de que el correo es de quien se
+  // registra. Recuperarla exige un servidor de correo propio (el de prueba de
+  // Supabase manda dos por hora) y la direccion de Vercel como `site_url`, y
+  // cambiar esto por `signUp()`. Queda anotado como pendiente.
   const { data: creado, error: errorAuth } = await admin.auth.admin.createUser({
     email: entrada.email,
     password: entrada.password,
-    email_confirm: false,
+    email_confirm: true,
     user_metadata: { nombre: entrada.nombre },
   });
 
