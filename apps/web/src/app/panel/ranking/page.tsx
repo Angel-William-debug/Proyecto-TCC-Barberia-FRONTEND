@@ -101,17 +101,18 @@ export default async function Ranking({
       ) : (
         <div className="mt-6">
           <Tabla titulo="Ranking de barberos por desempeño">
+            {/* Sin `<Tr>` adentro: `TablaEncabezado` ya dibuja su fila. Con uno
+                de mas quedaba una fila dentro de otra, el navegador reacomodaba
+                las celdas y todo el cuerpo salia corrido a la derecha. */}
             <TablaEncabezado>
-              <Tr>
-                <Th className="w-16">#</Th>
-                <Th>Barbero</Th>
-                <Th numerico>Servicios</Th>
-                <Th numerico>Clientes</Th>
-                <Th numerico>Facturado</Th>
-                <Th numerico>Ticket promedio</Th>
-                <Th numerico>Horas ocupadas</Th>
-                <Th>Último servicio</Th>
-              </Tr>
+              <Th className="w-16">#</Th>
+              <Th>Barbero</Th>
+              <Th numerico>Servicios</Th>
+              <Th numerico>Clientes</Th>
+              <Th numerico>Facturado</Th>
+              <Th numerico>Ticket promedio</Th>
+              <Th numerico>Horas ocupadas</Th>
+              <Th>Último servicio</Th>
             </TablaEncabezado>
 
             <TablaCuerpo>

@@ -14,6 +14,7 @@ import {
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { ErrorAplicacion, traducirError } from '../errores';
+import { uno } from '../compartido/relaciones';
 import { generarExcel } from '../compartido/exportacion/excel';
 import { generarPdfTabla } from '../compartido/exportacion/pdf';
 
@@ -60,19 +61,45 @@ export async function stockCritico(): Promise<VistaStockCritico[]> {
 
   const supabase = await clienteServidor();
 
-  const { data, error } = await supabase.from('v_stock_critico').select('*');
+  const { data, error } = await supabase
+    .from('v_stock_critico')
+    .select('id_producto, nombre_producto, stock_actual, stock_minimo, diferencia')
+    .order('diferencia', { ascending: false });
 
   if (error) throw traducirError(error);
-  return (data ?? []) as VistaStockCritico[];
+
+  // La vista nombra las columnas `nombre_producto` y `diferencia` (minimo menos
+  // actual); el tipo, `nombre` y `faltante`. Antes se devolvia la fila tal
+  // cual y Reportes mostraba el producto sin nombre y el faltante como «—».
+  return (data ?? []).map((f) => ({
+    id_producto: f.id_producto,
+    nombre: f.nombre_producto,
+    stock_actual: Number(f.stock_actual),
+    stock_minimo: Number(f.stock_minimo),
+    faltante: Number(f.diferencia),
+  }));
 }
 
 /**
  * Comisiones pendientes por barbero.
  *
- * Solo el administrador puede leer esta vista: `pagos_profesional` es una
- * tabla de su exclusividad segun las politicas RLS. Un barbero que consulte
- * su propio panel obtiene sus comisiones por otra via, filtrada por su
+ * Solo el administrador puede leer esto: `pagos_profesional` es una tabla de
+ * su exclusividad segun las politicas RLS. Un barbero que consulte su propio
+ * panel obtiene sus comisiones por otra via, filtrada por su
  * `id_profesional`.
+ *
+ * SE AGRUPA ACA Y NO EN LA VISTA
+ *
+ * Antes se leia `v_comisiones_pendientes` ordenando por `total_comision`,
+ * pero esa vista devuelve UNA FILA POR COMISION (id, barbero, servicio,
+ * monto, fecha) y no tiene esa columna: la consulta fallaba y Reportes
+ * mostraba «No se pudieron cargar los datos». En Comisiones el mismo error
+ * quedaba tapado por un `.catch(() => [])` y el resumen salia siempre vacio.
+ * En modo demostracion no se veia, porque los datos ficticios ya venian con
+ * la forma agrupada.
+ *
+ * Se lee la tabla con el mismo filtro que la vista -solo las pendientes- y
+ * se agrupa por barbero en memoria: son las comisiones de un solo local.
  */
 export async function comisionesPendientes(): Promise<VistaComisionPendiente[]> {
   if (MODO_DEMO) return COMISIONES_DEMO;
@@ -80,12 +107,26 @@ export async function comisionesPendientes(): Promise<VistaComisionPendiente[]> 
   const supabase = await clienteServidor();
 
   const { data, error } = await supabase
-    .from('v_comisiones_pendientes')
-    .select('*')
-    .order('total_comision', { ascending: false });
+    .from('pagos_profesional')
+    .select('id_profesional, monto, profesionales ( nombre )')
+    .eq('estado', 'pendiente');
 
   if (error) throw traducirError(error);
-  return (data ?? []) as VistaComisionPendiente[];
+
+  const porBarbero = new Map<number, VistaComisionPendiente>();
+  for (const fila of data ?? []) {
+    const actual = porBarbero.get(fila.id_profesional) ?? {
+      id_profesional: fila.id_profesional,
+      nombre_profesional: uno<{ nombre: string }>(fila.profesionales)?.nombre ?? 'Barbero eliminado',
+      cantidad_servicios: 0,
+      total_comision: 0,
+    };
+    actual.cantidad_servicios += 1;
+    actual.total_comision += Number(fila.monto);
+    porBarbero.set(fila.id_profesional, actual);
+  }
+
+  return [...porBarbero.values()].sort((a, b) => b.total_comision - a.total_comision);
 }
 
 // ---------------------------------------------------------------------------
