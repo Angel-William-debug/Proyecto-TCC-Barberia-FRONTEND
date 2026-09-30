@@ -53,6 +53,7 @@ export function MarcoLateral({
   aviso,
   /** Ancho máximo del contenido. El portal usa una columna más angosta. */
   anchoContenido = 'max-w-[1440px]',
+  decorado,
   children,
 }: {
   grupos: GrupoBarra[];
@@ -65,6 +66,11 @@ export function MarcoLateral({
   /** Franja de ancho completo sobre todo lo demás. Hoy, el aviso de demostración. */
   aviso?: ReactNode;
   anchoContenido?: string;
+  /**
+   * Capa decorativa detras del contenido, que no se desplaza con el. Hoy, las
+   * fotos de los costados del portal del cliente.
+   */
+  decorado?: ReactNode;
   children: ReactNode;
 }) {
   const [abierto, setAbierto] = useState(false);
@@ -172,9 +178,18 @@ export function MarcoLateral({
               y estira la altura de la pagina. Pasaba con el `<caption>` de las
               tablas, que lleva `solo-lectores`: la ventana quedaba con DOS
               barras de desplazamiento y la barra lateral se iba hacia arriba. */}
-          <main id="contenido" className="relative flex-1 overflow-y-auto">
-            <div className={cn('mx-auto w-full p-4 sm:p-6', anchoContenido)}>{children}</div>
-          </main>
+          <div className="relative flex min-h-0 flex-1">
+            {/* Fuera del `<main>` a proposito: asi queda quieta mientras el
+                contenido se desplaza por encima. No recibe clics. */}
+            {decorado && (
+              <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+                {decorado}
+              </div>
+            )}
+            <main id="contenido" className="relative flex-1 overflow-y-auto">
+              <div className={cn('mx-auto w-full p-4 sm:p-6', anchoContenido)}>{children}</div>
+            </main>
+          </div>
         </div>
       </div>
     </div>

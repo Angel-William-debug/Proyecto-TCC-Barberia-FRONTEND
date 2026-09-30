@@ -15,6 +15,17 @@ Recortadas 3:4 desde originales de 3200x2133. Si hace falta rehacer un
 encuadre, el script vive en el historial de la conversacion: recorta al alto
 completo y corre la ventana horizontalmente segun donde este la accion.
 
+FOTOS DE LOS COSTADOS DEL PORTAL DEL CLIENTE
+--------------------------------------------
+    peine.webp    800x1067, 49 KB   barbero peinando una barba
+    navaja.webp   407x543,  15 KB   afeitado con navaja
+
+Recortadas 3:4 desde Barberia1.jpg (800x1200) y Barberia 2.jpg (407x612).
+navaja.webp es chica porque el original lo es; como va fundida y de
+fondo no se nota, pero si aparece una version mas grande conviene
+reemplazarla. El portal usa estas dos y las dos de la portada, una
+pareja distinta por pantalla: ver componentes/portal/fotos-portal.tsx.
+
 EL ICONO DEL NAVEGADOR NO VIVE ACA
 ----------------------------------
 El icono de la pestana no se sirve desde /imagenes/: Next.js lo toma por

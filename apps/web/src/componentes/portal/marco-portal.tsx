@@ -5,6 +5,8 @@ import type { NombreRol } from '@barber-shop/tipos';
 import { MarcoLateral } from '@/componentes/armazon/marco-lateral';
 import type { EntradaBarra } from '@/componentes/armazon/barra-lateral';
 
+import { ANCHO_CONTENIDO, FotosPortal } from './fotos-portal';
+
 /**
  * Armazon del portal del cliente.
  *
@@ -28,6 +30,8 @@ import type { EntradaBarra } from '@/componentes/armazon/barra-lateral';
  *     etiqueta.
  *   - TARJETAS, NUNCA TABLAS. La tabla sirve para comparar registros entre
  *     si, y el cliente no compara: mira el suyo.
+ *   - FOTOS A LOS COSTADOS en pantallas anchas, donde el contenido angosto
+ *     dejaba el resto vacio. Ver `FotosPortal`.
  *
  * El resto -paleta, tipografia, componentes, comportamiento de la barra-
  * es el mismo, que es justamente lo que se buscaba: quien pasa de una mitad
@@ -59,7 +63,8 @@ export function MarcoPortal({
       grupos={[{ entradas: ENTRADAS_PORTAL }]}
       usuario={usuario}
       inicio="/mi-cuenta"
-      anchoContenido="max-w-3xl"
+      anchoContenido={ANCHO_CONTENIDO}
+      decorado={<FotosPortal />}
       aviso={aviso}
       acciones={acciones}
     >
