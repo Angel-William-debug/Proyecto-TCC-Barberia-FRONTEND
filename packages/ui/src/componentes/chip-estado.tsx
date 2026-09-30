@@ -37,8 +37,22 @@ export function ChipEstado({ presentacion, className, sinIcono = false }: PropsC
   );
 }
 
-/** Punto de color a secas, para la agenda, donde el espacio es escaso. */
-export function PuntoEstado({ tono, etiqueta }: { tono: Tono; etiqueta: string }) {
+/**
+ * Punto de color a secas, para la agenda, donde el espacio es escaso.
+ *
+ * `sinEtiqueta` deja solo el punto -el calendario del portal, en el
+ * teléfono, no tiene lugar para el texto- y pasa la etiqueta a los lectores
+ * de pantalla: el color solo no puede ser la única forma de decir el estado.
+ */
+export function PuntoEstado({
+  tono,
+  etiqueta,
+  sinEtiqueta = false,
+}: {
+  tono: Tono;
+  etiqueta: string;
+  sinEtiqueta?: boolean;
+}) {
   const fondo: Record<Tono, string> = {
     neutro: 'bg-secundario',
     exito: 'bg-exito',
@@ -51,7 +65,9 @@ export function PuntoEstado({ tono, etiqueta }: { tono: Tono; etiqueta: string }
   return (
     <span className="inline-flex items-center gap-1.5">
       <span className={cn('h-2 w-2 shrink-0 rounded-full', fondo[tono])} aria-hidden="true" />
-      <span className="text-etiqueta text-secundario">{etiqueta}</span>
+      <span className={sinEtiqueta ? 'solo-lectores' : 'text-etiqueta text-secundario'}>
+        {etiqueta}
+      </span>
     </span>
   );
 }

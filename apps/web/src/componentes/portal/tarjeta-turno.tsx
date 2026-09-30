@@ -13,6 +13,7 @@ import {
   fechaLarga,
   guaranies,
   hora,
+  mayusculaInicial,
   plural,
 } from '@barber-shop/ui';
 
@@ -53,8 +54,8 @@ export function TarjetaTurno({ turno }: { turno: TurnoDelCliente }) {
         className="hover:bg-elevado flex w-full items-start gap-4 p-4 text-left transition-colors sm:p-5"
       >
         <div className="min-w-0 flex-1">
-          <p className="text-cuerpo-sm text-terciario capitalize">
-            {fechaLarga(turno.fechaHora)}
+          <p className="text-cuerpo-sm text-terciario">
+            {mayusculaInicial(fechaLarga(turno.fechaHora))}
           </p>
 
           <p className="font-display text-principal text-titulo-2 mt-1 font-semibold">

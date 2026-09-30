@@ -119,6 +119,17 @@ export function fechaLarga(valor: string | Date | null | undefined): string {
   return d ? fmtFechaLarga.format(d) : '—';
 }
 
+/**
+ * Primera letra en mayuscula, el resto como viene: `"jueves, 26 de
+ * noviembre"` -> `"Jueves, 26 de noviembre"`.
+ *
+ * Existe porque la clase `capitalize` de CSS pone en mayuscula CADA palabra,
+ * y una fecha larga quedaba «26 De Noviembre De 2026».
+ */
+export function mayusculaInicial(texto: string): string {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
 /** `"2026-08-16T14:30:00Z"` -> `"14:30"` en hora de Asuncion. */
 export function hora(valor: string | Date | null | undefined): string {
   const d = aFecha(valor);

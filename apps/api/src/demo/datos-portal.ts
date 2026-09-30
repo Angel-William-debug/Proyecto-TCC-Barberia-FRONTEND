@@ -202,6 +202,8 @@ export function turnosPortalDemo(): {
       turno(1046, 9, 16, 'pendiente', [1], 2),
     ],
     pasados: [
+      // Uno cancelado, para que el calendario muestre todos los estados.
+      turno(1033, -5, 14, 'cancelado', [2], 3),
       turno(1012, -12, 11, 'completado', [1, 3], 1),
       turno(1004, -33, 15, 'completado', [2], 2),
       turno(998, -47, 9, 'no_asistio', [1], 3),
