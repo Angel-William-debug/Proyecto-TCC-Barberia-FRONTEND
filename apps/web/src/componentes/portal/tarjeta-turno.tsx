@@ -38,8 +38,15 @@ import { BotonCancelarTurno } from './boton-cancelar-turno';
  * La cabecera entera es el boton que despliega. Un triangulito de doce pixeles
  * seria un objetivo tactil por debajo del minimo de 44 px de la seccion 6.6.
  */
-export function TarjetaTurno({ turno }: { turno: TurnoDelCliente }) {
-  const [abierta, setAbierta] = useState(false);
+export function TarjetaTurno({
+  turno,
+  abiertaInicial = false,
+}: {
+  turno: TurnoDelCliente;
+  /** Arranca con el detalle desplegado. Lo usa el pop-up del calendario. */
+  abiertaInicial?: boolean;
+}) {
+  const [abierta, setAbierta] = useState(abiertaInicial);
   const idDetalle = useId();
 
   const barberos = [...new Set(turno.servicios.map((s) => s.barbero))].filter(Boolean);
