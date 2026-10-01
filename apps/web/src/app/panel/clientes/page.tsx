@@ -26,6 +26,7 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { BotonBorrar } from '@/componentes/compartido/boton-borrar';
+import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { FormularioCliente } from '@/componentes/clientes/formulario-cliente';
 import {
   ETIQUETAS_ACTIVO,
@@ -80,6 +81,10 @@ export default async function PaginaClientes({
             hasta: { titulo: 'Hasta' },
           }}
         />
+
+        <div className="px-4 pt-4">
+          <BotonExportar tipo="clientes" searchParams={params} />
+        </div>
 
         <Tabla
           titulo={`Listado de clientes, página ${resultado.pagina} de ${resultado.totalPaginas}`}

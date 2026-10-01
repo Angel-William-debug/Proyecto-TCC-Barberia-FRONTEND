@@ -33,6 +33,7 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { BotonBorrar } from '@/componentes/compartido/boton-borrar';
+import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { BotonResolverAlerta } from '@/componentes/inventario/boton-resolver-alerta';
 import { FormularioCategoriaProducto } from '@/componentes/inventario/formulario-categoria-producto';
 import { FormularioProducto } from '@/componentes/inventario/formulario-producto';
@@ -167,6 +168,10 @@ export default async function PaginaInventario({
             nivel: { titulo: 'Nivel', valores: ETIQUETAS_NIVEL },
           }}
         />
+
+        <div className="px-4 pt-4">
+          <BotonExportar tipo="inventario" searchParams={params} />
+        </div>
 
         <Tabla titulo="Productos del inventario con su nivel de stock">
           <TablaEncabezado>

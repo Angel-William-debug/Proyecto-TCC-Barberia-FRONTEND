@@ -26,6 +26,7 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { BotonEmitirFactura } from '@/componentes/cobros/boton-emitir-factura';
+import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { FormularioCobro } from '@/componentes/cobros/formulario-cobro';
 import {
   comunes,
@@ -123,6 +124,10 @@ export default async function PaginaCobros({
             hasta: { titulo: 'Hasta' },
           }}
         />
+
+        <div className="px-4 pt-4">
+          <BotonExportar tipo="cobros" searchParams={params} />
+        </div>
 
         <Tabla titulo="Cobros registrados">
           <TablaEncabezado>
