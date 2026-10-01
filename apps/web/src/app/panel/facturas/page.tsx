@@ -26,6 +26,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import {
   comunes,
   paginarFilas,
@@ -99,6 +100,10 @@ export default async function PaginaFacturas({
             hasta: { titulo: 'Hasta' },
           }}
         />
+
+        <div className="px-4 pt-4">
+          <BotonExportar tipo="facturas" searchParams={params} />
+        </div>
 
         <Tabla titulo="Facturas emitidas">
           <TablaEncabezado>

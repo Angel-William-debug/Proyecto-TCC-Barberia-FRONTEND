@@ -23,6 +23,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { FormularioUsuario } from '@/componentes/usuarios/formulario-usuario';
 import {
   ETIQUETAS_ACTIVO,
@@ -94,6 +95,10 @@ export default async function PaginaUsuarios({
             hasta: { titulo: 'Hasta' },
           }}
         />
+
+        <div className="px-4 pt-4">
+          <BotonExportar tipo="usuarios" searchParams={params} />
+        </div>
 
         <Tabla titulo="Usuarios del sistema">
           <TablaEncabezado>

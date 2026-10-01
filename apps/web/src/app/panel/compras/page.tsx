@@ -35,6 +35,7 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { BotonBorrar } from '@/componentes/compartido/boton-borrar';
+import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { FormularioOrdenCompra } from '@/componentes/compras/formulario-orden-compra';
 import { FormularioPagoProveedor } from '@/componentes/compras/formulario-pago-proveedor';
 import { FormularioProveedor } from '@/componentes/compras/formulario-proveedor';
@@ -166,6 +167,10 @@ export default async function PaginaCompras({
           }}
         />
 
+        <div className="px-4 pt-4">
+          <BotonExportar tipo="compras" searchParams={params} />
+        </div>
+
         <Tabla titulo="Órdenes de compra a proveedores">
           <TablaEncabezado>
             <Th>Orden</Th>
@@ -227,6 +232,13 @@ export default async function PaginaCompras({
             prov_hasta: { titulo: 'Hasta' },
           }}
         />
+
+        {/* Esta tabla filtra con el prefijo prov_, que BotonExportar no entiende
+            (usa q/desde/hasta sin prefijo) — exporta el listado completo de
+            proveedores, sin aplicar estos filtros en particular. */}
+        <div className="px-4 pt-4">
+          <BotonExportar tipo="proveedores" />
+        </div>
 
         <Tabla titulo="Proveedores registrados">
           <TablaEncabezado>

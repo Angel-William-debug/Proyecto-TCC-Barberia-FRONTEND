@@ -17,6 +17,14 @@ import { ErrorAplicacion, traducirError } from '../errores';
 import { uno } from '../compartido/relaciones';
 import { generarExcel } from '../compartido/exportacion/excel';
 import { generarPdfTabla } from '../compartido/exportacion/pdf';
+import { listarProfesionales } from './barberos';
+import { listarServicios } from './servicios';
+import { listarUsuarios } from './usuarios';
+import { listarAgenda } from './agenda';
+import { listarPedidos } from './compras';
+import { listarAuditoria } from './auditoria';
+import { listarFacturas } from './facturas';
+import { rankingBarberos } from './ranking';
 
 /**
  * Reportes del modulo 7.
@@ -144,6 +152,14 @@ export const TIPOS_REPORTE = [
   'inactivos',
   'cumpleanos',
   'general',
+  'barberos',
+  'servicios',
+  'usuarios',
+  'agenda',
+  'compras',
+  'auditoria',
+  'ranking',
+  'facturas',
 ] as const;
 export type TipoReporte = (typeof TIPOS_REPORTE)[number];
 
@@ -156,6 +172,14 @@ export const TITULOS_TIPO_REPORTE: Record<TipoReporte, string> = {
   inactivos: 'Clientes inactivos (fidelización)',
   cumpleanos: 'Cumpleaños del mes',
   general: 'Reporte general (KPIs mensuales)',
+  barberos: 'Reporte de barberos',
+  servicios: 'Reporte de servicios',
+  usuarios: 'Reporte de usuarios',
+  agenda: 'Reporte de agenda',
+  compras: 'Reporte de órdenes de compra',
+  auditoria: 'Reporte de auditoría',
+  ranking: 'Reporte de ranking de barberos',
+  facturas: 'Reporte de facturas',
 };
 
 export interface FiltroReporte {
@@ -369,6 +393,214 @@ async function datosReporte(tipo: TipoReporte, filtro: FiltroReporte): Promise<D
           { clave: 'comisiones', titulo: 'Comisiones', anchoExcel: 16, pesoPdf: 1.2, tipo: 'moneda' },
         ],
         filas: (data ?? []) as unknown as Array<Record<string, unknown>>,
+      };
+    }
+
+    case 'barberos': {
+      const filas = await listarProfesionales({
+        busqueda: filtro.busqueda,
+        desde: filtro.desde,
+        hasta: filtro.hasta,
+      });
+
+      return {
+        titulo,
+        columnas: [
+          { clave: 'nombre', titulo: 'Barbero', anchoExcel: 24, pesoPdf: 1.8 },
+          { clave: 'especialidad', titulo: 'Especialidad', anchoExcel: 22, pesoPdf: 1.6 },
+          { clave: 'tipo', titulo: 'Tipo', anchoExcel: 16, pesoPdf: 1.1 },
+          { clave: 'porcentaje_com', titulo: 'Comisión %', anchoExcel: 12, pesoPdf: 0.9, tipo: 'numero' },
+          { clave: 'estado_texto', titulo: 'Estado', anchoExcel: 12, pesoPdf: 0.9 },
+        ],
+        filas: filas.map((p) => ({
+          nombre: p.nombre,
+          especialidad: p.especialidad,
+          tipo: p.tipo,
+          porcentaje_com: p.porcentaje_com,
+          estado_texto: p.estado ? 'Activo' : 'Inactivo',
+        })),
+      };
+    }
+
+    case 'servicios': {
+      const filas = await listarServicios({
+        busqueda: filtro.busqueda,
+        desde: filtro.desde,
+        hasta: filtro.hasta,
+      });
+
+      return {
+        titulo,
+        columnas: [
+          { clave: 'nombre', titulo: 'Servicio', anchoExcel: 26, pesoPdf: 2 },
+          { clave: 'descripcion', titulo: 'Descripción', anchoExcel: 30, pesoPdf: 2.2 },
+          { clave: 'duracion_min', titulo: 'Duración (min)', anchoExcel: 12, pesoPdf: 1, tipo: 'numero' },
+          { clave: 'precio_base', titulo: 'Precio base', anchoExcel: 14, pesoPdf: 1.1, tipo: 'moneda' },
+          { clave: 'estado_texto', titulo: 'Estado', anchoExcel: 12, pesoPdf: 0.9 },
+        ],
+        filas: filas.map((s) => ({
+          nombre: s.nombre,
+          descripcion: s.descripcion,
+          duracion_min: s.duracion_min,
+          precio_base: s.precio_base,
+          estado_texto: s.estado ? 'Activo' : 'Inactivo',
+        })),
+      };
+    }
+
+    case 'usuarios': {
+      const filas = await listarUsuarios({
+        busqueda: filtro.busqueda,
+        desde: filtro.desde,
+        hasta: filtro.hasta,
+      });
+
+      return {
+        titulo,
+        columnas: [
+          { clave: 'nombre', titulo: 'Usuario', anchoExcel: 24, pesoPdf: 1.8 },
+          { clave: 'email', titulo: 'Correo', anchoExcel: 26, pesoPdf: 2 },
+          { clave: 'rol', titulo: 'Rol', anchoExcel: 16, pesoPdf: 1.2 },
+          { clave: 'estado_texto', titulo: 'Estado', anchoExcel: 12, pesoPdf: 0.9 },
+          { clave: 'created_at', titulo: 'Alta', anchoExcel: 14, pesoPdf: 1.1, tipo: 'fecha' },
+        ],
+        filas: filas.map((u) => ({
+          nombre: u.nombre,
+          email: u.email,
+          rol: u.rol,
+          estado_texto: u.estado ? 'Activo' : 'Inactivo',
+          created_at: u.created_at,
+        })),
+      };
+    }
+
+    case 'agenda': {
+      // listarAgenda exige un rango: sin filtro propio, se exporta el mes en curso.
+      const hoy = new Date();
+      const desde =
+        filtro.desde ?? `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
+      const hasta = filtro.hasta ?? hoy.toISOString().slice(0, 10);
+
+      const filas = await listarAgenda({ desde, hasta, busqueda: filtro.busqueda });
+
+      return {
+        titulo,
+        columnas: [
+          { clave: 'fecha_hora', titulo: 'Fecha y hora', anchoExcel: 18, pesoPdf: 1.3, tipo: 'fecha' },
+          { clave: 'nombre_cliente', titulo: 'Cliente', anchoExcel: 22, pesoPdf: 1.6 },
+          { clave: 'servicios_texto', titulo: 'Servicios', anchoExcel: 26, pesoPdf: 2 },
+          { clave: 'barberos_texto', titulo: 'Barbero', anchoExcel: 20, pesoPdf: 1.5 },
+          { clave: 'total', titulo: 'Total', anchoExcel: 14, pesoPdf: 1, tipo: 'moneda' },
+          { clave: 'estado', titulo: 'Estado', anchoExcel: 12, pesoPdf: 0.9 },
+        ],
+        filas: filas.map((c) => ({
+          fecha_hora: c.fecha_hora,
+          nombre_cliente: c.cliente.nombre,
+          servicios_texto: c.servicios.map((s) => s.servicio.nombre).join(', '),
+          barberos_texto: [...new Set(c.servicios.map((s) => s.profesional.nombre))].join(', '),
+          total: c.total,
+          estado: c.estado,
+        })),
+      };
+    }
+
+    case 'compras': {
+      const filas = await listarPedidos({
+        busqueda: filtro.busqueda,
+        desde: filtro.desde,
+        hasta: filtro.hasta,
+      });
+
+      return {
+        titulo,
+        columnas: [
+          { clave: 'nombre_proveedor', titulo: 'Proveedor', anchoExcel: 26, pesoPdf: 2 },
+          { clave: 'fecha_pedido', titulo: 'Fecha de pedido', anchoExcel: 16, pesoPdf: 1.2, tipo: 'fecha' },
+          { clave: 'cantidad_items', titulo: 'Ítems', anchoExcel: 10, pesoPdf: 0.8, tipo: 'numero' },
+          { clave: 'estado', titulo: 'Estado', anchoExcel: 14, pesoPdf: 1 },
+          { clave: 'total', titulo: 'Total', anchoExcel: 14, pesoPdf: 1.1, tipo: 'moneda' },
+        ],
+        filas: filas.map((p) => ({
+          nombre_proveedor: p.nombre_proveedor,
+          fecha_pedido: p.fecha_pedido,
+          cantidad_items: p.cantidad_items,
+          estado: p.estado,
+          total: p.total,
+        })),
+      };
+    }
+
+    case 'auditoria': {
+      const filas = await listarAuditoria({
+        busqueda: filtro.busqueda,
+        desde: filtro.desde,
+        hasta: filtro.hasta,
+      });
+
+      return {
+        titulo,
+        columnas: [
+          { clave: 'fecha_accion', titulo: 'Fecha', anchoExcel: 16, pesoPdf: 1.2, tipo: 'fecha' },
+          { clave: 'nombre_usuario', titulo: 'Usuario', anchoExcel: 22, pesoPdf: 1.6 },
+          { clave: 'tabla_afectada', titulo: 'Tabla', anchoExcel: 16, pesoPdf: 1.2 },
+          { clave: 'accion', titulo: 'Acción', anchoExcel: 12, pesoPdf: 0.9 },
+          { clave: 'detalle', titulo: 'Detalle', anchoExcel: 30, pesoPdf: 2.2 },
+        ],
+        filas: filas.map((a) => ({
+          fecha_accion: a.fecha_accion,
+          nombre_usuario: a.nombre_usuario ?? '—',
+          tabla_afectada: a.tabla_afectada,
+          accion: a.accion,
+          detalle: a.detalle,
+        })),
+      };
+    }
+
+    case 'ranking': {
+      const filas = await rankingBarberos({ desde: filtro.desde, hasta: filtro.hasta });
+
+      return {
+        titulo,
+        columnas: [
+          { clave: 'nombre', titulo: 'Barbero', anchoExcel: 22, pesoPdf: 1.6 },
+          { clave: 'serviciosRealizados', titulo: 'Servicios', anchoExcel: 10, pesoPdf: 0.8, tipo: 'numero' },
+          { clave: 'clientesDistintos', titulo: 'Clientes', anchoExcel: 10, pesoPdf: 0.8, tipo: 'numero' },
+          { clave: 'facturado', titulo: 'Facturado', anchoExcel: 16, pesoPdf: 1.2, tipo: 'moneda' },
+          { clave: 'ticketPromedio', titulo: 'Ticket promedio', anchoExcel: 16, pesoPdf: 1.2, tipo: 'moneda' },
+        ],
+        filas: filas.map((f) => ({
+          nombre: f.nombre,
+          serviciosRealizados: f.serviciosRealizados,
+          clientesDistintos: f.clientesDistintos,
+          facturado: f.facturado,
+          ticketPromedio: f.ticketPromedio,
+        })),
+      };
+    }
+
+    case 'facturas': {
+      const filas = await listarFacturas({
+        busqueda: filtro.busqueda,
+        desde: filtro.desde,
+        hasta: filtro.hasta,
+      });
+
+      return {
+        titulo,
+        columnas: [
+          { clave: 'id_factura', titulo: 'N.°', anchoExcel: 10, pesoPdf: 0.7, tipo: 'numero' },
+          { clave: 'nombre_cliente', titulo: 'Cliente', anchoExcel: 24, pesoPdf: 1.8 },
+          { clave: 'fecha_emision', titulo: 'Emisión', anchoExcel: 16, pesoPdf: 1.2, tipo: 'fecha' },
+          { clave: 'total', titulo: 'Total', anchoExcel: 14, pesoPdf: 1.1, tipo: 'moneda' },
+          { clave: 'estado', titulo: 'Estado', anchoExcel: 12, pesoPdf: 0.9 },
+        ],
+        filas: filas.map((f) => ({
+          id_factura: f.id_factura,
+          nombre_cliente: f.nombre_cliente,
+          fecha_emision: f.fecha_emision,
+          total: f.total,
+          estado: f.estado,
+        })),
       };
     }
 

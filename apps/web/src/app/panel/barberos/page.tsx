@@ -24,6 +24,7 @@ import {
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { BotonBorrar } from '@/componentes/compartido/boton-borrar';
+import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { FormularioBarbero } from '@/componentes/barberos/formulario-barbero';
 import {
   ETIQUETAS_ACTIVO,
@@ -102,6 +103,10 @@ export default async function PaginaBarberos({
             hasta: { titulo: 'Hasta' },
           }}
         />
+
+        <div className="px-4 pt-4">
+          <BotonExportar tipo="barberos" searchParams={params} />
+        </div>
 
         <Tabla titulo="Barberos registrados en el sistema">
           <TablaEncabezado>

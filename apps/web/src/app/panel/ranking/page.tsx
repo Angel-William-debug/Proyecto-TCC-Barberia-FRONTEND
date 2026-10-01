@@ -25,6 +25,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { GraficoRanking } from '@/componentes/ranking/grafico-ranking';
 import { comunes, texto, type Parametros } from '@/lib/filtros';
 
@@ -92,6 +93,10 @@ export default async function Ranking({
           todavía no registra valoraciones.
         </span>
       </p>
+
+      <div className="mt-4">
+        <BotonExportar tipo="ranking" searchParams={params} />
+      </div>
 
       {filas.length === 0 ? (
         <div className="mt-6">

@@ -24,6 +24,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import {
   comunes,
   lista,
@@ -115,6 +116,10 @@ export default async function PaginaAuditoria({
             hasta: { titulo: 'Hasta' },
           }}
         />
+
+        <div className="px-4 pt-4">
+          <BotonExportar tipo="auditoria" searchParams={params} />
+        </div>
 
         <Tabla titulo="Registro de auditoría del sistema">
           <TablaEncabezado>
