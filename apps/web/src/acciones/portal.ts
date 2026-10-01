@@ -11,6 +11,8 @@
  * duplicarlas garantiza que algun dia difieran.
  */
 
+import { headers } from 'next/headers';
+
 import {
   ErrorAplicacion,
   actualizarMiPerfil,
@@ -47,7 +49,15 @@ export async function accionRegistrarCliente(datos: FormData): Promise<Resultado
 
   if (v.hayErrores) return v.resultado;
 
-  return ejecutar(PORTAL, () => registrarCliente({ nombre, email, telefono, password }));
+  // El enlace del correo vuelve al mismo sitio que recibio el pedido: Vercel
+  // en produccion, localhost:3000 en desarrollo. Desde la app movil el pedido
+  // tambien llega a Vercel (`/api/registro`), asi que el enlace abre la web.
+  const cabeceras = await headers();
+  const host = cabeceras.get('x-forwarded-host') ?? cabeceras.get('host');
+  const protocolo = cabeceras.get('x-forwarded-proto') ?? 'https';
+  const urlRetorno = `${protocolo}://${host}/cuenta-confirmada`;
+
+  return ejecutar(PORTAL, () => registrarCliente({ nombre, email, telefono, password }, urlRetorno));
 }
 
 /**
