@@ -3,10 +3,11 @@ import type { Cliente, FiltroListado, Pagina, VistaHistorialCliente } from '@bar
 import { CLIENTES_DEMO } from '../demo/datos-catalogo';
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
-import { traducirError } from '../errores';
+import { ErrorAplicacion, traducirError } from '../errores';
 import { coincideEstado, coincideTexto, entreFechas, paginar } from '../compartido/filtros';
 import { actualizar, crear, rechazarSiEsDemo } from '../compartido/escritura';
 import { uno } from '../compartido/relaciones';
+import { generarPdfTabla } from '../compartido/exportacion/pdf';
 
 // Diez, como todas las tablas del panel (FILAS_POR_PAGINA en apps/web). Aca
 // se repite porque Clientes es la unica que pagina en la consulta.
@@ -133,6 +134,52 @@ export async function listarHistorialCliente(
     nombre_profesional: uno<{ nombre: string }>(f.profesionales)?.nombre ?? '—',
     costo_cobrado: f.costo_cobrado,
   }));
+}
+
+/**
+ * Ficha individual de un cliente en PDF (opción B del pedido de la
+ * profesora: exportar el documento de UNA persona puntual, no una tabla con
+ * todos). Reutiliza los mismos dos datos que ya trae la página de detalle
+ * (`obtenerCliente` + `listarHistorialCliente`), así que el PDF nunca puede
+ * desalinearse de lo que se ve en pantalla.
+ */
+export async function generarFichaClientePdf(idCliente: number): Promise<Buffer> {
+  const [cliente, historial] = await Promise.all([
+    obtenerCliente(idCliente),
+    listarHistorialCliente(idCliente),
+  ]);
+
+  if (!cliente) throw new ErrorAplicacion('No se encontró el cliente solicitado.');
+
+  const GUARANIES = (n: number) => `Gs. ${Math.round(n).toLocaleString('es-PY')}`;
+  const FECHA = (iso: string) => new Date(iso).toLocaleDateString('es-PY');
+
+  const totalGastado = historial.reduce((suma, h) => suma + h.costo_cobrado, 0);
+  const subtitulo = [
+    cliente.telefono,
+    `${historial.length} visitas`,
+    `Total gastado: ${GUARANIES(totalGastado)}`,
+    historial[0] ? `Última visita: ${FECHA(historial[0].fecha_realizacion)}` : null,
+  ]
+    .filter((parte): parte is string => Boolean(parte))
+    .join(' · ');
+
+  return generarPdfTabla(
+    `Ficha de cliente — ${cliente.nombre}`,
+    subtitulo,
+    [
+      { clave: 'fecha', titulo: 'Fecha', ancho: 1 },
+      { clave: 'servicio', titulo: 'Servicio', ancho: 1.6 },
+      { clave: 'profesional', titulo: 'Barbero', ancho: 1.3 },
+      { clave: 'costo', titulo: 'Costo', ancho: 1 },
+    ],
+    historial.map((h) => ({
+      fecha: FECHA(h.fecha_realizacion),
+      servicio: h.nombre_servicio,
+      profesional: h.nombre_profesional,
+      costo: GUARANIES(h.costo_cobrado),
+    })),
+  );
 }
 
 /**

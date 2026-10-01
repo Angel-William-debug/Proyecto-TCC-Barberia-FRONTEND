@@ -1,8 +1,14 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { listarHistorialCliente, listarRecomendaciones, obtenerCliente } from '@barber-shop/api';
 import {
+  listarHistorialCliente,
+  listarRecomendaciones,
+  obtenerCliente,
+  MODO_DEMO,
+} from '@barber-shop/api';
+import {
+  Boton,
   BotonIcono,
   EstadoVacio,
   Paginacion,
@@ -66,6 +72,15 @@ export default async function PaginaPerfilCliente({
       <EncabezadoVista
         titulo={cliente.nombre}
         descripcion={`${formatoTelefono(cliente.telefono)}${cliente.email ? ` · ${cliente.email}` : ''}`}
+        accion={
+          !MODO_DEMO && (
+            <Link href={`/panel/clientes/${idCliente}/pdf`} target="_blank">
+              <Boton variante="secundario" icono="download">
+                Exportar PDF
+              </Boton>
+            </Link>
+          )
+        }
       />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">

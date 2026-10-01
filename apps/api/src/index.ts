@@ -62,6 +62,7 @@ export {
   obtenerCliente,
   desactivarCliente,
   listarHistorialCliente,
+  generarFichaClientePdf,
   crearCliente,
   actualizarCliente,
   type EntradaCliente,
