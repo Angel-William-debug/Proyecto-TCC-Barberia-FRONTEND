@@ -35,14 +35,11 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { GraficoIngresos } from '@/componentes/reportes/grafico-ingresos';
+import { GraficoStockCritico } from '@/componentes/reportes/grafico-stock-critico';
 import { fecha, paginarFilas, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Reportes' };
-
-const MESES = [
-  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
-];
 
 // El tipo "general" hace de opcion en blanco del selector (ver comentario
 // junto a `SelectorFiltro` mas abajo): no aparece en la lista de opciones
@@ -93,8 +90,6 @@ export default async function PaginaReportes({
     previsualizarReporte(tipo, filtroReporte),
   ]);
 
-  const mayorIngreso = Math.max(...ingresos.map((i) => i.total_ingresos), 1);
-
   const queryExportar = new URLSearchParams();
   queryExportar.set('tipo', tipo);
   if (filtroReporte.desde) queryExportar.set('desde', filtroReporte.desde);
@@ -137,30 +132,17 @@ export default async function PaginaReportes({
             titulo="Ingresos por mes"
             descripcion="Cobros pagados y parciales"
           />
-          <div className="space-y-4 p-6">
-            {ingresos.map((i) => (
-              <div key={`${i.anio}-${i.mes}`}>
-                <div className="mb-1.5 flex items-baseline justify-between gap-4">
-                  <span className="text-cuerpo text-principal">
-                    {MESES[i.mes - 1]} {i.anio}
-                  </span>
-                  <span className="text-cuerpo text-principal font-medium tabular-nums">
-                    {guaranies(i.total_ingresos)}
-                  </span>
-                </div>
-                <div className="bg-elevado h-2 w-full overflow-hidden rounded-full">
-                  <div
-                    className="bg-marca h-full rounded-full"
-                    style={{ width: `${(i.total_ingresos / mayorIngreso) * 100}%` }}
-                  />
-                </div>
-                <p className="text-cuerpo-sm text-terciario mt-1">
-                  {i.cantidad_servicios} servicios · ticket promedio{' '}
-                  {guaranies(i.ticket_promedio)}
-                </p>
-              </div>
-            ))}
-          </div>
+          {ingresos.length === 0 ? (
+            <div className="p-6">
+              <EstadoVacio
+                icono="chart-column"
+                titulo="Todavía no hay ingresos registrados"
+                descripcion="El gráfico se arma con los cobros pagados y parciales de cada mes."
+              />
+            </div>
+          ) : (
+            <GraficoIngresos datos={ingresos} />
+          )}
         </Tarjeta>
 
         <div className="space-y-6">
@@ -169,6 +151,7 @@ export default async function PaginaReportes({
               titulo="Stock crítico"
               descripcion="Productos en o por debajo del mínimo"
             />
+            {criticos.length > 0 && <GraficoStockCritico datos={criticos} />}
             <Tabla titulo="Productos con stock crítico">
               <TablaEncabezado>
                 <Th>Producto</Th>
