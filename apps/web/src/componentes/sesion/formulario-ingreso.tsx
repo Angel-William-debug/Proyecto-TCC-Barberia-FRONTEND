@@ -19,6 +19,24 @@ export function FormularioIngreso() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  // Correo de una cuenta sin confirmar: habilita «Reenviar el correo».
+  const [sinConfirmar, setSinConfirmar] = useState<string | null>(null);
+  const [reenvio, setReenvio] = useState<'nada' | 'enviando' | 'enviado'>('nada');
+
+  async function reenviar() {
+    if (!sinConfirmar) return;
+    setReenvio('enviando');
+    // La respuesta no cambia si falla (limite de envios, red): decir «no se
+    // pudo» tampoco le da a la persona otra cosa que hacer que esperar.
+    await clienteNavegador()
+      .auth.resend({
+        type: 'signup',
+        email: sinConfirmar,
+        options: { emailRedirectTo: `${window.location.origin}/cuenta-confirmada` },
+      })
+      .catch(() => {});
+    setReenvio('enviado');
+  }
 
   async function enviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -42,14 +60,17 @@ export function FormularioIngreso() {
       });
 
       if (errorAuth) {
-        // Se distingue solo la cuenta sin confirmar: ahi la contraseña puede
-        // estar bien, y decir «no son correctos» manda a la persona a probar
-        // otra en vez de avisar a la barberia. Paso el 30/9/2026. Cualquier
-        // otro fallo sigue siendo el mensaje generico, para no revelar si un
+        // Se distingue solo la cuenta sin confirmar: ahi la contraseña esta
+        // bien -Supabase la valida antes de mirar la confirmacion-, y decir
+        // «no son correctos» manda a la persona a probar otra. Cualquier otro
+        // fallo sigue siendo el mensaje generico, para no revelar si un
         // correo tiene cuenta.
+        const pendiente = errorAuth.code === 'email_not_confirmed';
+        setSinConfirmar(pendiente ? email : null);
+        setReenvio('nada');
         setError(
-          errorAuth.code === 'email_not_confirmed'
-            ? 'Su cuenta todavía no está confirmada. Avise a la barbería para que la habiliten.'
+          pendiente
+            ? 'Todavía no confirmó su correo. Abra el enlace que le enviamos al crear la cuenta (revise también el correo no deseado).'
             : 'El correo o la contraseña no son correctos.',
         );
         setEnviando(false);
@@ -76,7 +97,26 @@ export function FormularioIngreso() {
           className="border-peligro text-peligro text-cuerpo-sm flex items-start gap-2 rounded-md border bg-[var(--chip-peligro-fondo)] p-3"
         >
           <Icono nombre="circle-alert" tamano="sm" className="mt-0.5" />
-          <span>{error}</span>
+          <span>
+            {error}
+            {sinConfirmar && (
+              <>
+                {' '}
+                {reenvio === 'enviado' ? (
+                  <strong>Se lo volvimos a enviar.</strong>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={reenviar}
+                    disabled={reenvio === 'enviando'}
+                    className="cursor-pointer font-semibold underline disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {reenvio === 'enviando' ? 'Enviando…' : 'Reenviar el correo'}
+                  </button>
+                )}
+              </>
+            )}
+          </span>
         </div>
       )}
 

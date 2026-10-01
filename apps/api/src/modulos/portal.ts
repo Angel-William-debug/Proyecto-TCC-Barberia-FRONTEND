@@ -16,7 +16,7 @@
  * La unica excepcion es `registrarCliente`, y esta explicada donde ocurre.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import type {
   CambiosPerfilCliente,
@@ -45,6 +45,7 @@ import {
   turnosPortalDemo,
 } from '../demo/datos-portal';
 import { MODO_DEMO } from '../demo/modo';
+import { entornoPublico } from '../entorno';
 import { ErrorAplicacion, traducirError } from '../errores';
 import { clienteAdmin } from '../supabase/cliente-admin';
 import { clienteServidor } from '../supabase/cliente-servidor';
@@ -105,8 +106,20 @@ export async function sesionPortal(): Promise<UsuarioSesion | null> {
  * que en `crearUsuario()`: una cuenta de Auth sin ficha es invisible para el
  * sistema y su dueno no puede ni entrar ni volver a registrarse, porque el
  * correo ya figura como tomado.
+ *
+ * CONFIRMACION POR CORREO (1/10/2026)
+ *
+ * La cuenta nace SIN confirmar y Supabase le manda al cliente un correo con
+ * el enlace, por el SMTP de Brevo configurado en Auth. Hasta que lo abre, el
+ * ingreso responde `email_not_confirmed`. `urlRetorno` es la pagina a la que
+ * lleva el enlace despues de confirmar (`/cuenta-confirmada` del sitio que
+ * hizo el pedido); tiene que estar en la lista de direcciones permitidas de
+ * Auth.
  */
-export async function registrarCliente(entrada: EntradaRegistroCliente): Promise<void> {
+export async function registrarCliente(
+  entrada: EntradaRegistroCliente,
+  urlRetorno: string,
+): Promise<void> {
   if (MODO_DEMO) return;
 
   const admin = clienteAdmin();
@@ -121,22 +134,21 @@ export async function registrarCliente(entrada: EntradaRegistroCliente): Promise
     throw new ErrorAplicacion('No se pudo completar el registro. Intente mas tarde.');
   }
 
-  // `email_confirm: true`: la cuenta nace confirmada y el cliente entra en
-  // seguida. Antes era `false`, con la idea de que Supabase mandara el correo
-  // de confirmacion, pero `admin.createUser` NUNCA manda correos: la cuenta
-  // quedaba sin confirmar para siempre y el ingreso la rechazaba. Paso con la
-  // primera cuenta real el 30/9/2026.
-  //
-  // Es la misma decision que el alta de usuarios del personal (`crearUsuario`).
-  // Lo que se pierde es la verificacion de que el correo es de quien se
-  // registra. Recuperarla exige un servidor de correo propio (el de prueba de
-  // Supabase manda dos por hora) y la direccion de Vercel como `site_url`, y
-  // cambiar esto por `signUp()`. Queda anotado como pendiente.
-  const { data: creado, error: errorAuth } = await admin.auth.admin.createUser({
+  // `signUp()` y no `admin.auth.admin.createUser()`: el de administracion
+  // NUNCA manda correos (la cuenta quedaba sin confirmar para siempre, paso el
+  // 30/9/2026), y `signUp()` si manda el de confirmacion. Con un cliente
+  // anonimo propio, sin sesion guardada: no hay navegador del que tomar
+  // cookies, y el flujo implicito hace que el enlace confirme por si solo en
+  // Supabase, sin que esta pagina tenga que canjear nada.
+  const { urlSupabase, claveAnonima } = entornoPublico();
+  const anonimo = createClient(urlSupabase, claveAnonima, {
+    auth: { persistSession: false, autoRefreshToken: false, flowType: 'implicit' },
+  });
+
+  const { data: creado, error: errorAuth } = await anonimo.auth.signUp({
     email: entrada.email,
     password: entrada.password,
-    email_confirm: true,
-    user_metadata: { nombre: entrada.nombre },
+    options: { emailRedirectTo: urlRetorno, data: { nombre: entrada.nombre } },
   });
 
   if (errorAuth || !creado.user) {
@@ -145,7 +157,25 @@ export async function registrarCliente(entrada: EntradaRegistroCliente): Promise
     throw new ErrorAplicacion('No se pudo crear la cuenta. Revise los datos e intente de nuevo.');
   }
 
+  // Correo que ya tiene cuenta CONFIRMADA: Supabase no da error -para no
+  // revelar que existe- y devuelve un usuario ficticio sin identidades. Aca
+  // se hace lo mismo: se responde como si se hubiera creado, y no se toca
+  // nada. Su dueno no recibe un correo nuevo; si olvido la contrasena, la
+  // recupera.
+  if (!creado.user.identities?.length) return;
+
   const authUid = creado.user.id;
+
+  // Correo con cuenta SIN confirmar que se vuelve a registrar: Supabase
+  // reenvia el correo y devuelve la misma cuenta, que ya tiene su usuario y
+  // su ficha. No hay que crearlas de nuevo -fallaria por duplicado- y, sobre
+  // todo, no hay que deshacer nada: se borraria una cuenta que existe.
+  const { data: existente } = await admin
+    .from('usuarios')
+    .select('id_usuario')
+    .eq('auth_uid', authUid)
+    .maybeSingle();
+  if (existente) return;
 
   const { data: usuario, error: errorUsuario } = await admin
     .from('usuarios')

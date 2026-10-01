@@ -21,9 +21,10 @@ import { accionRegistrarCliente } from '@/acciones/portal';
  *
  * Ahora el registro publico es del cliente y se completa solo: la accion de
  * servidor crea la credencial, el usuario con rol `cliente` y su ficha, las
- * tres enlazadas, y la cuenta nace confirmada: entra y reserva en seguida.
- * (Hasta el 30/9/2026 este cartel prometia un correo de confirmacion que
- * nunca salia; ver `registrarCliente()`.)
+ * tres enlazadas. Desde el 1/10/2026 la cuenta nace SIN confirmar: Supabase
+ * manda el correo con el enlace (por Brevo) y el cliente ingresa despues de
+ * abrirlo. Entre el 30/9 y el 1/10 nacia confirmada, porque no habia servidor
+ * de correo; ver `registrarCliente()`.
  *
  * EL ROL NO ES UN CAMPO DE ESTE FORMULARIO, y no por descuido. Quien se
  * registra por su cuenta es siempre un cliente; el personal de la barberia lo
@@ -33,18 +34,20 @@ import { accionRegistrarCliente } from '@/acciones/portal';
 export function FormularioCrearCuenta() {
   const [error, setError] = useState<string | null>(null);
   const [errores, setErrores] = useState<Record<string, string>>({});
-  const [listo, setListo] = useState(false);
+  // El correo al que se mando el enlace, para mostrarlo en el cartel final.
+  const [listo, setListo] = useState<string | null>(null);
   const [enviando, iniciar] = useTransition();
 
   function enviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const datos = new FormData(evento.currentTarget);
+    const email = String(datos.get('email') ?? '').trim();
 
     setError(null);
     setErrores({});
 
     if (MODO_DEMO) {
-      setListo(true);
+      setListo(email);
       return;
     }
 
@@ -55,19 +58,21 @@ export function FormularioCrearCuenta() {
         setErrores(r.campos ?? {});
         return;
       }
-      setListo(true);
+      setListo(email);
     });
   }
 
   if (listo) {
     return (
       <div className="text-center">
-        <span className="bg-[var(--chip-exito-fondo)] text-exito inline-flex h-12 w-12 items-center justify-center rounded-full">
-          <Icono nombre="circle-check" tamano="lg" />
+        <span className="bg-[var(--chip-info-fondo)] text-info inline-flex h-12 w-12 items-center justify-center rounded-full">
+          <Icono nombre="bell" tamano="lg" />
         </span>
-        <h2 className="text-titulo-3 text-principal mt-4 font-semibold">Cuenta creada</h2>
+        <h2 className="text-titulo-3 text-principal mt-4 font-semibold">Revise su correo</h2>
         <p className="text-cuerpo-sm text-secundario medida-lectura mx-auto mt-2">
-          Ya puede ingresar con su correo y su contraseña, y reservar su turno.
+          Le enviamos un enlace a <strong className="text-principal">{listo}</strong> para
+          confirmar que el correo es suyo. Ábralo y después ingrese con su contraseña. Si no
+          lo ve, revise la carpeta de correo no deseado.
         </p>
         <Link href="/ingresar" className="mt-6 inline-block">
           <Boton variante="primario">Ir a iniciar sesión</Boton>
