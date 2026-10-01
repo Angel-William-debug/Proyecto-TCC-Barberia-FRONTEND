@@ -42,3 +42,6 @@ test-results/
 
 # Fotos originales sin procesar: pesadas, no se publican
 apps/web/imagenes-originales/
+
+# Copias de trabajo de la extension Kilo Code de VS Code. No son del proyecto.
+.kilo/
