@@ -63,6 +63,7 @@ export {
   desactivarCliente,
   listarHistorialCliente,
   generarFichaClientePdf,
+  exportarFichasClientesZip,
   crearCliente,
   actualizarCliente,
   type EntradaCliente,
@@ -97,7 +98,12 @@ export {
 } from './modulos/facturas';
 
 // --- Comisiones ------------------------------------------------------------
-export { listarComisiones, liquidarComisiones } from './modulos/comisiones';
+export {
+  listarComisiones,
+  liquidarComisiones,
+  generarFichaComisionBarberoPdf,
+  exportarFichasComisionesZip,
+} from './modulos/comisiones';
 
 // --- Inventario ------------------------------------------------------------
 export {

@@ -11,10 +11,12 @@ import type { ComisionDeLista } from '@barber-shop/tipos';
 import { COMISIONES_DETALLE_DEMO } from '../demo/datos-operacion';
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
-import { traducirError } from '../errores';
+import { ErrorAplicacion, traducirError } from '../errores';
 import { coincideEstado, coincideTexto, entreFechas, type FiltroTabla } from '../compartido/filtros';
 import { rechazarSiEsDemo } from '../compartido/escritura';
 import { uno } from '../compartido/relaciones';
+import { generarPdfTabla } from '../compartido/exportacion/pdf';
+import { generarZip, nombreArchivoSeguro } from '../compartido/exportacion/zip';
 
 export interface FiltroComisiones extends FiltroTabla {
   /** Nombre del barbero. */
@@ -74,6 +76,67 @@ export async function listarComisiones(
   });
 
   return filtrar(filas);
+}
+
+/**
+ * Ficha de liquidación de UN barbero (opción B/A del pedido de la profesora:
+ * el documento de una persona puntual, y la pieza que se repite en lote para
+ * la opción A). Filtra por nombre, igual que ya hace `listarComisiones` -no
+ * hay otra forma de acotar por barbero en esa función.
+ */
+export async function generarFichaComisionBarberoPdf(nombreProfesional: string): Promise<Buffer> {
+  const pendientes = await listarComisiones({ estados: ['pendiente'], barbero: nombreProfesional });
+  if (pendientes.length === 0) {
+    throw new ErrorAplicacion(`${nombreProfesional} no tiene comisiones pendientes de liquidar.`);
+  }
+
+  const GUARANIES = (n: number) => `Gs. ${Math.round(n).toLocaleString('es-PY')}`;
+  const FECHA = (iso: string) => (iso ? new Date(iso).toLocaleDateString('es-PY') : '—');
+
+  const total = pendientes.reduce((suma, c) => suma + c.monto, 0);
+  const subtitulo = `${pendientes.length} comisiones pendientes · Total: ${GUARANIES(total)}`;
+
+  return generarPdfTabla(
+    `Liquidación de comisiones — ${nombreProfesional}`,
+    subtitulo,
+    [
+      { clave: 'fecha', titulo: 'Fecha', ancho: 1 },
+      { clave: 'servicio', titulo: 'Servicio', ancho: 1.6 },
+      { clave: 'costo', titulo: 'Costo del servicio', ancho: 1.3 },
+      { clave: 'porcentaje', titulo: '%', ancho: 0.6 },
+      { clave: 'comision', titulo: 'Comisión', ancho: 1 },
+    ],
+    pendientes.map((c) => ({
+      fecha: FECHA(c.fecha_realizacion),
+      servicio: c.nombre_servicio,
+      costo: GUARANIES(c.costo_cobrado),
+      porcentaje: `${c.porcentaje}%`,
+      comision: GUARANIES(c.monto),
+    })),
+  );
+}
+
+/**
+ * Un `.zip` con la ficha de liquidación de cada barbero con comisiones
+ * pendientes (opción A). Reusa `generarFichaComisionBarberoPdf` por barbero.
+ */
+export async function exportarFichasComisionesZip(): Promise<Buffer> {
+  if (MODO_DEMO) {
+    throw new ErrorAplicacion('El modo demostración no puede exportar: no hay datos reales que exportar.');
+  }
+
+  const pendientes = await listarComisiones({ estados: ['pendiente'] });
+  const nombres = [...new Set(pendientes.map((c) => c.nombre_profesional))];
+  if (nombres.length === 0) throw new ErrorAplicacion('No hay comisiones pendientes para exportar.');
+
+  const archivos = await Promise.all(
+    nombres.map(async (nombre) => ({
+      nombre: `comision-${nombreArchivoSeguro(nombre)}.pdf`,
+      contenido: await generarFichaComisionBarberoPdf(nombre),
+    })),
+  );
+
+  return generarZip(archivos);
 }
 
 /**

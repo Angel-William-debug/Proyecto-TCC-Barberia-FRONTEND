@@ -1,7 +1,15 @@
-import { comisionesPendientes, listarComisiones, listarProfesionales } from '@barber-shop/api';
+import Link from 'next/link';
+
+import {
+  comisionesPendientes,
+  listarComisiones,
+  listarProfesionales,
+  MODO_DEMO,
+} from '@barber-shop/api';
 import { ESTADOS_COMISION } from '@barber-shop/tipos';
 import {
   BarraFiltros,
+  Boton,
   CampoBusqueda,
   ChipEstado,
   EstadoVacio,
@@ -93,6 +101,15 @@ export default async function PaginaComisiones({
           <TarjetaEncabezado
             titulo="Resumen por barbero"
             descripcion="Solo comisiones todavía no liquidadas"
+            accion={
+              !MODO_DEMO && (
+                <Link href="/panel/comisiones/exportar-individual">
+                  <Boton variante="terciario" icono="download">
+                    PDFs individuales (.zip)
+                  </Boton>
+                </Link>
+              )
+            }
           />
           <Tabla titulo="Comisiones pendientes agrupadas por barbero">
             <TablaEncabezado>

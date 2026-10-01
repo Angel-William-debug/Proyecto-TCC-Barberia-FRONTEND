@@ -1,8 +1,9 @@
 import Link from 'next/link';
 
-import { listarClientes } from '@barber-shop/api';
+import { listarClientes, MODO_DEMO } from '@barber-shop/api';
 import {
   BarraFiltros,
+  Boton,
   BotonIcono,
   CampoBusqueda,
   ChipEstado,
@@ -82,8 +83,15 @@ export default async function PaginaClientes({
           }}
         />
 
-        <div className="px-4 pt-4">
+        <div className="flex flex-wrap items-center justify-end gap-2 px-4 pt-4">
           <BotonExportar tipo="clientes" searchParams={params} />
+          {!MODO_DEMO && (
+            <Link href="/panel/clientes/exportar-individual">
+              <Boton variante="terciario" icono="download">
+                PDFs individuales (.zip)
+              </Boton>
+            </Link>
+          )}
         </div>
 
         <Tabla

@@ -8,6 +8,7 @@ import { coincideEstado, coincideTexto, entreFechas, paginar } from '../comparti
 import { actualizar, crear, rechazarSiEsDemo } from '../compartido/escritura';
 import { uno } from '../compartido/relaciones';
 import { generarPdfTabla } from '../compartido/exportacion/pdf';
+import { generarZip, nombreArchivoSeguro } from '../compartido/exportacion/zip';
 
 // Diez, como todas las tablas del panel (FILAS_POR_PAGINA en apps/web). Aca
 // se repite porque Clientes es la unica que pagina en la consulta.
@@ -180,6 +181,29 @@ export async function generarFichaClientePdf(idCliente: number): Promise<Buffer>
       costo: GUARANIES(h.costo_cobrado),
     })),
   );
+}
+
+/**
+ * Un `.zip` con la ficha individual de cada cliente activo (opción A del
+ * pedido de la profesora: un PDF por persona, generado en lote). Reusa
+ * `generarFichaClientePdf` fila por fila, cero lógica de PDF nueva.
+ */
+export async function exportarFichasClientesZip(): Promise<Buffer> {
+  if (MODO_DEMO) {
+    throw new ErrorAplicacion('El modo demostración no puede exportar: no hay datos reales que exportar.');
+  }
+
+  const { datos: clientes } = await listarClientes({ porPagina: 2000, soloActivos: false });
+  if (clientes.length === 0) throw new ErrorAplicacion('No hay clientes para exportar.');
+
+  const archivos = await Promise.all(
+    clientes.map(async (c) => ({
+      nombre: `cliente-${c.id_cliente}-${nombreArchivoSeguro(c.nombre)}.pdf`,
+      contenido: await generarFichaClientePdf(c.id_cliente),
+    })),
+  );
+
+  return generarZip(archivos);
 }
 
 /**
