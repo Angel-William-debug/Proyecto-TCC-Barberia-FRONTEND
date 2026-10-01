@@ -52,6 +52,7 @@ type Foto = keyof typeof FOTOS;
 
 const PAREJAS: Array<{ ruta: string; izquierda: Foto; derecha: Foto }> = [
   { ruta: '/mi-cuenta/reservar', izquierda: 'peine', derecha: 'corte' },
+  { ruta: '/mi-cuenta/para-usted', izquierda: 'barba', derecha: 'peine' },
   { ruta: '/mi-cuenta/historial', izquierda: 'corte', derecha: 'navaja' },
   { ruta: '/mi-cuenta/perfil', izquierda: 'navaja', derecha: 'peine' },
 ];

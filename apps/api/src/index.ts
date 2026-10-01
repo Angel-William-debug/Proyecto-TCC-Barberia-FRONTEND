@@ -17,6 +17,9 @@ export { entornoPublico, entornoPrivado } from './entorno';
 export { MODO_DEMO } from './demo/modo';
 export { ErrorAplicacion, traducirError, ejecutar } from './errores';
 
+// Sesion por token, para la app movil del cliente (no tiene cookies).
+export { clienteConToken } from './supabase/cliente-token';
+
 // --- Sesion ----------------------------------------------------------------
 export { usuarioActual, exigirSesion } from './modulos/sesion';
 
@@ -36,6 +39,10 @@ export {
   miPerfil,
   actualizarMiPerfil,
   misFacturas,
+  misRecomendaciones,
+  generarMisRecomendaciones,
+  misRecomendacionesCon,
+  generarMisRecomendacionesCon,
 } from './modulos/portal';
 
 // --- Agenda ----------------------------------------------------------------

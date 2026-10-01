@@ -382,6 +382,19 @@ export interface RecomendacionDeLista {
   fecha_generacion: string;
 }
 
+/**
+ * Las recomendaciones del cliente que tiene la sesion, para el portal y la
+ * app. `visitas` y `minimo` estan para explicar RN-009 sin adivinar: con
+ * menos de `minimo` servicios en el historial todavia no se generan.
+ */
+export interface MisRecomendaciones {
+  recomendaciones: RecomendacionDeLista[];
+  /** Servicios realizados en su historial. */
+  visitas: number;
+  /** El minimo de RN-009. */
+  minimo: number;
+}
+
 // ---------------------------------------------------------------------------
 // Facturas (CU-025, anexo)
 // ---------------------------------------------------------------------------

@@ -19,10 +19,11 @@ import type {
   FacturaDelCliente,
   FranjaDisponible,
   PerfilCliente,
+  RecomendacionDeLista,
   TurnoDelCliente,
+  UsuarioSesion,
   VistaPublicoBarbero,
   VistaPublicoHorario,
-  UsuarioSesion,
   VistaPublicoServicio,
 } from '@barber-shop/tipos';
 
@@ -210,6 +211,23 @@ export function turnosPortalDemo(): {
       turno(981, -68, 17, 'completado', [5], 1),
     ],
   };
+}
+
+// ---------------------------------------------------------------------------
+// Recomendaciones del cliente
+//
+// Tres servicios que el cliente de demostracion no probo, con la forma que
+// devuelve `listarConConexion`. Las dos primeras con el algoritmo principal y
+// la ultima con el de respaldo, para que la pantalla muestre los dos casos.
+// ---------------------------------------------------------------------------
+
+export function recomendacionesPortalDemo(): RecomendacionDeLista[] {
+  const hoy = new Date().toISOString();
+  return [
+    { id_recomendacion: 1, id_servicio: 2, nombre_servicio: 'Corte degradado', score_relevancia: 1, algoritmo: 'kmeans_colaborativo_v2', fecha_generacion: hoy },
+    { id_recomendacion: 2, id_servicio: 4, nombre_servicio: 'Afeitado tradicional', score_relevancia: 0.72, algoritmo: 'kmeans_colaborativo_v2', fecha_generacion: hoy },
+    { id_recomendacion: 3, id_servicio: 6, nombre_servicio: 'Corte infantil', score_relevancia: 0.35, algoritmo: 'mas_pedidos_v1', fecha_generacion: hoy },
+  ];
 }
 
 // ---------------------------------------------------------------------------

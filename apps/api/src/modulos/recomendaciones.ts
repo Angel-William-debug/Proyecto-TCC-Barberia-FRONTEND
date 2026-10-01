@@ -41,6 +41,8 @@
  * para dar un mensaje temprano, no la unica barrera.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import type { RecomendacionDeLista } from '@barber-shop/tipos';
 
 import { MODO_DEMO } from '../demo/modo';
@@ -49,7 +51,8 @@ import { ErrorAplicacion, traducirError } from '../errores';
 import { rechazarSiEsDemo } from '../compartido/escritura';
 import { uno } from '../compartido/relaciones';
 
-const MIN_SERVICIOS_HISTORIAL = 3;
+/** RN-009. Exportado para que el portal lo explique con el mismo numero. */
+export const MIN_SERVICIOS_HISTORIAL = 3;
 const K_CLUSTERS_MAX = 5;
 const REINICIOS_KMEANS = 10;
 const TOP_N_RECOMENDACIONES = 5;
@@ -302,11 +305,29 @@ function serviciosMasPedidos(
  * Genera y guarda las recomendaciones de un cliente. Reemplaza las
  * anteriores: son un calculo derivado del historial, no un registro que deba
  * conservarse (a diferencia de una auditoria o una comision liquidada).
+ *
+ * Con la sesion de quien la llama: es la que usa el panel, donde el personal
+ * ya puede leer el historial de todos. El portal usa `generarConConexion`
+ * con la conexion de sistema, ver `generarMisRecomendaciones()`.
  */
 export async function generarRecomendaciones(idCliente: number): Promise<RecomendacionDeLista[]> {
   rechazarSiEsDemo();
+  return generarConConexion(await clienteServidor(), idCliente);
+}
 
-  const supabase = await clienteServidor();
+/**
+ * El calculo, con la conexion que se le pase.
+ *
+ * Existe porque el filtrado colaborativo necesita el historial de TODOS los
+ * clientes para encontrar a los parecidos. Con la sesion de un cliente, las
+ * politicas RLS solo le dejan ver el suyo, y el algoritmo caeria siempre al
+ * «mas pedidos». Quien llame con la conexion de sistema es responsable de
+ * haber verificado antes para que cliente se calcula.
+ */
+export async function generarConConexion(
+  supabase: SupabaseClient,
+  idCliente: number,
+): Promise<RecomendacionDeLista[]> {
 
   const { data: historial, error: errorHistorial } = await supabase
     .from('historial_servicio')
@@ -427,14 +448,18 @@ export async function generarRecomendaciones(idCliente: number): Promise<Recomen
   );
   if (errorInsercion) throw traducirError(errorInsercion);
 
-  return listarRecomendaciones(idCliente);
+  return listarConConexion(supabase, idCliente);
 }
 
 export async function listarRecomendaciones(idCliente: number): Promise<RecomendacionDeLista[]> {
   if (MODO_DEMO) return [];
+  return listarConConexion(await clienteServidor(), idCliente);
+}
 
-  const supabase = await clienteServidor();
-
+export async function listarConConexion(
+  supabase: SupabaseClient,
+  idCliente: number,
+): Promise<RecomendacionDeLista[]> {
   const { data, error } = await supabase
     .from('recomendaciones_ml')
     .select(

@@ -11,7 +11,14 @@
  * duplicarlas garantiza que algun dia difieran.
  */
 
-import { registrarCliente, reservarTurno, cancelarMiTurno, actualizarMiPerfil } from '@barber-shop/api';
+import {
+  ErrorAplicacion,
+  actualizarMiPerfil,
+  cancelarMiTurno,
+  generarMisRecomendaciones,
+  registrarCliente,
+  reservarTurno,
+} from '@barber-shop/api';
 
 import { CORREO, ejecutar, numero, texto, textoOpcional, Validacion, type ResultadoAccion } from './base';
 
@@ -106,4 +113,28 @@ export async function accionActualizarPerfil(datos: FormData): Promise<Resultado
       fechaNacimiento: textoOpcional(datos, 'fechaNacimiento') ?? undefined,
     }),
   );
+}
+
+export type ResultadoMisRecomendaciones =
+  | { ok: true; nuevas: boolean; cantidad: number }
+  | { ok: false; error: string };
+
+/**
+ * El cliente pide sus recomendaciones (CU-013 desde el portal). No usa
+ * `ejecutar()` porque no es un formulario: no hay campos, y lo que la
+ * pantalla necesita saber es si se recalcularon o seguian vigentes.
+ */
+export async function accionGenerarMisRecomendaciones(): Promise<ResultadoMisRecomendaciones> {
+  try {
+    const r = await generarMisRecomendaciones();
+    return { ok: true, nuevas: r.nuevas, cantidad: r.recomendaciones.length };
+  } catch (causa) {
+    return {
+      ok: false,
+      error:
+        causa instanceof ErrorAplicacion
+          ? causa.message
+          : 'No se pudieron generar sus recomendaciones. Intente de nuevo en unos instantes.',
+    };
+  }
 }

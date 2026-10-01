@@ -21,8 +21,8 @@ import { ANCHO_CONTENIDO, FotosPortal } from './fotos-portal';
  * conserva tres diferencias, y las tres tienen que ver con quien lo usa y no
  * con el gusto:
  *
- *   - CUATRO ENTRADAS, sin agrupar. El panel llega a diecisiete y por eso
- *     necesita los cinco grupos de la seccion 6.5.1; encabezar cuatro
+ *   - CINCO ENTRADAS, sin agrupar. El panel llega a diecisiete y por eso
+ *     necesita los cinco grupos de la seccion 6.5.1; encabezar cinco
  *     entradas seria ponerle un titulo a una lista que se lee entera de un
  *     vistazo.
  *   - CONTENIDO ANGOSTO, hasta 768 px. Una tabla de veinte filas necesita
@@ -43,6 +43,8 @@ export const ENTRADAS_PORTAL: EntradaBarra[] = [
   // `exacta` porque `/mi-cuenta` es prefijo de las otras tres: sin eso
   // quedaria resaltada tambien estando en Reservar, Historial o Mi perfil.
   { etiqueta: 'Mis turnos', ruta: '/mi-cuenta', icono: 'clipboard-list', exacta: true },
+  // Las recomendaciones del motor (CU-013), pedidas por el propio cliente.
+  { etiqueta: 'Para usted', ruta: '/mi-cuenta/para-usted', icono: 'sparkles' },
   { etiqueta: 'Historial', ruta: '/mi-cuenta/historial', icono: 'file-text' },
   { etiqueta: 'Mi perfil', ruta: '/mi-cuenta/perfil', icono: 'user-round' },
 ];

@@ -16,12 +16,15 @@
  * La unica excepcion es `registrarCliente`, y esta explicada donde ocurre.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import type {
+  CambiosPerfilCliente,
   EntradaRegistroCliente,
   EntradaReserva,
-  CambiosPerfilCliente,
   FacturaDelCliente,
   FranjaDisponible,
+  MisRecomendaciones,
   PerfilCliente,
   TurnoDelCliente,
   UsuarioSesion,
@@ -38,12 +41,18 @@ import {
   SERVICIOS_PORTAL_DEMO,
   SESION_CLIENTE_DEMO,
   franjasDemo,
+  recomendacionesPortalDemo,
   turnosPortalDemo,
 } from '../demo/datos-portal';
 import { MODO_DEMO } from '../demo/modo';
 import { ErrorAplicacion, traducirError } from '../errores';
 import { clienteAdmin } from '../supabase/cliente-admin';
 import { clienteServidor } from '../supabase/cliente-servidor';
+import {
+  MIN_SERVICIOS_HISTORIAL,
+  generarConConexion,
+  listarConConexion,
+} from './recomendaciones';
 import { usuarioActual } from './sesion';
 
 // ---------------------------------------------------------------------------
@@ -565,4 +574,104 @@ export async function misFacturas(): Promise<FacturaDelCliente[]> {
     total: f.total,
     estado: f.estado,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Recomendaciones del cliente (CU-013 desde el portal)
+//
+// El motor vive en `recomendaciones.ts` y hasta ahora solo lo usaba el panel,
+// desde el perfil de un cliente. El cliente no podia generarse las suyas con
+// su propia sesion, por dos motivos: el filtrado colaborativo necesita el
+// historial de TODOS los clientes para encontrar a los parecidos, y RLS solo
+// le deja ver el suyo; y no tiene permiso de insertar en `recomendaciones_ml`.
+//
+// La solucion es la misma que en el alta de cuentas: su propia sesion dice
+// QUIEN es (`fn_id_cliente_actual()`), y recien con eso se calcula con la
+// conexion de sistema, solo para ese cliente. Lo que vuelve son servicios y
+// puntajes: nada de otros clientes sale de aca.
+//
+// Las dos funciones reciben la conexion del usuario por parametro para que la
+// app movil -que no tiene cookies sino un token- pueda usar exactamente la
+// misma logica desde una ruta del servidor.
+// ---------------------------------------------------------------------------
+
+/** Cuantas horas duran unas recomendaciones antes de poder recalcularse. */
+const HORAS_ENTRE_GENERACIONES = 24;
+
+async function idClienteDeLaSesion(supabase: SupabaseClient): Promise<number> {
+  const { data, error } = await supabase.rpc('fn_id_cliente_actual');
+  if (error) throw traducirError(error);
+  if (data == null) {
+    throw new ErrorAplicacion('No encontramos su ficha de cliente. Consulte en la barbería.');
+  }
+  return data as number;
+}
+
+/** Cuantos servicios tiene en su historial. Con su sesion: RLS le deja ver los suyos. */
+async function visitasDe(supabase: SupabaseClient, idCliente: number): Promise<number> {
+  const { count, error } = await supabase
+    .from('historial_servicio')
+    .select('id_historial', { count: 'exact', head: true })
+    .eq('id_cliente', idCliente);
+  if (error) throw traducirError(error);
+  return count ?? 0;
+}
+
+export async function misRecomendacionesCon(supabase: SupabaseClient): Promise<MisRecomendaciones> {
+  const idCliente = await idClienteDeLaSesion(supabase);
+  const [visitas, recomendaciones] = await Promise.all([
+    visitasDe(supabase, idCliente),
+    // Con la conexion de sistema: el nombre del servicio sale de `servicios`,
+    // que el cliente no lee directo. Acotado a su propio id.
+    listarConConexion(clienteAdmin(), idCliente),
+  ]);
+  return { recomendaciones, visitas, minimo: MIN_SERVICIOS_HISTORIAL };
+}
+
+/**
+ * Genera las recomendaciones del cliente de la sesion. Si las que tiene son
+ * de las ultimas `HORAS_ENTRE_GENERACIONES` horas, las devuelve sin
+ * recalcular: el historial cambia con cada visita, no cada minuto, y el
+ * calculo recorre el historial de toda la barberia.
+ */
+export async function generarMisRecomendacionesCon(
+  supabase: SupabaseClient,
+): Promise<MisRecomendaciones & { nuevas: boolean }> {
+  const actuales = await misRecomendacionesCon(supabase);
+
+  if (actuales.visitas < actuales.minimo) {
+    throw new ErrorAplicacion(
+      `Todavía no hay suficientes datos: le recomendamos servicios cuando tenga al menos ` +
+        `${actuales.minimo} en su historial, y tiene ${actuales.visitas}.`,
+      'RN-009',
+    );
+  }
+
+  const ultima = actuales.recomendaciones[0]?.fecha_generacion;
+  const vigentes =
+    ultima && Date.now() - new Date(ultima).getTime() < HORAS_ENTRE_GENERACIONES * 3_600_000;
+  if (vigentes) return { ...actuales, nuevas: false };
+
+  const idCliente = await idClienteDeLaSesion(supabase);
+  const recomendaciones = await generarConConexion(clienteAdmin(), idCliente);
+  return { ...actuales, recomendaciones, nuevas: true };
+}
+
+export async function misRecomendaciones(): Promise<MisRecomendaciones> {
+  if (MODO_DEMO) {
+    return { recomendaciones: recomendacionesPortalDemo(), visitas: 4, minimo: MIN_SERVICIOS_HISTORIAL };
+  }
+  return misRecomendacionesCon(await clienteServidor());
+}
+
+export async function generarMisRecomendaciones(): Promise<MisRecomendaciones & { nuevas: boolean }> {
+  if (MODO_DEMO) {
+    return {
+      recomendaciones: recomendacionesPortalDemo(),
+      visitas: 4,
+      minimo: MIN_SERVICIOS_HISTORIAL,
+      nuevas: false,
+    };
+  }
+  return generarMisRecomendacionesCon(await clienteServidor());
 }
