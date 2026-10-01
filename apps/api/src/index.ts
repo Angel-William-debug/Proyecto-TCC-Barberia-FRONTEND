@@ -39,6 +39,7 @@ export {
   miPerfil,
   actualizarMiPerfil,
   misFacturas,
+  generarMiHistorialPdf,
   misRecomendaciones,
   generarMisRecomendaciones,
   misRecomendacionesCon,

@@ -54,6 +54,7 @@ import {
   listarConConexion,
 } from './recomendaciones';
 import { usuarioActual } from './sesion';
+import { generarPdfTabla } from '../compartido/exportacion/pdf';
 
 // ---------------------------------------------------------------------------
 // Sesion del portal
@@ -574,6 +575,47 @@ export async function misFacturas(): Promise<FacturaDelCliente[]> {
     total: f.total,
     estado: f.estado,
   }));
+}
+
+/**
+ * Mi historial en PDF (opción C del pedido de la profesora: el cliente baja
+ * su propio documento desde su portal, sin que el staff lo genere por él).
+ *
+ * Se arma con `misTurnos().pasados`, que ya trae servicios, total y estado
+ * por turno -no hace falta una función SQL nueva como `fn_mis_turnos`, que ya
+ * resuelve del lado de la base los nombres que el rol `cliente` no puede leer
+ * directo por RLS-. `misFacturas()` no se usa acá: es la misma información
+ * resumida de otra forma, y cada comprobante ya se puede bajar aparte desde
+ * `/mi-cuenta/comprobantes/[id]/pdf`.
+ */
+export async function generarMiHistorialPdf(): Promise<Buffer> {
+  const sesion = await sesionPortal();
+  if (!sesion) throw new ErrorAplicacion('No hay una sesión activa.');
+
+  const { pasados } = await misTurnos();
+
+  const GUARANIES = (n: number) => `Gs. ${Math.round(n).toLocaleString('es-PY')}`;
+  const FECHA = (iso: string) => new Date(iso).toLocaleDateString('es-PY');
+
+  const totalGastado = pasados.reduce((suma, t) => suma + t.total, 0);
+  const subtitulo = `${pasados.length} turnos · Total: ${GUARANIES(totalGastado)}`;
+
+  return generarPdfTabla(
+    `Mi historial — ${sesion.nombre}`,
+    subtitulo,
+    [
+      { clave: 'fecha', titulo: 'Fecha', ancho: 1 },
+      { clave: 'servicios', titulo: 'Servicios', ancho: 2 },
+      { clave: 'total', titulo: 'Total', ancho: 1 },
+      { clave: 'estado', titulo: 'Estado', ancho: 0.8 },
+    ],
+    pasados.map((t) => ({
+      fecha: FECHA(t.fechaHora),
+      servicios: t.servicios.map((s) => s.nombre).join(', '),
+      total: GUARANIES(t.total),
+      estado: t.estado,
+    })),
+  );
 }
 
 // ---------------------------------------------------------------------------

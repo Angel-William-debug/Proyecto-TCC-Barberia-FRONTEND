@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { misFacturas, misTurnos } from '@barber-shop/api';
+import { misFacturas, misTurnos, MODO_DEMO } from '@barber-shop/api';
 import {
   ChipEstado,
   EstadoVacio,
@@ -34,10 +34,24 @@ export default async function Historial() {
   return (
     <div className="mt-2 flex flex-col gap-10">
       <section>
-        <h1 className="font-display text-principal text-display-sm font-semibold">Historial</h1>
-        <p className="text-cuerpo text-secundario medida-lectura mt-2">
-          Los turnos por los que ya pasó, con el servicio y el barbero que lo atendió.
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="font-display text-principal text-display-sm font-semibold">Historial</h1>
+            <p className="text-cuerpo text-secundario medida-lectura mt-2">
+              Los turnos por los que ya pasó, con el servicio y el barbero que lo atendió.
+            </p>
+          </div>
+          {!MODO_DEMO && pasados.length > 0 && (
+            <Link
+              href="/mi-cuenta/historial/pdf"
+              target="_blank"
+              className="text-cuerpo-sm text-marca hover:text-marca-hover inline-flex items-center gap-1.5 font-medium"
+            >
+              <Icono nombre="download" tamano="xs" />
+              Descargar mi historial
+            </Link>
+          )}
+        </div>
 
         {pasados.length === 0 ? (
           <div className="border-borde-sutil bg-superficie mt-6 rounded-lg border p-2">
