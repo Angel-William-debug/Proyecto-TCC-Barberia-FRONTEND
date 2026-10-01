@@ -13,6 +13,8 @@ import {
   Tabla,
   TablaCuerpo,
   TablaEncabezado,
+  Tarjeta,
+  TarjetaEncabezado,
   Td,
   Th,
   Tr,
@@ -23,6 +25,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { GraficoRanking } from '@/componentes/ranking/grafico-ranking';
 import { comunes, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = {
@@ -99,7 +102,15 @@ export default async function Ranking({
           />
         </div>
       ) : (
-        <div className="mt-6">
+        <div className="mt-6 space-y-6">
+          <Tarjeta>
+            <TarjetaEncabezado
+              titulo={TITULOS_CRITERIO[criterio]}
+              descripcion="Comparativa visual del equipo por el criterio elegido"
+            />
+            <GraficoRanking filas={filas} criterio={criterio} />
+          </Tarjeta>
+
           <Tabla titulo="Ranking de barberos por desempeño">
             {/* Sin `<Tr>` adentro: `TablaEncabezado` ya dibuja su fila. Con uno
                 de mas quedaba una fila dentro de otra, el navegador reacomodaba

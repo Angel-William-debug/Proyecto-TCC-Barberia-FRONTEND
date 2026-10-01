@@ -155,6 +155,7 @@ export {
 // --- Ranking de barberos -----------------------------------------------------
 export {
   rankingBarberos,
+  valorPorCriterio,
   CRITERIOS_RANKING,
   TITULOS_CRITERIO,
   type CriterioRanking,

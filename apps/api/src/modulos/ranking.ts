@@ -19,10 +19,15 @@
  * `v_ocupacion_por_barbero`), que era justamente el pendiente 7 del proyecto.
  */
 
-import type {
-  VistaOcupacionBarbero,
-  VistaProfesionalResumen,
-  VistaTicketPromedioBarbero,
+import {
+  CRITERIOS_RANKING,
+  TITULOS_CRITERIO,
+  valorPorCriterio,
+  type CriterioRanking,
+  type FilaRanking,
+  type VistaOcupacionBarbero,
+  type VistaProfesionalResumen,
+  type VistaTicketPromedioBarbero,
 } from '@barber-shop/tipos';
 
 import { PROFESIONALES_DEMO } from '../demo/datos-catalogo';
@@ -30,48 +35,11 @@ import { MODO_DEMO } from '../demo/modo';
 import { traducirError } from '../errores';
 import { clienteServidor } from '../supabase/cliente-servidor';
 
-/** Los criterios por los que se puede ordenar el ranking. */
-export const CRITERIOS_RANKING = [
-  'servicios',
-  'facturado',
-  'ticket',
-  'clientes',
-  'ocupacion',
-] as const;
-export type CriterioRanking = (typeof CRITERIOS_RANKING)[number];
-
-export const TITULOS_CRITERIO: Record<CriterioRanking, string> = {
-  servicios: 'Servicios realizados',
-  facturado: 'Facturación generada',
-  ticket: 'Ticket promedio',
-  clientes: 'Clientes distintos',
-  ocupacion: 'Horas ocupadas',
-};
-
-export interface FilaRanking {
-  idProfesional: number;
-  nombre: string;
-  especialidad: string | null;
-  activo: boolean;
-  serviciosRealizados: number;
-  facturado: number;
-  /** Promedio por servicio. `0` si todavía no atendió a nadie. */
-  ticketPromedio: number;
-  clientesDistintos: number;
-  /** Suma de `minutos_ocupados` de la agenda, en minutos. */
-  minutosOcupados: number;
-  ultimoServicio: string | null;
-  /** Posición en el criterio elegido, empezando en 1. */
-  posicion: number;
-}
-
-const VALOR: Record<CriterioRanking, (f: FilaRanking) => number> = {
-  servicios: (f) => f.serviciosRealizados,
-  facturado: (f) => f.facturado,
-  ticket: (f) => f.ticketPromedio,
-  clientes: (f) => f.clientesDistintos,
-  ocupacion: (f) => f.minutosOcupados,
-};
+// Re-exportadas desde `@barber-shop/tipos` (ver ese archivo): viven ahí porque
+// un componente cliente -el gráfico de ranking- las necesita sin arrastrar el
+// código de servidor de este módulo. Se re-exportan acá para no romper nada
+// que ya las importe desde `@barber-shop/api`.
+export { CRITERIOS_RANKING, TITULOS_CRITERIO, valorPorCriterio, type CriterioRanking, type FilaRanking };
 
 export interface FiltroRanking {
   criterio?: CriterioRanking;
@@ -179,7 +147,7 @@ export async function rankingBarberos(filtro: FiltroRanking = {}): Promise<FilaR
  * que los datos no tienen.
  */
 function ordenar(filas: FilaRanking[], criterio: CriterioRanking): FilaRanking[] {
-  const valor = VALOR[criterio];
+  const valor = valorPorCriterio[criterio];
   const ordenadas = [...filas].sort((a, b) => valor(b) - valor(a));
 
   let posicion = 0;
