@@ -210,7 +210,9 @@ export function CalendarioTurnos({
 
             const descripcion = lista.length
               ? `${plural(lista.length, 'turno', 'turnos')}: ` +
-                lista.map((t) => `${hora(t.fechaHora)} ${PRESENTACION_CITA[t.estado].etiqueta}`).join(', ')
+                lista
+                  .map((t) => `de ${hora(t.fechaHora)} a ${hora(t.fechaHoraFin)} ${PRESENTACION_CITA[t.estado].etiqueta}`)
+                  .join(', ')
               : 'sin turnos';
 
             return (
@@ -238,7 +240,10 @@ export function CalendarioTurnos({
                   {numero}
                 </span>
 
-                {/* Telefono: solo puntos. Desde sm: hora y punto de cada turno. */}
+                {/* Telefono: solo puntos. Desde sm: punto, inicio y fin de cada
+                    turno -«09:45 a 10:25»-, para saber hasta cuando ocupa sin
+                    abrir el detalle (pedido de la directora, 7/10/2026). Si la
+                    celda es angosta, el fin baja a la linea de abajo. */}
                 {lista.length > 0 && (
                   <>
                     <span className="flex flex-wrap justify-center gap-1 sm:hidden">
@@ -253,19 +258,22 @@ export function CalendarioTurnos({
                     </span>
                     <span className="hidden flex-col gap-0.5 sm:flex">
                       {lista.slice(0, 2).map((t) => (
-                        <span key={t.idCita} className="flex items-center gap-1">
-                          <PuntoEstado
-                            tono={PRESENTACION_CITA[t.estado].tono}
-                            etiqueta={PRESENTACION_CITA[t.estado].etiqueta}
-                            sinEtiqueta
-                          />
+                        <span key={t.idCita} className="flex items-start gap-1">
+                          <span className="mt-1">
+                            <PuntoEstado
+                              tono={PRESENTACION_CITA[t.estado].tono}
+                              etiqueta={PRESENTACION_CITA[t.estado].etiqueta}
+                              sinEtiqueta
+                            />
+                          </span>
                           <span
                             className={cn(
-                              'text-titulillo tabular-nums',
+                              'text-titulillo leading-tight tabular-nums',
                               t.estado === 'cancelado' ? 'text-terciario line-through' : 'text-principal',
                             )}
                           >
-                            {hora(t.fechaHora)}
+                            {hora(t.fechaHora)}{' '}
+                            <span className="text-secundario whitespace-nowrap">a {hora(t.fechaHoraFin)}</span>
                           </span>
                         </span>
                       ))}

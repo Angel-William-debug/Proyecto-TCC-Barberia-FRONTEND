@@ -70,7 +70,7 @@ export default async function Historial() {
                     {fechaCorta(t.fechaHora)}
                   </p>
                   <p className="text-cuerpo-sm text-terciario tabular-nums">
-                    {hora(t.fechaHora)}
+                    {hora(t.fechaHora)} a {hora(t.fechaHoraFin)}
                   </p>
                 </div>
 
