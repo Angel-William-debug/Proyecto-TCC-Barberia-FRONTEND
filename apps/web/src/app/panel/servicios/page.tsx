@@ -87,6 +87,7 @@ export default async function PaginaServicios({
             </>
           }
           parametrosAvanzados={['categoria', 'estado']}
+          acciones={<BotonExportar tipo="servicios" searchParams={params} />}
         />
 
         <FiltrosActivos
@@ -105,10 +106,6 @@ export default async function PaginaServicios({
             hasta: { titulo: 'Hasta' },
           }}
         />
-
-        <div className="px-4 pt-4">
-          <BotonExportar tipo="servicios" searchParams={params} />
-        </div>
 
         <Tabla titulo="Catálogo de servicios de la barbería">
           <TablaEncabezado>

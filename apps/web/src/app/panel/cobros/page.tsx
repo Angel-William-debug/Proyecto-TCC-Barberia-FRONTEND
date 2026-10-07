@@ -111,6 +111,7 @@ export default async function PaginaCobros({
             </>
           }
           parametrosAvanzados={['estado', 'metodo']}
+          acciones={<BotonExportar tipo="cobros" searchParams={params} />}
         />
 
         <FiltrosActivos
@@ -124,10 +125,6 @@ export default async function PaginaCobros({
             hasta: { titulo: 'Hasta' },
           }}
         />
-
-        <div className="px-4 pt-4">
-          <BotonExportar tipo="cobros" searchParams={params} />
-        </div>
 
         <Tabla titulo="Cobros registrados">
           <TablaEncabezado>

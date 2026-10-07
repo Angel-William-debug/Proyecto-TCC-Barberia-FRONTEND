@@ -153,6 +153,7 @@ export default async function PaginaCompras({
             </>
           }
           parametrosAvanzados={['proveedor', 'estado']}
+          acciones={<BotonExportar tipo="compras" searchParams={params} />}
         />
 
         <FiltrosActivos
@@ -166,10 +167,6 @@ export default async function PaginaCompras({
             hasta: { titulo: 'Hasta' },
           }}
         />
-
-        <div className="px-4 pt-4">
-          <BotonExportar tipo="compras" searchParams={params} />
-        </div>
 
         <Tabla titulo="Órdenes de compra a proveedores">
           <TablaEncabezado>
@@ -221,6 +218,10 @@ export default async function PaginaCompras({
         <BarraFiltros
           busqueda={<CampoBusqueda nombre="prov_q" placeholder="Nombre, correo o teléfono" />}
           fecha={<RangoFechas etiqueta="Fecha de alta" nombreDesde="prov_desde" nombreHasta="prov_hasta" />}
+          // Esta tabla filtra con el prefijo prov_, que BotonExportar no
+          // entiende (usa q/desde/hasta sin prefijo) — exporta el listado
+          // completo de proveedores, sin aplicar estos filtros en particular.
+          acciones={<BotonExportar tipo="proveedores" />}
         />
 
         <FiltrosActivos
@@ -232,13 +233,6 @@ export default async function PaginaCompras({
             prov_hasta: { titulo: 'Hasta' },
           }}
         />
-
-        {/* Esta tabla filtra con el prefijo prov_, que BotonExportar no entiende
-            (usa q/desde/hasta sin prefijo) — exporta el listado completo de
-            proveedores, sin aplicar estos filtros en particular. */}
-        <div className="px-4 pt-4">
-          <BotonExportar tipo="proveedores" />
-        </div>
 
         <Tabla titulo="Proveedores registrados">
           <TablaEncabezado>

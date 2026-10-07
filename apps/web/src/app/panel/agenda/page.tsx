@@ -150,6 +150,13 @@ export default async function PaginaAgenda({
             </>
           }
           parametrosAvanzados={['barbero', 'estado']}
+          // La agenda se filtra por "fecha" (un solo día), no por
+          // "desde"/"hasta" como el resto de las pantallas — se los pasa
+          // explícitos para que el reporte exporte el día que se está
+          // viendo, no el mes entero.
+          acciones={
+            <BotonExportar tipo="agenda" searchParams={{ ...params, desde: dia, hasta: dia }} />
+          }
         />
 
         <FiltrosActivos
@@ -166,13 +173,6 @@ export default async function PaginaAgenda({
             },
           }}
         />
-
-        {/* La agenda se filtra por "fecha" (un solo día), no por "desde"/"hasta"
-            como el resto de las pantallas — se los pasa explícitos para que
-            el reporte exporte el día que se está viendo, no el mes entero. */}
-        <div className="px-4 pt-4">
-          <BotonExportar tipo="agenda" searchParams={{ ...params, desde: dia, hasta: dia }} />
-        </div>
 
         <Tabla titulo={`Turnos agendados para el ${dia}`}>
           <TablaEncabezado>

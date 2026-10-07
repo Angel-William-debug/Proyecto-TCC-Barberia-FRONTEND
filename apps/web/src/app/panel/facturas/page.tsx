@@ -88,6 +88,7 @@ export default async function PaginaFacturas({
           fecha={<RangoFechas etiqueta="Fecha de emisión" />}
           avanzados={<SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ESTADO} />}
           parametrosAvanzados={['estado']}
+          acciones={<BotonExportar tipo="facturas" searchParams={params} />}
         />
 
         <FiltrosActivos
@@ -100,10 +101,6 @@ export default async function PaginaFacturas({
             hasta: { titulo: 'Hasta' },
           }}
         />
-
-        <div className="px-4 pt-4">
-          <BotonExportar tipo="facturas" searchParams={params} />
-        </div>
 
         <Tabla titulo="Facturas emitidas">
           <TablaEncabezado>

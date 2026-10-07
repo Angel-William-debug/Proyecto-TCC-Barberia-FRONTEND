@@ -79,6 +79,7 @@ export default async function Ranking({
           />
         }
         fecha={<RangoFechas />}
+        acciones={<BotonExportar tipo="ranking" searchParams={params} />}
       />
 
       {/* Se avisa lo que el filtro de fechas alcanza y lo que no. Un filtro que
@@ -93,10 +94,6 @@ export default async function Ranking({
           todavía no registra valoraciones.
         </span>
       </p>
-
-      <div className="mt-4">
-        <BotonExportar tipo="ranking" searchParams={params} />
-      </div>
 
       {filas.length === 0 ? (
         <div className="mt-6">

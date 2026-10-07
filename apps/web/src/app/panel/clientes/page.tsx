@@ -69,6 +69,13 @@ export default async function PaginaClientes({
           fecha={<RangoFechas etiqueta="Fecha de registro" />}
           avanzados={<SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ACTIVO} />}
           parametrosAvanzados={['estado']}
+          acciones={
+            <BotonExportar
+              tipo="clientes"
+              searchParams={params}
+              individual={{ href: '/panel/clientes/exportar-individual' }}
+            />
+          }
         />
 
         <FiltrosActivos
@@ -81,14 +88,6 @@ export default async function PaginaClientes({
             hasta: { titulo: 'Hasta' },
           }}
         />
-
-        <div className="flex justify-end px-4 pt-4">
-          <BotonExportar
-            tipo="clientes"
-            searchParams={params}
-            individual={{ href: '/panel/clientes/exportar-individual' }}
-          />
-        </div>
 
         <Tabla
           titulo={`Listado de clientes, página ${resultado.pagina} de ${resultado.totalPaginas}`}

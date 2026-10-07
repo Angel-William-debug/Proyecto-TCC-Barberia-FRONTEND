@@ -158,6 +158,7 @@ export default async function PaginaInventario({
           busqueda={<CampoBusqueda placeholder="Nombre del producto" />}
           avanzados={<SelectorMultiple nombre="nivel" etiqueta="Nivel de stock" opciones={OPCIONES_NIVEL} />}
           parametrosAvanzados={['nivel']}
+          acciones={<BotonExportar tipo="inventario" searchParams={params} />}
         />
 
         <FiltrosActivos
@@ -168,10 +169,6 @@ export default async function PaginaInventario({
             nivel: { titulo: 'Nivel', valores: ETIQUETAS_NIVEL },
           }}
         />
-
-        <div className="px-4 pt-4">
-          <BotonExportar tipo="inventario" searchParams={params} />
-        </div>
 
         <Tabla titulo="Productos del inventario con su nivel de stock">
           <TablaEncabezado>

@@ -87,6 +87,7 @@ export default async function PaginaBarberos({
             </>
           }
           parametrosAvanzados={['tipo', 'estado']}
+          acciones={<BotonExportar tipo="barberos" searchParams={params} />}
         />
 
         <FiltrosActivos
@@ -103,10 +104,6 @@ export default async function PaginaBarberos({
             hasta: { titulo: 'Hasta' },
           }}
         />
-
-        <div className="px-4 pt-4">
-          <BotonExportar tipo="barberos" searchParams={params} />
-        </div>
 
         <Tabla titulo="Barberos registrados en el sistema">
           <TablaEncabezado>

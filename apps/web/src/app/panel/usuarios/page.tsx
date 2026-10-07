@@ -82,6 +82,7 @@ export default async function PaginaUsuarios({
             </>
           }
           parametrosAvanzados={['rol', 'estado']}
+          acciones={<BotonExportar tipo="usuarios" searchParams={params} />}
         />
 
         <FiltrosActivos
@@ -95,10 +96,6 @@ export default async function PaginaUsuarios({
             hasta: { titulo: 'Hasta' },
           }}
         />
-
-        <div className="px-4 pt-4">
-          <BotonExportar tipo="usuarios" searchParams={params} />
-        </div>
 
         <Tabla titulo="Usuarios del sistema">
           <TablaEncabezado>

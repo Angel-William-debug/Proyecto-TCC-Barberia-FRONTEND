@@ -103,6 +103,7 @@ export default async function PaginaAuditoria({
             </>
           }
           parametrosAvanzados={['tabla', 'accion']}
+          acciones={<BotonExportar tipo="auditoria" searchParams={params} />}
         />
 
         <FiltrosActivos
@@ -116,10 +117,6 @@ export default async function PaginaAuditoria({
             hasta: { titulo: 'Hasta' },
           }}
         />
-
-        <div className="px-4 pt-4">
-          <BotonExportar tipo="auditoria" searchParams={params} />
-        </div>
 
         <Tabla titulo="Registro de auditoría del sistema">
           <TablaEncabezado>

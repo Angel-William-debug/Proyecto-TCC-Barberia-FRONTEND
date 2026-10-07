@@ -18,7 +18,7 @@ import { cn } from '../../utilidades';
  *
  * Ahora el orden lo decide este componente, no la pantalla:
  *
- *   [fijos]  [Buscar]  [Fecha]  [+ Filtros (n)]
+ *   [fijos]  [Buscar]  [Fecha]  [+ Filtros (n)]  [acciones]
  *   └── al tocar «Filtros», los propios de esa tabla, en una fila debajo
  *
  * - `busqueda` y `fecha` son el estandar: van siempre que la tabla los tenga
@@ -31,6 +31,9 @@ import { cn } from '../../utilidades';
  * - `fijos` no son filtros sino el marco de lo que se mira: el tipo de
  *   reporte, el catalogo de la papelera, el dia de la agenda. Por eso van
  *   primero y nunca se pliegan.
+ * - `acciones` tampoco filtra nada -tipicamente «Exportar»-, por eso va del
+ *   todo a la derecha, despues de «Filtros» y no mezclado con el resto: es lo
+ *   unico de la barra que no cambia que se ve en la tabla.
  *
  * La fila avanzada se despliega debajo y no en un panel lateral: no tapa la
  * tabla mientras se filtra, y en el telefono se apila sola.
@@ -50,6 +53,8 @@ export interface PropsBarraFiltros {
    * busqueda, la fecha ni los filtros de otra tabla de la misma pantalla.
    */
   parametrosAvanzados?: string[];
+  /** Del todo a la derecha, despues de «Filtros». No filtra nada (ej. Exportar). */
+  acciones?: ReactNode;
 }
 
 export function BarraFiltros({
@@ -58,6 +63,7 @@ export function BarraFiltros({
   fijos,
   avanzados,
   parametrosAvanzados = [],
+  acciones,
 }: PropsBarraFiltros) {
   const { params, aplicar } = useFiltros();
   const idPanel = useId();
@@ -84,7 +90,7 @@ export function BarraFiltros({
             aria-expanded={abierto}
             aria-controls={idPanel}
             onClick={() => setAbierto((a) => !a)}
-            className="sm:ml-auto"
+            className={cn(!acciones && 'sm:ml-auto')}
           >
             Filtros
             {aplicados > 0 && (
@@ -99,6 +105,12 @@ export function BarraFiltros({
               </span>
             )}
           </Boton>
+        )}
+
+        {acciones && (
+          <div className={cn('flex items-center gap-2', !avanzados && 'sm:ml-auto')}>
+            {acciones}
+          </div>
         )}
       </div>
 
