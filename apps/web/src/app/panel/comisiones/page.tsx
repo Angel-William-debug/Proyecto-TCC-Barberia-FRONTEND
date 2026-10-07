@@ -1,11 +1,15 @@
+import Link from 'next/link';
+
 import {
   comisionesPendientes,
   listarComisiones,
   listarProfesionales,
+  MODO_DEMO,
 } from '@barber-shop/api';
 import { ESTADOS_COMISION } from '@barber-shop/tipos';
 import {
   BarraFiltros,
+  BotonIcono,
   CampoBusqueda,
   ChipEstado,
   EstadoVacio,
@@ -114,6 +118,9 @@ export default async function PaginaComisiones({
               <Th>Barbero</Th>
               <Th numerico>Servicios</Th>
               <Th numerico>Total a liquidar</Th>
+              <Th>
+                <span className="solo-lectores">Acciones</span>
+              </Th>
             </TablaEncabezado>
             <TablaCuerpo>
               {resumen.map((r) => (
@@ -122,6 +129,18 @@ export default async function PaginaComisiones({
                   <Td numerico etiqueta="Servicios">{r.cantidad_servicios}</Td>
                   <Td numerico className="font-medium" etiqueta="Total a liquidar">
                     {guaranies(r.total_comision)}
+                  </Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    {!MODO_DEMO && (
+                      <Link href={`/panel/comisiones/${r.id_profesional}/pdf`} target="_blank">
+                        <BotonIcono
+                          icono="download"
+                          etiqueta={`Descargar liquidación de ${r.nombre_profesional}`}
+                          variante="terciario"
+                          tamano="sm"
+                        />
+                      </Link>
+                    )}
                   </Td>
                 </Tr>
               ))}

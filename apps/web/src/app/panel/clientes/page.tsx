@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { listarClientes } from '@barber-shop/api';
+import { listarClientes, MODO_DEMO } from '@barber-shop/api';
 import {
   BarraFiltros,
   BotonIcono,
@@ -135,6 +135,16 @@ export default async function PaginaClientes({
                           tamano="sm"
                         />
                       </Link>
+                      {!MODO_DEMO && (
+                        <Link href={`/panel/clientes/${c.id_cliente}/pdf`} target="_blank">
+                          <BotonIcono
+                            icono="download"
+                            etiqueta={`Descargar ficha de ${c.nombre}`}
+                            variante="terciario"
+                            tamano="sm"
+                          />
+                        </Link>
+                      )}
                       <FormularioCliente cliente={c} />
                       <BotonBorrar tabla="clientes" id={c.id_cliente} nombre={c.nombre} />
                     </div>

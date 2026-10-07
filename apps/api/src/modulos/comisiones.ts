@@ -21,6 +21,8 @@ import { generarZip, nombreArchivoSeguro } from '../compartido/exportacion/zip';
 export interface FiltroComisiones extends FiltroTabla {
   /** Nombre del barbero. */
   barbero?: string;
+  /** Id del barbero. A diferencia de `barbero`, no depende de que el nombre no cambie ni se repita. */
+  idProfesional?: number;
 }
 
 export async function listarComisiones(
@@ -32,6 +34,7 @@ export async function listarComisiones(
         coincideTexto([c.nombre_profesional, c.nombre_servicio], filtro.busqueda) &&
         coincideEstado(c.estado, filtro.estados) &&
         (!filtro.barbero || c.nombre_profesional === filtro.barbero) &&
+        (filtro.idProfesional == null || c.id_profesional === filtro.idProfesional) &&
         entreFechas(c.fecha_realizacion, filtro.desde, filtro.hasta),
     );
 
@@ -43,19 +46,22 @@ export async function listarComisiones(
     .from('pagos_profesional')
     .select(
       `id_pago_prof, monto, estado,
-       profesionales ( nombre, porcentaje_com ),
+       profesionales ( id_profesional, nombre, porcentaje_com ),
        historial_servicio ( fecha_realizacion, costo_cobrado, servicios ( nombre ) )`,
     )
     .order('id_pago_prof', { ascending: false })
     .limit(200);
 
   if (filtro.estados?.length) consulta = consulta.in('estado', filtro.estados);
+  if (filtro.idProfesional != null) consulta = consulta.eq('id_profesional', filtro.idProfesional);
 
   const { data, error } = await consulta;
   if (error) throw traducirError(error);
 
   const filas = (data ?? []).map((f) => {
-    const prof = uno<{ nombre: string; porcentaje_com: number }>(f.profesionales);
+    const prof = uno<{ id_profesional: number; nombre: string; porcentaje_com: number }>(
+      f.profesionales,
+    );
     const hist = uno<{
       fecha_realizacion: string;
       costo_cobrado: number;
@@ -65,6 +71,7 @@ export async function listarComisiones(
 
     return {
       id_pago_prof: f.id_pago_prof,
+      id_profesional: prof?.id_profesional ?? 0,
       nombre_profesional: prof?.nombre ?? 'Sin asignar',
       nombre_servicio: servicio?.nombre ?? '—',
       fecha_realizacion: hist?.fecha_realizacion ?? '',
@@ -81,15 +88,16 @@ export async function listarComisiones(
 /**
  * Ficha de liquidación de UN barbero (opción B/A del pedido de la profesora:
  * el documento de una persona puntual, y la pieza que se repite en lote para
- * la opción A). Filtra por nombre, igual que ya hace `listarComisiones` -no
- * hay otra forma de acotar por barbero en esa función.
+ * la opción A). Por id y no por nombre -como antes-: dos barberos podrían
+ * llamarse igual, y el nombre puede cambiar.
  */
-export async function generarFichaComisionBarberoPdf(nombreProfesional: string): Promise<Buffer> {
-  const pendientes = await listarComisiones({ estados: ['pendiente'], barbero: nombreProfesional });
+export async function generarFichaComisionBarberoPdf(idProfesional: number): Promise<Buffer> {
+  const pendientes = await listarComisiones({ estados: ['pendiente'], idProfesional });
   if (pendientes.length === 0) {
-    throw new ErrorAplicacion(`${nombreProfesional} no tiene comisiones pendientes de liquidar.`);
+    throw new ErrorAplicacion('Ese barbero no tiene comisiones pendientes de liquidar.');
   }
 
+  const nombreProfesional = pendientes[0]!.nombre_profesional;
   const GUARANIES = (n: number) => `Gs. ${Math.round(n).toLocaleString('es-PY')}`;
   const FECHA = (iso: string) => (iso ? new Date(iso).toLocaleDateString('es-PY') : '—');
 
@@ -126,13 +134,13 @@ export async function exportarFichasComisionesZip(): Promise<Buffer> {
   }
 
   const pendientes = await listarComisiones({ estados: ['pendiente'] });
-  const nombres = [...new Set(pendientes.map((c) => c.nombre_profesional))];
-  if (nombres.length === 0) throw new ErrorAplicacion('No hay comisiones pendientes para exportar.');
+  const barberos = new Map(pendientes.map((c) => [c.id_profesional, c.nombre_profesional]));
+  if (barberos.size === 0) throw new ErrorAplicacion('No hay comisiones pendientes para exportar.');
 
   const archivos = await Promise.all(
-    nombres.map(async (nombre) => ({
+    [...barberos].map(async ([idProfesional, nombre]) => ({
       nombre: `comision-${nombreArchivoSeguro(nombre)}.pdf`,
-      contenido: await generarFichaComisionBarberoPdf(nombre),
+      contenido: await generarFichaComisionBarberoPdf(idProfesional),
     })),
   );
 

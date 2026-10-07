@@ -130,6 +130,7 @@ export const COBROS_DEMO: CobroDeLista[] = [
 export const COMISIONES_DETALLE_DEMO: ComisionDeLista[] = [
   {
     id_pago_prof: 1,
+    id_profesional: 1,
     nombre_profesional: 'Marcos Ayala',
     nombre_servicio: 'Corte clásico',
     fecha_realizacion: haceDias(0),
@@ -140,6 +141,7 @@ export const COMISIONES_DETALLE_DEMO: ComisionDeLista[] = [
   },
   {
     id_pago_prof: 2,
+    id_profesional: 1,
     nombre_profesional: 'Marcos Ayala',
     nombre_servicio: 'Corte y barba',
     fecha_realizacion: haceDias(0),
@@ -150,6 +152,7 @@ export const COMISIONES_DETALLE_DEMO: ComisionDeLista[] = [
   },
   {
     id_pago_prof: 3,
+    id_profesional: 2,
     nombre_profesional: 'Diego Rojas',
     nombre_servicio: 'Corte degradado',
     fecha_realizacion: haceDias(0),
@@ -160,6 +163,7 @@ export const COMISIONES_DETALLE_DEMO: ComisionDeLista[] = [
   },
   {
     id_pago_prof: 4,
+    id_profesional: 3,
     nombre_profesional: 'Fabián Ortiz',
     nombre_servicio: 'Afeitado tradicional',
     fecha_realizacion: haceDias(1),
@@ -170,6 +174,7 @@ export const COMISIONES_DETALLE_DEMO: ComisionDeLista[] = [
   },
   {
     id_pago_prof: 5,
+    id_profesional: 1,
     nombre_profesional: 'Marcos Ayala',
     nombre_servicio: 'Corte clásico',
     fecha_realizacion: haceDias(8),
@@ -180,6 +185,7 @@ export const COMISIONES_DETALLE_DEMO: ComisionDeLista[] = [
   },
   {
     id_pago_prof: 6,
+    id_profesional: 2,
     nombre_profesional: 'Diego Rojas',
     nombre_servicio: 'Perfilado de barba',
     fecha_realizacion: haceDias(8),
@@ -190,6 +196,7 @@ export const COMISIONES_DETALLE_DEMO: ComisionDeLista[] = [
   },
   {
     id_pago_prof: 7,
+    id_profesional: 3,
     nombre_profesional: 'Fabián Ortiz',
     nombre_servicio: 'Corte infantil',
     fecha_realizacion: haceDias(9),

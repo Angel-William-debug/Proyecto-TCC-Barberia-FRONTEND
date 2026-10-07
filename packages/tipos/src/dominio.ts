@@ -153,6 +153,7 @@ export interface CobroDeLista {
 
 export interface ComisionDeLista {
   id_pago_prof: number;
+  id_profesional: number;
   nombre_profesional: string;
   nombre_servicio: string;
   fecha_realizacion: string;
