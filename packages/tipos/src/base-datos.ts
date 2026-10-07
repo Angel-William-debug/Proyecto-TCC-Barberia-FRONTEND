@@ -856,6 +856,20 @@ export interface FranjaDisponible {
   ids_barberos: number[];
 }
 
+/**
+ * Una fila de `fn_ocupacion_barberos(p_desde, p_hasta, p_ids_profesional)`:
+ * un barbero ocupado de `inicio` a `fin`. Sin cliente ni servicio, a
+ * proposito. Para el calendario de disponibilidad del portal (7/10/2026).
+ */
+export interface BloqueOcupado {
+  id_profesional: number;
+  /** aaaa-MM-dd en la zona de la barberia. */
+  fecha: string;
+  /** ISO 8601 con zona. */
+  inicio: string;
+  fin: string;
+}
+
 /** Resultado de `fn_generar_resumen_kpis(p_desde, p_hasta)`. */
 export interface ResumenKpis {
   periodo_desde: string;

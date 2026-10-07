@@ -33,6 +33,7 @@ export {
   barberosPublicos,
   horariosPublicos,
   turnosDisponibles,
+  ocupacionBarberos,
   misTurnos,
   reservarTurno,
   cancelarMiTurno,

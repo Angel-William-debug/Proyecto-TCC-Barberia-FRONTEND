@@ -96,19 +96,21 @@ export default function Portada() {
 
           <div className="flex items-center gap-2">
             <SelectorTema />
-            {/* Dos accesos y no uno: la portada la miran dos publicos muy
-                distintos. Quien viene a cortarse el pelo reserva; quien
-                trabaja en la barberia entra al panel. El primario es el del
-                cliente porque es el que llega sin que nadie le explique
-                nada. */}
+            {/* Solo dos accesos, los mismos arriba y en el titular (pedido de
+                la directora, 7/10/2026): habia cuatro botones -«Soy de la
+                barberia», «Reservar turno», «Reservar mi turno», «Ingresar al
+                sistema»- y tres llevaban al mismo ingreso. El personal entra
+                por Ingresar como cualquiera: el sistema lo manda al panel por
+                su rol. Crear cuenta es el primario porque es lo que necesita
+                quien llega por primera vez. */}
             <Link href="/ingresar" className="hidden sm:block">
               <Boton variante="secundario" tamano="sm">
-                Soy de la barbería
+                Ingresar
               </Boton>
             </Link>
-            <Link href="/mi-cuenta">
+            <Link href="/crear-cuenta">
               <Boton variante="primario" tamano="sm">
-                Reservar turno
+                Crear cuenta
               </Boton>
             </Link>
           </div>
@@ -142,17 +144,20 @@ export default function Portada() {
                   a usar la barbería. La galería sigue disponible escribiendo
                   /sistema-de-diseno, para revisiones y capturas del TCC. */}
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/mi-cuenta">
-                  <Boton variante="primario" tamano="lg" icono="calendar-days">
-                    Reservar mi turno
+                <Link href="/crear-cuenta">
+                  <Boton variante="primario" tamano="lg" icono="user-round">
+                    Crear cuenta
                   </Boton>
                 </Link>
                 <Link href="/ingresar">
                   <Boton variante="secundario" tamano="lg" icono="log-out">
-                    Ingresar al sistema
+                    Ingresar
                   </Boton>
                 </Link>
               </div>
+              <p className="text-cuerpo-sm text-terciario mt-3">
+                Con su cuenta reserva turnos y ve la disponibilidad de cada barbero.
+              </p>
             </div>
 
             {/* Composición fotográfica del oficio. En móvil se muestra debajo

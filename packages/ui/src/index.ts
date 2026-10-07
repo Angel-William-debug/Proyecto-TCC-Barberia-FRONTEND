@@ -11,6 +11,7 @@ export { cn } from './utilidades';
 export { VALORES, COLOR_TEMA_NAVEGADOR, COLORES_GRAFICO } from './tokens/valores';
 export * from './formato';
 export * from './estados';
+export * from './disponibilidad';
 export {
   ICONOS,
   ICONO_DE,

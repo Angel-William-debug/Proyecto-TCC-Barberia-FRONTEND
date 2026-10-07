@@ -3,7 +3,12 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useId, useRef, useState, useTransition } from 'react';
 
-import type { FranjaDisponible, VistaPublicoBarbero, VistaPublicoServicio } from '@barber-shop/tipos';
+import type {
+  FranjaDisponible,
+  VistaPublicoBarbero,
+  VistaPublicoHorario,
+  VistaPublicoServicio,
+} from '@barber-shop/tipos';
 import {
   AvisoFormulario,
   Boton,
@@ -13,7 +18,10 @@ import {
   duracion,
   guaranies,
   hora,
+  horarioDe,
+  minutoDeHora,
   plural,
+  textoMinuto,
 } from '@barber-shop/ui';
 
 import { accionReservarTurno } from '@/acciones/portal';
@@ -49,13 +57,21 @@ import { accionReservarTurno } from '@/acciones/portal';
  * Servicios y dia viven en la URL (regla 3, seccion 9.9): de ellos depende que
  * franjas le pide el servidor a la base. Hora, barbero y nota viven en el
  * componente: no cambian la consulta, y en la URL sobrevivirian a un cambio de
- * dia donde ya no tienen sentido.
+ * dia donde ya no tienen sentido. La excepcion es la llegada desde el
+ * calendario de disponibilidad, que trae `barbero` y `hora` en la URL: se
+ * toman como valor inicial.
+ *
+ * CADA HORA DICE HASTA CUANDO (7/10/2026, pedido de la directora): «09:00 a
+ * 09:45», con la duracion de lo elegido, y debajo del dia el horario de
+ * atencion de ese dia. Antes decia solo «09:00» y no se sabia hasta que hora
+ * ocupaba el turno.
  */
 export function FormularioReserva({
   servicios,
   hoy,
   franjas,
   barberos,
+  horarios,
 }: {
   /** El catalogo entero. */
   servicios: VistaPublicoServicio[];
@@ -64,6 +80,8 @@ export function FormularioReserva({
   /** Todas las franjas del dia, llenas incluidas. Vacio si falta servicio o dia. */
   franjas: FranjaDisponible[];
   barberos: VistaPublicoBarbero[];
+  /** El horario de atencion de cada dia de la semana. */
+  horarios: VistaPublicoHorario[];
 }) {
   const router = useRouter();
   const ruta = usePathname();
@@ -75,8 +93,14 @@ export function FormularioReserva({
   const idBarbero = useId();
   const idHora = useId();
 
+  // Desde el calendario de disponibilidad llegan el barbero y la hora.
+  const barberoUrl = Number(params.get('barbero'));
+  const horaUrl = params.get('hora') ?? '';
+
   const [inicio, setInicio] = useState('');
-  const [idProfesional, setIdProfesional] = useState<number | null>(null);
+  const [idProfesional, setIdProfesional] = useState<number | null>(
+    barberos.some((b) => b.id_profesional === barberoUrl) ? barberoUrl : null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   // ------------------------------------------------------ lo que dice la URL
@@ -121,7 +145,18 @@ export function FormularioReserva({
   // cuando se eligio: al cambiar de servicio o de dia llegan otras, y la que
   // estaba elegida puede no existir o haberse llenado. Derivarlo evita un
   // efecto que la borre y el parpadeo de un render con un valor imposible.
-  const franja = franjas.find((f) => f.inicio === inicio && libreEn(f, idProfesional)) ?? null;
+  // Mientras no elija otra, vale la hora que trajo el calendario, si entra.
+  const franja =
+    franjas.find((f) => f.inicio === inicio && libreEn(f, idProfesional)) ??
+    (inicio === '' && horaUrl
+      ? (franjas.find((f) => f.hora_local.slice(0, 5) === horaUrl && libreEn(f, idProfesional)) ?? null)
+      : null);
+
+  /** «09:00 a 09:45»: de cuando a cuando ocupa el turno con lo elegido. */
+  const rango = (f: FranjaDisponible) =>
+    `${hora(f.inicio)} a ${textoMinuto(minutoDeHora(f.hora_local) + duracionTotal)}`;
+
+  const horarioDelDia = fecha ? horarioDe(fecha, horarios) : null;
 
   // Sin preferencia se asigna el primer barbero libre, que es lo que hacia la
   // version anterior y lo que quiere la mayoria.
@@ -136,11 +171,11 @@ export function FormularioReserva({
 
   function etiquetaFranja(f: FranjaDisponible) {
     if (idProfesional != null) {
-      return `${hora(f.inicio)} · ${libreEn(f, idProfesional) ? 'Libre' : 'Ocupado'}`;
+      return `${rango(f)} · ${libreEn(f, idProfesional) ? 'Libre' : 'Ocupado'}`;
     }
     return f.barberos_disponibles > 0
-      ? `${hora(f.inicio)} · ${plural(f.barberos_disponibles, 'lugar libre', 'lugares libres')}`
-      : `${hora(f.inicio)} · Lleno`;
+      ? `${rango(f)} · ${plural(f.barberos_disponibles, 'lugar libre', 'lugares libres')}`
+      : `${rango(f)} · Lleno`;
   }
 
   // ------------------------------------------------------------------ envio
@@ -206,6 +241,13 @@ export function FormularioReserva({
             onChange={(e) => aplicar({ fecha: e.target.value })}
             className="bg-fondo border-borde-control text-principal text-cuerpo h-11 w-full rounded-md border px-3"
           />
+          {fecha && (
+            <p className="text-cuerpo-sm text-terciario">
+              {horarioDelDia
+                ? `Ese día se atiende de ${textoMinuto(minutoDeHora(horarioDelDia.hora_apertura))} a ${textoMinuto(minutoDeHora(horarioDelDia.hora_cierre))}.`
+                : 'Ese día la barbería no atiende.'}
+            </p>
+          )}
         </div>
 
         {/* ------------------------------------------------------- barbero */}
@@ -273,7 +315,9 @@ export function FormularioReserva({
               ))}
           </select>
           <p id={`${idHora}-ayuda`} className="text-cuerpo-sm text-terciario">
-            {!listo || actualizando
+            {horaUrl && !seleccionados.length
+              ? `Del calendario: las ${horaUrl}. Elija el servicio y queda puesta, si entra.`
+              : !listo || actualizando
               ? `Se calcula con la duración de lo que elija${duracionTotal ? `: ${duracion(duracionTotal)}` : ''}.`
               : franjas.length === 0
                 ? // Los motivos posibles, porque desde afuera no se distinguen.
@@ -333,7 +377,7 @@ export function FormularioReserva({
           cargando={enviando}
           disabled={!franja || barberoFinal == null || actualizando}
         >
-          {franja ? `Reservar ${hora(franja.inicio)} con ${nombreFinal ?? 'el barbero'}` : 'Reservar'}
+          {franja ? `Reservar de ${rango(franja)} con ${nombreFinal ?? 'el barbero'}` : 'Reservar'}
         </Boton>
       </div>
     </form>

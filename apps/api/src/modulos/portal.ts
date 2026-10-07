@@ -19,6 +19,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import type {
+  BloqueOcupado,
   CambiosPerfilCliente,
   EntradaRegistroCliente,
   EntradaReserva,
@@ -308,6 +309,32 @@ export async function turnosDisponibles(
 
   if (error) throw traducirError(error);
   return (data ?? []) as FranjaDisponible[];
+}
+
+/**
+ * Cuando esta ocupado cada barbero entre dos fechas, para el calendario de
+ * disponibilidad (7/10/2026). Solo barbero, inicio y fin: la funcion de la
+ * base no devuelve de quien es el turno. Ver `fn_ocupacion_barberos`.
+ *
+ * En modo demostracion no hay turnos ajenos que mostrar: el calendario se ve
+ * todo libre.
+ */
+export async function ocupacionBarberos(
+  desde: string,
+  hasta: string,
+  idsProfesional?: number[],
+): Promise<BloqueOcupado[]> {
+  if (MODO_DEMO) return [];
+
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase.rpc('fn_ocupacion_barberos', {
+    p_desde: desde,
+    p_hasta: hasta,
+    p_ids_profesional: idsProfesional?.length ? idsProfesional : null,
+  });
+
+  if (error) throw traducirError(error);
+  return (data ?? []) as BloqueOcupado[];
 }
 
 // ---------------------------------------------------------------------------
