@@ -288,6 +288,9 @@ export async function horariosPublicos(): Promise<VistaPublicoHorario[]> {
 // para elegir de un desplegable. `fn_turnos_disponibles` soporta el paso
 // como parámetro desde el 23/9/2026 (franjas llenas); antes de eso la base
 // lo fijaba en 15 sin que el llamador pudiera pedir otra cosa.
+// Tiene que coincidir con `PASO_RESERVA_MIN` de `packages/ui/src/disponibilidad.ts`
+// (y su copia en la app): el calendario de disponibilidad ofrece las mismas
+// horas en punto que este formulario.
 const PASO_MINUTOS_RESERVA = 60;
 
 export async function turnosDisponibles(

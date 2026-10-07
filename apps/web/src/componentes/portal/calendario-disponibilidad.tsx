@@ -10,12 +10,12 @@ import {
   BotonIcono,
   PRESENTACION_NIVEL,
   PuntoEstado,
-  TRAMO_MINIMO_MIN,
   cn,
   fechaLarga,
   horarioDe,
   mayusculaInicial,
   nivelDelDia,
+  primerInicioReservable,
   textoMinuto,
   minutoDeHora,
   tramosDelBarbero,
@@ -397,7 +397,10 @@ function DialogoDia({
                     {tramos.map((t) => (
                       <span
                         key={t.desde}
-                        className={cn('absolute inset-y-0', t.libre ? 'bg-exito' : 'bg-[var(--borde-control)]')}
+                        className={cn(
+                          'absolute inset-y-0',
+                          t.libre ? 'bg-exito' : t.recreo ? 'bg-elevado' : 'bg-[var(--borde-control)]',
+                        )}
                         style={{
                           left: `${((t.desde - apertura) / largo) * 100}%`,
                           width: `${((t.hasta - t.desde) / largo) * 100}%`,
@@ -409,11 +412,11 @@ function DialogoDia({
                   <ul className="mt-2 flex flex-col gap-1">
                     {tramos.map((t) => {
                       const texto = `${textoMinuto(t.desde)} a ${textoMinuto(t.hasta)}`;
-                      // Las horas reservables van de 15 en 15 desde la
+                      // Las horas reservables van de hora en hora desde la
                       // apertura: un tramo libre desde las 10:25 se reserva
-                      // desde las 10:30, o el formulario no la encontraria.
-                      const reservable =
-                        apertura + Math.ceil((t.desde - apertura) / TRAMO_MINIMO_MIN) * TRAMO_MINIMO_MIN;
+                      // desde las 11:00, o el formulario no la encontraria.
+                      // Un tramo libre siempre tiene una (`tramosDelBarbero`).
+                      const reservable = primerInicioReservable(t, apertura) ?? t.desde;
                       return (
                         <li key={t.desde}>
                           {t.libre ? (
@@ -430,9 +433,15 @@ function DialogoDia({
                             </Link>
                           ) : (
                             <span className="flex items-center gap-2 px-2 py-1.5">
-                              <PuntoEstado tono="neutro" etiqueta="Ocupado" sinEtiqueta />
+                              <PuntoEstado
+                                tono="neutro"
+                                etiqueta={t.recreo ? 'Almuerzo' : 'Ocupado'}
+                                sinEtiqueta
+                              />
                               <span className="text-cuerpo-sm text-terciario tabular-nums">{texto}</span>
-                              <span className="text-cuerpo-sm text-terciario">Ocupado</span>
+                              <span className="text-cuerpo-sm text-terciario">
+                                {t.recreo ? 'Almuerzo, no se atiende' : 'Ocupado'}
+                              </span>
                             </span>
                           )}
                         </li>

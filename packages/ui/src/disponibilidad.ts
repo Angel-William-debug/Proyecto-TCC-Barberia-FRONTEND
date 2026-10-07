@@ -29,13 +29,41 @@ export interface Tramo {
   desde: number;
   hasta: number;
   libre: boolean;
+  /** El recreo de almuerzo: ni libre ni ocupado por un turno. */
+  recreo?: boolean;
 }
+
+/**
+ * El recreo de almuerzo, fijo de 12:00 a 14:00: ningun turno empieza ahi.
+ * Es el mismo que tiene adentro `fn_turnos_disponibles` (migracion
+ * 20261007150000 del DBA), que a pedido expreso no es editable desde el
+ * panel. Si cambia alla, se cambia aca.
+ */
+export const RECREO = { desde: 12 * 60, hasta: 14 * 60 } as const;
 
 /** Como de lleno esta un dia, para pintar la celda del mes. */
 export type NivelDia = 'libre' | 'pocos' | 'completo' | 'cerrado' | 'pasado';
 
 /** Un tramo libre mas corto que esto no entra ni el servicio mas breve. */
 export const TRAMO_MINIMO_MIN = 15;
+
+/**
+ * Cada cuanto empieza un turno reservable: cada hora en punto desde la
+ * apertura. Tiene que ser el mismo `p_paso_min` que `turnosDisponibles`
+ * le pide a la base (`PASO_MINUTOS_RESERVA` en `apps/api`, 7/10/2026): si
+ * difirieran, el calendario ofreceria una hora que el formulario no tiene.
+ */
+export const PASO_RESERVA_MIN = 60;
+
+/**
+ * La primera hora reservable dentro de un tramo, o `null` si no entra
+ * ninguna: un tramo libre de 10:25 a 11:00 no tiene una hora en punto donde
+ * empezar, porque la de las 11:00 ya es el final.
+ */
+export function primerInicioReservable(tramo: Tramo, apertura: number): number | null {
+  const inicio = apertura + Math.ceil((tramo.desde - apertura) / PASO_RESERVA_MIN) * PASO_RESERVA_MIN;
+  return inicio + TRAMO_MINIMO_MIN <= tramo.hasta ? inicio : null;
+}
 
 const formatoDia = new Intl.DateTimeFormat('en-CA', { timeZone: ZONA });
 const formatoHora = new Intl.DateTimeFormat('en-GB', {
@@ -135,10 +163,27 @@ export function tramosDelBarbero(
   }
   if (cursor < cierre) tramos.push({ desde: cursor, hasta: cierre, libre: true });
 
-  // Un hueco libre de diez minutos entre dos turnos no se puede reservar:
-  // mostrarlo como libre seria prometer algo que la reserva despues no ofrece.
-  return tramos.map((t) =>
-    t.libre && t.hasta - t.desde < TRAMO_MINIMO_MIN ? { ...t, libre: false } : t,
+  // El recreo parte en dos lo que estaba libre a esa hora. Un turno que ya
+  // estaba agendado cruzando el recreo sigue siendo un turno: no se toca.
+  const conRecreo = tramos.flatMap<Tramo>((t) => {
+    if (!t.libre || t.hasta <= RECREO.desde || t.desde >= RECREO.hasta) return [t];
+    const partes: Tramo[] = [];
+    if (t.desde < RECREO.desde) partes.push({ desde: t.desde, hasta: RECREO.desde, libre: true });
+    partes.push({
+      desde: Math.max(t.desde, RECREO.desde),
+      hasta: Math.min(t.hasta, RECREO.hasta),
+      libre: false,
+      recreo: true,
+    });
+    if (t.hasta > RECREO.hasta) partes.push({ desde: RECREO.hasta, hasta: t.hasta, libre: true });
+    return partes;
+  });
+
+  // Un hueco libre donde no empieza ninguna hora reservable -diez minutos
+  // entre dos turnos, o de 10:25 a 11:00- no se puede reservar: mostrarlo
+  // como libre seria prometer algo que el formulario despues no ofrece.
+  return conRecreo.map((t) =>
+    t.libre && primerInicioReservable(t, apertura) == null ? { ...t, libre: false } : t,
   );
 }
 
@@ -163,7 +208,11 @@ export function nivelDelDia(
   if (fecha < diaDeInstante(ahora)) return 'pasado';
   if (!horario) return 'cerrado';
 
-  const total = tramosPorBarbero.reduce((n, t) => n + (t ?? []).reduce((m, x) => m + x.hasta - x.desde, 0), 0);
+  // El recreo no es tiempo de atencion: no cuenta ni como libre ni en el total.
+  const total = tramosPorBarbero.reduce(
+    (n, t) => n + (t ?? []).reduce((m, x) => m + (x.recreo ? 0 : x.hasta - x.desde), 0),
+    0,
+  );
   if (total === 0) return 'pasado';
 
   const libres = tramosPorBarbero.reduce((n, t) => n + minutosLibres(t ?? []), 0);
