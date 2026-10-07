@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 
-import { MODO_DEMO, type TipoReporte } from '@barber-shop/api';
+import { MODO_DEMO } from '@barber-shop/api/demo';
+import type { TipoReporte } from '@barber-shop/api';
 import { Icono, cn } from '@barber-shop/ui';
 
 import { fecha, texto, type Parametros } from '@/lib/filtros';
