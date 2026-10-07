@@ -1,15 +1,11 @@
-import Link from 'next/link';
-
 import {
   comisionesPendientes,
   listarComisiones,
   listarProfesionales,
-  MODO_DEMO,
 } from '@barber-shop/api';
 import { ESTADOS_COMISION } from '@barber-shop/tipos';
 import {
   BarraFiltros,
-  Boton,
   CampoBusqueda,
   ChipEstado,
   EstadoVacio,
@@ -34,6 +30,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { PanelLiquidacion } from '@/componentes/comisiones/panel-liquidacion';
 import {
   comunes,
@@ -102,13 +99,14 @@ export default async function PaginaComisiones({
             titulo="Resumen por barbero"
             descripcion="Solo comisiones todavía no liquidadas"
             accion={
-              !MODO_DEMO && (
-                <Link href="/panel/comisiones/exportar-individual">
-                  <Boton variante="terciario" icono="download">
-                    PDFs individuales (.zip)
-                  </Boton>
-                </Link>
-              )
+              <BotonExportar
+                tipo="comisiones"
+                searchParams={params}
+                individual={{
+                  href: '/panel/comisiones/exportar-individual',
+                  etiqueta: 'PDFs individuales por barbero (.zip)',
+                }}
+              />
             }
           />
           <Tabla titulo="Comisiones pendientes agrupadas por barbero">
