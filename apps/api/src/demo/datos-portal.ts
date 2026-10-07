@@ -122,7 +122,9 @@ export function franjasDemo(
 
   const franjas: FranjaDisponible[] = [];
 
-  for (let minutos = apertura * 60; minutos + duracionMin <= cierre * 60; minutos += 15) {
+  // Cada hora en punto, igual que `fn_turnos_disponibles` con p_paso_min = 60
+  // en modo real (ver `turnosDisponibles` en modulos/portal.ts).
+  for (let minutos = apertura * 60; minutos + duracionMin <= cierre * 60; minutos += 60) {
     const inicio = conHora(fecha, Math.floor(minutos / 60), minutos % 60);
     if (inicio.getTime() <= Date.now()) continue;
 

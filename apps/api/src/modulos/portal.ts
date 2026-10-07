@@ -282,6 +282,12 @@ export async function horariosPublicos(): Promise<VistaPublicoHorario[]> {
  * del portal las pide asi para poder decir «Lleno» en vez de hacer desaparecer
  * la hora, que el cliente leeria como "a esa hora no se atiende".
  */
+// Cada hora en punto, no cada 15 minutos: 43 horarios por día es demasiado
+// para elegir de un desplegable. `fn_turnos_disponibles` soporta el paso
+// como parámetro desde el 23/9/2026 (franjas llenas); antes de eso la base
+// lo fijaba en 15 sin que el llamador pudiera pedir otra cosa.
+const PASO_MINUTOS_RESERVA = 60;
+
 export async function turnosDisponibles(
   fecha: string,
   duracionMin: number,
@@ -295,6 +301,7 @@ export async function turnosDisponibles(
     p_fecha: fecha,
     p_duracion_min: duracionMin,
     p_id_profesional: idProfesional ?? null,
+    p_paso_min: PASO_MINUTOS_RESERVA,
     p_incluir_llenas: incluirLlenas,
   });
 
