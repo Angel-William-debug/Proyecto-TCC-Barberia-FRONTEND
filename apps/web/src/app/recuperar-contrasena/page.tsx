@@ -9,7 +9,7 @@ export default function PaginaRecuperar() {
   return (
     <MarcoSesion
       titulo="Recuperar contraseña"
-      descripcion="Le enviaremos un enlace por correo"
+      descripcion="Le enviaremos un código por correo"
       pie={
         <Link href="/ingresar" className="hover:text-principal underline">
           Volver a iniciar sesión

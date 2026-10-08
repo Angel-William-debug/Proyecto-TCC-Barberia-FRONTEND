@@ -1,8 +1,9 @@
 'use client';
 
-import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, useId, useState, type InputHTMLAttributes, type ReactNode } from 'react';
 
 import { CONTROL, Envoltorio } from './base';
+import { Icono } from '../icono';
 import { cn } from '../../utilidades';
 
 /**
@@ -13,6 +14,13 @@ import { cn } from '../../utilidades';
  * etiqueta, su propia ayuda y su propio error, duplicando lo que ya hacia
  * `Envoltorio`. Ahora usa el mismo, que es justamente lo que garantiza que los
  * cinco campos se vean iguales.
+ *
+ * CONTRASEÑAS (8/10/2026). Con `type="password"` el campo lleva a la derecha
+ * un boton con un ojo que muestra u oculta lo escrito. Esta aca y no en cada
+ * formulario para que aparezca en todos: ingresar, crear cuenta, recuperar la
+ * contraseña y el alta de usuarios del panel. El boton dice que hace en
+ * `aria-label` y su estado en `aria-pressed`; no roba el foco del campo al
+ * tabular (va despues, en orden natural).
  */
 export interface PropsCampo extends Omit<InputHTMLAttributes<HTMLInputElement>, 'className'> {
   etiqueta: string;
@@ -26,11 +34,13 @@ export interface PropsCampo extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 }
 
 export const Campo = forwardRef<HTMLInputElement, PropsCampo>(function Campo(
-  { etiqueta, ayuda, error, sufijo, required, id, className, claseContenedor, ...resto },
+  { etiqueta, ayuda, error, sufijo, required, id, className, claseContenedor, type, ...resto },
   ref,
 ) {
   const generado = useId();
   const idCampo = id ?? generado;
+  const esClave = type === 'password';
+  const [visible, setVisible] = useState(false);
 
   return (
     <Envoltorio
@@ -45,6 +55,7 @@ export const Campo = forwardRef<HTMLInputElement, PropsCampo>(function Campo(
         <input
           ref={ref}
           id={idCampo}
+          type={esClave && visible ? 'text' : type}
           required={required}
           aria-required={required || undefined}
           aria-invalid={error ? true : undefined}
@@ -53,17 +64,30 @@ export const Campo = forwardRef<HTMLInputElement, PropsCampo>(function Campo(
             CONTROL,
             'h-10',
             error ? 'border-peligro' : 'border-borde-control',
-            // El sufijo se dibuja encima del campo, no al lado: sin este
-            // relleno el texto largo pasa por debajo de «Gs.».
-            sufijo && 'pr-14',
+            // El sufijo y el ojo se dibujan encima del campo, no al lado: sin
+            // este relleno el texto largo pasa por debajo.
+            (sufijo || esClave) && 'pr-12',
             className,
           )}
           {...resto}
         />
-        {sufijo && (
-          <span className="text-terciario text-cuerpo-sm pointer-events-none absolute right-3">
-            {sufijo}
-          </span>
+        {esClave ? (
+          <button
+            type="button"
+            onClick={() => setVisible((v) => !v)}
+            aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            aria-pressed={visible}
+            aria-controls={idCampo}
+            className="text-terciario hover:text-principal absolute right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-sm"
+          >
+            <Icono nombre={visible ? 'eye-off' : 'eye'} tamano="sm" />
+          </button>
+        ) : (
+          sufijo && (
+            <span className="text-terciario text-cuerpo-sm pointer-events-none absolute right-3">
+              {sufijo}
+            </span>
+          )
         )}
       </div>
     </Envoltorio>

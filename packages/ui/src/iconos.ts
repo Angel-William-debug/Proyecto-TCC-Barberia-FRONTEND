@@ -38,12 +38,16 @@ import {
   Clock,
   CreditCard,
   Download,
+  Eye,
+  EyeOff,
   FileArchive,
   FileSpreadsheet,
   FileText,
   HandCoins,
   Inbox,
+  KeyRound,
   LoaderCircle,
+  Mail,
   LogOut,
   Menu,
   Moon,
@@ -137,6 +141,11 @@ export const ICONOS = {
   inbox: Inbox,
   sun: Sun,
   moon: Moon,
+  // Contraseñas (8/10/2026): mostrar u ocultar, y la recuperación por código.
+  eye: Eye,
+  'eye-off': EyeOff,
+  'key-round': KeyRound,
+  mail: Mail,
 } as const satisfies Record<string, LucideIcon>;
 
 export type NombreIcono = keyof typeof ICONOS;
