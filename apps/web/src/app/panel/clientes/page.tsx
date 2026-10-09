@@ -126,7 +126,7 @@ export default async function PaginaClientes({
                     />
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    <div className="flex justify-end gap-1">
+                    <div className="flex justify-end gap-1.5">
                       <Link href={`/panel/clientes/${c.id_cliente}`}>
                         <BotonIcono
                           icono="chevron-right"

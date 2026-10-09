@@ -46,7 +46,10 @@ export function BotonBorrar({
     <BotonIcono
       icono="trash-2"
       etiqueta={`Borrar ${nombre}`}
-      variante="terciario"
+      // §9.3 del sistema de diseño: «Eliminar» usa peligro-sutil, no
+      // terciario -ahi mismo se ve el ejemplo con este icono exacto-. Esto
+      // es compartido por todas las tablas del sistema, no solo Clientes.
+      variante="peligro-sutil"
       tamano="sm"
       onClick={borrar}
       disabled={ocupado}

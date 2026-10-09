@@ -25,7 +25,9 @@ export function FormularioCliente({ cliente }: { cliente?: Cliente }) {
         <BotonIcono
           icono="pencil"
           etiqueta={`Editar a ${cliente!.nombre}`}
-          variante="terciario"
+          // §9.3 del sistema de diseño: «Editar» usa secundario (con borde),
+          // no terciario -ahi mismo se ve el ejemplo con este icono exacto-.
+          variante="secundario"
           tamano="sm"
           onClick={() => setAbierto(true)}
         />
