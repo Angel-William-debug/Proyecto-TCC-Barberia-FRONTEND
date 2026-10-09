@@ -19,7 +19,7 @@ export function FormularioProveedor({ proveedor }: { proveedor?: Proveedor }) {
         <BotonIcono
           icono="pencil"
           etiqueta={`Editar ${proveedor!.nombre}`}
-          variante="terciario"
+          variante="secundario"
           tamano="sm"
           onClick={() => setAbierto(true)}
         />

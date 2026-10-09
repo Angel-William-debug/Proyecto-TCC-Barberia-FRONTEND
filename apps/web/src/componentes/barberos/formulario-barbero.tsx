@@ -32,7 +32,7 @@ export function FormularioBarbero({ barbero }: { barbero?: Profesional }) {
         <BotonIcono
           icono="pencil"
           etiqueta={`Editar a ${barbero!.nombre}`}
-          variante="terciario"
+          variante="secundario"
           tamano="sm"
           onClick={() => setAbierto(true)}
         />

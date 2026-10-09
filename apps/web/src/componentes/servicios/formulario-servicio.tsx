@@ -27,7 +27,7 @@ export function FormularioServicio({
         <BotonIcono
           icono="pencil"
           etiqueta={`Editar ${servicio!.nombre}`}
-          variante="terciario"
+          variante="secundario"
           tamano="sm"
           onClick={() => setAbierto(true)}
         />

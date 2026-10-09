@@ -34,7 +34,7 @@ export function FormularioProducto({
         <BotonIcono
           icono="pencil"
           etiqueta={`Editar ${producto!.nombre}`}
-          variante="terciario"
+          variante="secundario"
           tamano="sm"
           onClick={() => setAbierto(true)}
         />

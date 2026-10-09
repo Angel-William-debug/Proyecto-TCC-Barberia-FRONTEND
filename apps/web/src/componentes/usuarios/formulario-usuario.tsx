@@ -31,7 +31,7 @@ export function FormularioUsuario({ usuario, roles }: { usuario?: VistaUsuarioPo
         <BotonIcono
           icono="pencil"
           etiqueta={`Editar ${usuario!.nombre}`}
-          variante="terciario"
+          variante="secundario"
           tamano="sm"
           onClick={() => setAbierto(true)}
         />

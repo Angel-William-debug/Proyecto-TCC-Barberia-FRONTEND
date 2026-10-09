@@ -33,7 +33,12 @@ const variantes = cva(
           'border border-borde-control text-principal hover:bg-elevado active:bg-superficie',
         terciario: 'text-secundario hover:bg-elevado hover:text-principal',
         peligro: 'bg-peligro text-white hover:opacity-90 active:opacity-80',
-        'peligro-sutil': 'border border-peligro text-peligro hover:bg-[var(--chip-peligro-fondo)]',
+        // Fondo rojo tenue permanente, no solo al pasar el mouse: en el
+        // tema claro, un simple borde sobre fondo blanco se leia demasiado
+        // debil para una accion destructiva. Mismo tono que ya usa el chip
+        // de estado «Inactivo»/error, asi que no suma un rojo nuevo.
+        'peligro-sutil':
+          'border border-peligro bg-[var(--chip-peligro-fondo)] text-peligro hover:opacity-80 active:opacity-70',
       },
       tamano: {
         sm: 'h-8 px-3 text-cuerpo-sm',
