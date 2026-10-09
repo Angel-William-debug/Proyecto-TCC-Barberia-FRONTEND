@@ -177,6 +177,13 @@ export function PanelLateral({
         aria-describedby={descripcion ? idDescripcion : undefined}
         className={cn(
           'bg-superficie border-borde-sutil relative flex h-full w-full flex-col border-l shadow-4',
+          // El panel se monta donde esta el boton que lo abre -normalmente
+          // una columna de «Acciones» alineada a la derecha- y `text-align`
+          // se hereda: sin este reset, un panel abierto desde esa columna
+          // sale con todas sus etiquetas pegadas a la derecha, aunque
+          // visualmente el panel este fuera de la tabla (`fixed inset-0`
+          // no corta la herencia de estilos, solo la posicion).
+          'text-left',
           ANCHOS[ancho],
           'transition-transform duration-[var(--movimiento-lento)] ease-estandar',
           entrado ? 'translate-x-0' : 'translate-x-full',
