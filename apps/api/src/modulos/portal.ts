@@ -673,7 +673,7 @@ export async function generarMiHistorialPdf(): Promise<Buffer> {
     [
       { clave: 'fecha', titulo: 'Fecha', ancho: 1 },
       { clave: 'servicios', titulo: 'Servicios', ancho: 2 },
-      { clave: 'total', titulo: 'Total', ancho: 1 },
+      { clave: 'total', titulo: 'Total', ancho: 1, numerico: true },
       { clave: 'estado', titulo: 'Estado', ancho: 0.8 },
     ],
     pasados.map((t) => ({

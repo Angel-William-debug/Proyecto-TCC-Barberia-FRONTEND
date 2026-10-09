@@ -172,7 +172,7 @@ export async function generarFichaClientePdf(idCliente: number): Promise<Buffer>
       { clave: 'fecha', titulo: 'Fecha', ancho: 1 },
       { clave: 'servicio', titulo: 'Servicio', ancho: 1.6 },
       { clave: 'profesional', titulo: 'Barbero', ancho: 1.3 },
-      { clave: 'costo', titulo: 'Costo', ancho: 1 },
+      { clave: 'costo', titulo: 'Costo', ancho: 1, numerico: true },
     ],
     historial.map((h) => ({
       fecha: FECHA(h.fecha_realizacion),

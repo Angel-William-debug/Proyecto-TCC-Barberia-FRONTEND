@@ -697,7 +697,12 @@ export async function exportarReportePdf(tipo: TipoReporte, filtro: FiltroReport
   return generarPdfTabla(
     titulo,
     subtituloPeriodo(filtro),
-    columnas.map((c) => ({ clave: c.clave, titulo: c.titulo, ancho: c.pesoPdf })),
+    columnas.map((c) => ({
+      clave: c.clave,
+      titulo: c.titulo,
+      ancho: c.pesoPdf,
+      numerico: c.tipo === 'numero' || c.tipo === 'moneda',
+    })),
     filasTexto,
   );
 }

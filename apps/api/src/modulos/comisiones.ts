@@ -110,9 +110,9 @@ export async function generarFichaComisionBarberoPdf(idProfesional: number): Pro
     [
       { clave: 'fecha', titulo: 'Fecha', ancho: 1 },
       { clave: 'servicio', titulo: 'Servicio', ancho: 1.6 },
-      { clave: 'costo', titulo: 'Costo del servicio', ancho: 1.3 },
-      { clave: 'porcentaje', titulo: '%', ancho: 0.6 },
-      { clave: 'comision', titulo: 'Comisión', ancho: 1 },
+      { clave: 'costo', titulo: 'Costo del servicio', ancho: 1.3, numerico: true },
+      { clave: 'porcentaje', titulo: '%', ancho: 0.6, numerico: true },
+      { clave: 'comision', titulo: 'Comisión', ancho: 1, numerico: true },
     ],
     pendientes.map((c) => ({
       fecha: FECHA(c.fecha_realizacion),
