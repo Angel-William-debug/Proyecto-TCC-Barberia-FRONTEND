@@ -103,8 +103,11 @@ export default async function PaginaComisiones({
             titulo="Resumen por barbero"
             descripcion="Solo comisiones todavía no liquidadas"
             accion={
+              // Esta tarjeta muestra lo pendiente, y exporta lo pendiente
+              // (14/10/2026: antes sacaba las liquidadas). Las liquidadas se
+              // exportan desde «Detalle».
               <BotonExportar
-                tipo="comisiones"
+                tipo="comisiones_pendientes"
                 searchParams={params}
                 individual={{
                   href: '/panel/comisiones/exportar-individual',
@@ -150,7 +153,11 @@ export default async function PaginaComisiones({
       )}
 
       <Tarjeta>
-        <TarjetaEncabezado titulo="Detalle" descripcion="Una fila por servicio realizado" />
+        <TarjetaEncabezado
+          titulo="Detalle"
+          descripcion="Una fila por servicio realizado"
+          accion={<BotonExportar tipo="comisiones" searchParams={params} />}
+        />
 
         <BarraFiltros
           busqueda={<CampoBusqueda placeholder="Barbero o servicio" />}

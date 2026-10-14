@@ -26,6 +26,7 @@ import { listarPedidos } from './compras';
 import { listarAuditoria } from './auditoria';
 import { listarFacturas } from './facturas';
 import { rankingBarberos } from './ranking';
+import { listarComisiones } from './comisiones';
 
 /**
  * Reportes del modulo 7.
@@ -150,6 +151,7 @@ export const TIPOS_REPORTE = [
   'cobros',
   'inventario',
   'comisiones',
+  'comisiones_pendientes',
   'inactivos',
   'cumpleanos',
   'general',
@@ -169,7 +171,11 @@ export const TITULOS_TIPO_REPORTE: Record<TipoReporte, string> = {
   proveedores: 'Reporte de proveedores',
   cobros: 'Reporte de cobros',
   inventario: 'Reporte de inventario',
-  comisiones: 'Reporte de comisiones',
+  // Dos reportes y no uno (14/10/2026): el Resumen por barbero del panel
+  // de Comisiones muestra lo PENDIENTE, y su boton Exportar sacaba las
+  // liquidadas. Cada tarjeta exporta ahora lo que muestra.
+  comisiones: 'Comisiones liquidadas',
+  comisiones_pendientes: 'Comisiones pendientes de liquidar',
   inactivos: 'Clientes inactivos (fidelización)',
   cumpleanos: 'Cumpleaños del mes',
   general: 'Reporte general (KPIs mensuales)',
@@ -329,6 +335,29 @@ async function datosReporte(tipo: TipoReporte, filtro: FiltroReporte): Promise<D
           { clave: 'comision', titulo: 'Comision', anchoExcel: 14, pesoPdf: 1, tipo: 'moneda' },
         ],
         filas: (data ?? []) as unknown as Array<Record<string, unknown>>,
+      };
+    }
+
+    case 'comisiones_pendientes': {
+      // La misma consulta que el panel de Comisiones, solo lo pendiente.
+      const filas = await listarComisiones({
+        estados: ['pendiente'],
+        busqueda: filtro.busqueda,
+        desde: filtro.desde,
+        hasta: filtro.hasta,
+      });
+
+      return {
+        titulo,
+        columnas: [
+          { clave: 'nombre_profesional', titulo: 'Barbero', anchoExcel: 22, pesoPdf: 1.6 },
+          { clave: 'nombre_servicio', titulo: 'Servicio', anchoExcel: 22, pesoPdf: 1.6 },
+          { clave: 'fecha_realizacion', titulo: 'Fecha', anchoExcel: 14, pesoPdf: 1, tipo: 'fecha' },
+          { clave: 'costo_cobrado', titulo: 'Cobrado', anchoExcel: 14, pesoPdf: 1, tipo: 'moneda' },
+          { clave: 'porcentaje', titulo: '%', anchoExcel: 8, pesoPdf: 0.6, tipo: 'numero' },
+          { clave: 'monto', titulo: 'Comision', anchoExcel: 14, pesoPdf: 1, tipo: 'moneda' },
+        ],
+        filas: filas as unknown as Array<Record<string, unknown>>,
       };
     }
 
