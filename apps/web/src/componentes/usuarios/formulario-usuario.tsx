@@ -20,10 +20,27 @@ import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
  * contraseña: cambiarla es de la persona, desde «Recuperar contraseña». Solo
  * se cambia el rol (CU-019 A3) y el estado (CU-019 A2).
  */
-export function FormularioUsuario({ usuario, roles }: { usuario?: VistaUsuarioPorRol; roles: Rol[] }) {
+export function FormularioUsuario({
+  usuario,
+  roles,
+  barberosSinCuenta = [],
+}: {
+  usuario?: VistaUsuarioPorRol;
+  roles: Rol[];
+  /** Fichas de barbero sin cuenta, para vincular al dar de alta un profesional. */
+  barberosSinCuenta?: Array<{ id_profesional: number; nombre: string }>;
+}) {
   const [abierto, setAbierto] = useState(false);
   const editando = Boolean(usuario);
   const rolActual = roles.find((r) => r.nombre === usuario?.rol);
+  const [idRolElegido, setIdRolElegido] = useState<string>('');
+  const esProfesional = roles.find((r) => String(r.id_rol) === idRolElegido)?.nombre === 'profesional';
+
+  // Al crear, el rol cliente no se ofrece (14/10/2026): un cliente se
+  // registra solo desde el portal o la app, y asi recibe su ficha de
+  // `clientes`. Creado desde aca quedaba con cuenta y sin ficha. Al editar
+  // se lista igual, para no esconder el rol que ya tiene alguien.
+  const rolesOfrecidos = editando ? roles : roles.filter((r) => r.nombre !== 'cliente');
 
   return (
     <>
@@ -114,11 +131,31 @@ export function FormularioUsuario({ usuario, roles }: { usuario?: VistaUsuarioPo
                 etiqueta="Rol"
                 name="id_rol"
                 defaultValue={rolActual?.id_rol ?? ''}
-                opciones={roles.map((r) => ({ valor: r.id_rol, etiqueta: r.nombre }))}
+                opciones={rolesOfrecidos.map((r) => ({ valor: r.id_rol, etiqueta: r.nombre }))}
                 marcador="Elija un rol"
                 error={errores.id_rol}
+                onChange={(e) => setIdRolElegido(e.currentTarget.value)}
                 required
               />
+              {/* Un profesional necesita su ficha de barbero: sin ella entra al
+                  panel y no ve su agenda ni sus comisiones. */}
+              {!editando && esProfesional && (
+                <CampoSelector
+                  etiqueta="Ficha de barbero"
+                  name="barbero"
+                  defaultValue="nuevo"
+                  opciones={[
+                    { valor: 'nuevo', etiqueta: 'Crear su ficha nueva con este nombre' },
+                    ...barberosSinCuenta.map((b) => ({
+                      valor: b.id_profesional,
+                      etiqueta: `${b.nombre} (ya cargado en Barberos, sin cuenta)`,
+                    })),
+                  ]}
+                  ayuda="Si el barbero ya está en Barberos, elíjalo para que su cuenta vea su agenda y sus comisiones."
+                  error={errores.barbero}
+                  required
+                />
+              )}
               {editando && (
                 <Interruptor
                   name="estado"

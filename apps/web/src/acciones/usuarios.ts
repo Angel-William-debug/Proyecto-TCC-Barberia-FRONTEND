@@ -1,7 +1,7 @@
 /** Accion de servidor de usuarios y roles (CU-019). */
 'use server';
 
-import { actualizarUsuario, crearUsuario, exigirSesion } from '@barber-shop/api';
+import { actualizarUsuario, crearUsuario, exigirSesion, listarRoles } from '@barber-shop/api';
 
 import { CORREO, Validacion, booleano, ejecutar, numero, texto } from './base';
 import type { ResultadoAccion } from './base';
@@ -41,8 +41,30 @@ export async function guardarUsuario(datos: FormData): Promise<ResultadoAccion> 
   v.exigir(password === repetir, 'repetir', 'Las dos contraseñas no coinciden.');
   if (v.hayErrores) return v.resultado;
 
+  // El rol decide si hace falta la ficha de barbero, y el cliente no se da de
+  // alta desde aca (se registra solo y asi recibe su ficha). Se mira en el
+  // servidor aunque el formulario ya no ofrezca «cliente»: el formulario es
+  // una conveniencia, no un control.
+  const rol = (await listarRoles()).find((r) => r.id_rol === idRol)?.nombre;
+  if (rol === 'cliente') {
+    return {
+      ok: false,
+      error: 'Los clientes se registran solos desde el portal o la app: así reciben su ficha de cliente.',
+      campos: { id_rol: 'Elija un rol del personal.' },
+    };
+  }
+
+  let barbero: { idProfesional: number } | { nuevo: true } | undefined;
+  if (rol === 'profesional') {
+    const valor = String(datos.get('barbero') ?? 'nuevo');
+    barbero = valor === 'nuevo' ? { nuevo: true } : { idProfesional: Number(valor) };
+    if ('idProfesional' in barbero && !Number.isFinite(barbero.idProfesional)) {
+      return { ok: false, error: 'Elija la ficha de barbero.', campos: { barbero: 'Elija una opción.' } };
+    }
+  }
+
   return ejecutar('/panel/usuarios', () =>
-    crearUsuario({ nombre, email, idRol: idRol!, password }),
+    crearUsuario({ nombre, email, idRol: idRol!, password, barbero }),
   );
 }
 

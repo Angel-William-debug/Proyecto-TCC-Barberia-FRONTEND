@@ -190,6 +190,7 @@ export {
 export {
   listarUsuarios,
   listarRoles,
+  listarBarberosSinCuenta,
   crearUsuario,
   actualizarUsuario,
   type EntradaNuevoUsuario,

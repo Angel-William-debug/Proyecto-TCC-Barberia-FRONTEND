@@ -92,6 +92,27 @@ export interface EntradaNuevoUsuario {
   idRol: number;
   /** Contrasena inicial. La fija el Administrador y la persona la cambia despues. */
   password: string;
+  /**
+   * Solo con rol profesional (14/10/2026): la ficha de barbero que se vincula
+   * a la cuenta. Un barbero existente sin cuenta, o una ficha nueva con el
+   * mismo nombre. Sin esto, `fn_id_profesional_actual()` devolvia NULL y el
+   * barbero entraba a un panel que no le mostraba nada.
+   */
+  barbero?: { idProfesional: number } | { nuevo: true };
+}
+
+/** Barberos activos que todavia no tienen cuenta: los que se pueden vincular. */
+export async function listarBarberosSinCuenta(): Promise<Array<{ id_profesional: number; nombre: string }>> {
+  if (MODO_DEMO) return [];
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase
+    .from('profesionales')
+    .select('id_profesional, nombre')
+    .is('id_usuario', null)
+    .eq('deleted', false)
+    .order('nombre');
+  if (error) throw traducirError(error);
+  return (data ?? []) as Array<{ id_profesional: number; nombre: string }>;
 }
 
 /**
@@ -145,7 +166,35 @@ export async function crearUsuario(entrada: EntradaNuevoUsuario): Promise<number
     throw traducirError(errorUsuario);
   }
 
-  return (usuario as { id_usuario: number }).id_usuario;
+  const idUsuario = (usuario as { id_usuario: number }).id_usuario;
+
+  // La ficha de barbero, en el mismo paso: una cuenta de profesional sin
+  // ficha es un barbero que entra y no ve su agenda. Si falla, se deshace
+  // todo, igual que cuando falla la fila de `usuarios`.
+  if (entrada.barbero) {
+    const resultado =
+      'nuevo' in entrada.barbero
+        ? await supabase
+            .from('profesionales')
+            .insert({ nombre: entrada.nombre, id_usuario: idUsuario, estado: true })
+            .select('id_profesional')
+        : await supabase
+            .from('profesionales')
+            .update({ id_usuario: idUsuario })
+            .eq('id_profesional', entrada.barbero.idProfesional)
+            .is('id_usuario', null)
+            .select('id_profesional');
+
+    if (resultado.error || !resultado.data?.length) {
+      await supabase.from('usuarios').delete().eq('id_usuario', idUsuario);
+      await admin.auth.admin.deleteUser(authUid);
+      throw resultado.error
+        ? traducirError(resultado.error)
+        : new ErrorAplicacion('Ese barbero ya tiene una cuenta. Elija otro o cree una ficha nueva.');
+    }
+  }
+
+  return idUsuario;
 }
 
 // ---------------------------------------------------------------------------

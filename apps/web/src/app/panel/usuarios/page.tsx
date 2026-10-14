@@ -1,4 +1,4 @@
-import { listarRoles, listarUsuarios } from '@barber-shop/api';
+import { listarBarberosSinCuenta, listarRoles, listarUsuarios } from '@barber-shop/api';
 import { ROLES } from '@barber-shop/tipos';
 import {
   BarraFiltros,
@@ -59,7 +59,11 @@ export default async function PaginaUsuarios({
   const params = await searchParams;
   const filtro = { ...comunes(params), rol: texto(params, 'rol') };
 
-  const [usuarios, roles] = await Promise.all([listarUsuarios(filtro), listarRoles()]);
+  const [usuarios, roles, barberosSinCuenta] = await Promise.all([
+    listarUsuarios(filtro),
+    listarRoles(),
+    listarBarberosSinCuenta(),
+  ]);
 
   const pagUsuarios = paginarFilas(usuarios, params);
 
@@ -68,7 +72,7 @@ export default async function PaginaUsuarios({
       <EncabezadoVista
         titulo="Usuarios"
         descripcion={plural(usuarios.length, 'usuario', 'usuarios')}
-        accion={<FormularioUsuario roles={roles} />}
+        accion={<FormularioUsuario roles={roles} barberosSinCuenta={barberosSinCuenta} />}
       />
 
       <Tarjeta>
