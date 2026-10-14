@@ -4,11 +4,14 @@
 import { revalidatePath } from 'next/cache';
 
 import {
+  cambiarEstadoCita,
+  cancelarCita,
   completarCita,
   crearCita,
   ErrorAplicacion,
   exigirSesion,
   registrarProductosUtilizados,
+  reprogramarCita,
 } from '@barber-shop/api';
 import type { EntradaProductoUtilizado, SugerenciaCierre } from '@barber-shop/tipos';
 
@@ -80,4 +83,48 @@ export async function registrarInsumosAccion(
 ): Promise<ResultadoAccion> {
   await exigirSesion();
   return ejecutar('/panel/inventario', () => registrarProductosUtilizados(entradas));
+}
+
+/**
+ * Cambiar la hora de un turno (CU-006 4a). Las reglas de horario, pasado y
+ * choque con otros turnos las aplica la base (migracion 20261015120000).
+ */
+export async function reprogramarTurno(datos: FormData): Promise<ResultadoAccion> {
+  await exigirSesion();
+  const idCita = numero(datos, 'id_cita');
+  const fecha = texto(datos, 'fecha');
+  const hora = texto(datos, 'hora');
+
+  const v = new Validacion();
+  v.exigir(idCita !== null, 'id_cita', 'Falta el turno.');
+  v.exigir(Boolean(fecha), 'fecha', 'Indique la fecha nueva.');
+  v.exigir(Boolean(hora), 'hora', 'Indique la hora nueva.');
+  if (v.hayErrores) return v.resultado;
+
+  return ejecutar('/panel/agenda', () =>
+    reprogramarCita(idCita!, `${fecha}T${hora}:00`, textoOpcional(datos, 'observaciones') ?? null),
+  );
+}
+
+/** Cancelar un turno con su motivo (CU-006 4b). El motivo es obligatorio. */
+export async function cancelarTurno(datos: FormData): Promise<ResultadoAccion> {
+  await exigirSesion();
+  const idCita = numero(datos, 'id_cita');
+  const motivo = texto(datos, 'motivo');
+
+  const v = new Validacion();
+  v.exigir(idCita !== null, 'id_cita', 'Falta el turno.');
+  v.exigir(motivo.length >= 3, 'motivo', 'Escriba por qué se cancela el turno.');
+  if (v.hayErrores) return v.resultado;
+
+  return ejecutar('/panel/agenda', () => cancelarCita(idCita!, motivo.slice(0, 300)));
+}
+
+/** Confirmar un turno pendiente, o marcar que el cliente no vino. */
+export async function cambiarEstadoTurno(
+  idCita: number,
+  estado: 'confirmado' | 'no_asistio',
+): Promise<ResultadoAccion> {
+  await exigirSesion();
+  return ejecutar('/panel/agenda', () => cambiarEstadoCita(idCita, estado));
 }

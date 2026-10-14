@@ -56,6 +56,8 @@ export {
   obtenerCita,
   crearCita,
   cambiarEstadoCita,
+  reprogramarCita,
+  cancelarCita,
   hayConflictoHorario,
   completarCita,
   registrarProductosUtilizados,

@@ -315,6 +315,7 @@ export function agendaDemo(fecha: string): CitaCompleta[] {
       fecha_hora: inicioIso,
       estado: t.estado,
       observaciones: null,
+      motivo_cancelacion: t.estado === 'cancelado' ? 'El cliente avisó que no podía venir' : null,
       // Una cita cancelada o no asistida no factura.
       total: t.estado === 'cancelado' || t.estado === 'no_asistio' ? 0 : total,
       created_at: inicioIso,

@@ -12,6 +12,7 @@ import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { ErrorAplicacion, traducirError } from '../errores';
 import { rechazarSiEsDemo } from '../compartido/escritura';
+import { instanteDeHoraLocal } from '../compartido/fechas';
 import { coincideTexto } from '../compartido/filtros';
 import { uno } from '../compartido/relaciones';
 import { usuarioActual } from './sesion';
@@ -24,7 +25,7 @@ import { usuarioActual } from './sesion';
  * un dia con cuarenta turnos disparaba mas de ochenta consultas.
  */
 const SELECCION_CITA = `
-  id_cita, id_cliente, id_usuario, fecha_hora, estado, observaciones, total,
+  id_cita, id_cliente, id_usuario, fecha_hora, estado, observaciones, motivo_cancelacion, total,
   created_at, updated_at,
   clientes ( id_cliente, nombre, telefono ),
   detalle_cita (
@@ -42,6 +43,7 @@ interface FilaCruda {
   fecha_hora: string;
   estado: CitaCompleta['estado'];
   observaciones: string | null;
+  motivo_cancelacion: string | null;
   total: number;
   created_at: string;
   updated_at: string;
@@ -83,6 +85,7 @@ function componer(fila: FilaCruda): CitaCompleta {
     fecha_hora: fila.fecha_hora,
     estado: fila.estado,
     observaciones: fila.observaciones,
+    motivo_cancelacion: fila.motivo_cancelacion,
     total: fila.total,
     created_at: fila.created_at,
     updated_at: fila.updated_at,
@@ -216,8 +219,10 @@ export async function hayConflictoHorario(params: {
  * decir que el cliente se agendo solo, sin que interviniera nadie de la
  * barberia. Por eso importa que aca no lo este.
  */
-export async function crearCita(entrada: EntradaNuevaCita): Promise<number> {
+export async function crearCita(datosCita: EntradaNuevaCita): Promise<number> {
   rechazarSiEsDemo();
+  // El panel entrega la hora de la barberia sin zona; la base la tomaria como UTC.
+  const entrada = { ...datosCita, fechaHora: instanteDeHoraLocal(datosCita.fechaHora) };
 
   const supabase = await clienteServidor();
   const gestiona = await usuarioActual();
@@ -330,6 +335,48 @@ export async function cambiarEstadoCita(
   const { error } = await supabase.from('citas').update({ estado }).eq('id_cita', idCita);
 
   if (error) throw traducirError(error);
+}
+
+/**
+ * Cambia la hora de un turno vigente (CU-006 4a, 15/10/2026). Las reglas -que
+ * no quede en el pasado, dentro del horario de atencion y sin pisar otro turno
+ * del mismo barbero (RN-015)- las aplica la base: `trg_cita_validar` y
+ * `trg_cita_reprogramar` (migracion 20261015120000). Al cliente con cuenta le
+ * llega el aviso push de «su turno cambio» (`trg_cita_avisar_cliente`).
+ */
+export async function reprogramarCita(
+  idCita: number,
+  fechaHora: string,
+  observaciones: string | null,
+): Promise<void> {
+  rechazarSiEsDemo();
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase
+    .from('citas')
+    .update({ fecha_hora: instanteDeHoraLocal(fechaHora), observaciones })
+    .eq('id_cita', idCita)
+    .in('estado', ['pendiente', 'confirmado'])
+    .select('id_cita');
+  if (error) throw traducirError(error);
+  if (!data?.length) throw new ErrorAplicacion('Solo se puede cambiar un turno pendiente o confirmado.');
+}
+
+/**
+ * Cancela un turno con su motivo (CU-006 4b). Un turno completado o ya
+ * cancelado no cambia: lo impide `trg_cita_inmutable` (RN-018), y aca se
+ * filtra por estado para dar un mensaje claro en vez del error del disparador.
+ */
+export async function cancelarCita(idCita: number, motivo: string): Promise<void> {
+  rechazarSiEsDemo();
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase
+    .from('citas')
+    .update({ estado: 'cancelado', motivo_cancelacion: motivo })
+    .eq('id_cita', idCita)
+    .in('estado', ['pendiente', 'confirmado', 'en_proceso'])
+    .select('id_cita');
+  if (error) throw traducirError(error);
+  if (!data?.length) throw new ErrorAplicacion('Ese turno ya no se puede cancelar.');
 }
 
 /**

@@ -30,10 +30,20 @@ import {
   hora,
 } from '@barber-shop/ui';
 
+import Link from 'next/link';
+
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { FormularioTurno } from '@/componentes/agenda/formulario-turno';
 import { PanelCierreServicio } from '@/componentes/agenda/panel-cierre-servicio';
+import { PanelDetalleCita } from '@/componentes/agenda/panel-detalle-cita';
+import {
+  CalendarioMes,
+  CalendarioSemana,
+  limitesMes,
+  lunesDe,
+  sumarDias,
+} from '@/componentes/agenda/calendario-agenda';
 import { FiltroFecha } from '@/componentes/agenda/filtro-fecha';
 import {
   fecha as leerFecha,
@@ -54,7 +64,11 @@ const ETIQUETAS_ESTADO = Object.fromEntries(
 );
 
 /**
- * CU-005 (registrar) y CU-006 (modificar y cancelar) — Agenda de turnos. Vista diaria.
+ * CU-005 (registrar) y CU-006 (modificar y cancelar) — Agenda de turnos.
+ *
+ * Tres vistas (15/10/2026): Día -la tabla, con el detalle de cada turno y sus
+ * acciones-, Semana y Mes (vistas 38 y 39 del anexo). La vista viaja en la URL
+ * junto con la fecha y el barbero.
  *
  * La fecha viaja en la URL para que un día concreto se pueda compartir por
  * enlace. Sin parámetro, se muestra el día de hoy en hora de Asunción.
@@ -77,12 +91,30 @@ export default async function PaginaAgenda({
   const dia = leerFecha(params, 'fecha') ?? hoyEnAsuncion();
   const estados = lista(params, 'estado') as EstadoCita[] | undefined;
   const barbero = texto(params, 'barbero');
+  const vista = params.vista === 'semana' || params.vista === 'mes' ? params.vista : 'dia';
+  const rango =
+    vista === 'semana'
+      ? { desde: lunesDe(dia), hasta: sumarDias(lunesDe(dia), 6) }
+      : vista === 'mes'
+        ? limitesMes(dia)
+        : { desde: dia, hasta: dia };
+  const hoy = hoyEnAsuncion();
+
+  /** Enlace a otra vista o fecha, conservando el barbero elegido. */
+  const enlace = (cambios: { vista?: string; fecha?: string }) => {
+    const p = new URLSearchParams();
+    const v = cambios.vista ?? vista;
+    if (v !== 'dia') p.set('vista', v);
+    p.set('fecha', cambios.fecha ?? dia);
+    if (barbero) p.set('barbero', barbero);
+    return `/panel/agenda?${p.toString()}`;
+  };
 
   const [barberos, citas, clientes, servicios] = await Promise.all([
     listarProfesionales().catch(() => []),
     listarAgenda({
-      desde: dia,
-      hasta: dia,
+      desde: rango.desde,
+      hasta: rango.hasta,
       estados,
       idProfesional: barbero ? Number(barbero) : undefined,
       busqueda: texto(params, 'q'),
@@ -103,7 +135,13 @@ export default async function PaginaAgenda({
     <>
       <EncabezadoVista
         titulo="Agenda"
-        descripcion={fechaLarga(`${dia}T12:00:00`)}
+        descripcion={
+          vista === 'dia'
+            ? fechaLarga(`${dia}T12:00:00`)
+            : vista === 'semana'
+              ? `Semana del ${fechaLarga(`${rango.desde}T12:00:00`)}`
+              : 'Mes completo'
+        }
         accion={
           <FormularioTurno
             clientes={clientes?.datos ?? []}
@@ -114,9 +152,58 @@ export default async function PaginaAgenda({
         }
       />
 
+      {/* Día, Semana o Mes. Enlaces y no pestañas de cliente: cambian la
+          consulta del servidor y conservan la fecha y el barbero. */}
+      <nav aria-label="Vista de la agenda" className="mb-6 flex flex-wrap items-center gap-3">
+        <div className="border-borde-sutil bg-superficie inline-flex rounded-md border p-1">
+          {(
+            [
+              ['dia', 'Día'],
+              ['semana', 'Semana'],
+              ['mes', 'Mes'],
+            ] as const
+          ).map(([v, etiqueta]) => (
+            <Link
+              key={v}
+              href={enlace({ vista: v })}
+              aria-current={vista === v ? 'page' : undefined}
+              className={
+                vista === v
+                  ? 'text-cuerpo-sm inline-flex h-9 items-center rounded-sm bg-[var(--chip-marca-fondo)] px-4 font-medium text-[var(--chip-marca-texto)]'
+                  : 'text-cuerpo-sm text-secundario hover:text-principal hover:bg-elevado inline-flex h-9 items-center rounded-sm px-4 font-medium'
+              }
+            >
+              {etiqueta}
+            </Link>
+          ))}
+        </div>
+        {vista !== 'dia' && (
+          <div className="flex items-center gap-2">
+            <Link
+              href={enlace({ fecha: vista === 'semana' ? sumarDias(rango.desde, -7) : sumarDias(`${dia.slice(0, 7)}-01`, -1) })}
+              className="text-cuerpo-sm text-secundario hover:text-principal border-borde-control inline-flex h-9 items-center rounded-md border px-3"
+            >
+              ← {vista === 'semana' ? 'Semana anterior' : 'Mes anterior'}
+            </Link>
+            <Link
+              href={enlace({ fecha: hoy })}
+              className="text-cuerpo-sm text-secundario hover:text-principal border-borde-control inline-flex h-9 items-center rounded-md border px-3"
+            >
+              Hoy
+            </Link>
+            <Link
+              href={enlace({ fecha: vista === 'semana' ? sumarDias(rango.desde, 7) : sumarDias(`${dia.slice(0, 7)}-01`, 32).slice(0, 8) + '01' })}
+              className="text-cuerpo-sm text-secundario hover:text-principal border-borde-control inline-flex h-9 items-center rounded-md border px-3"
+            >
+              {vista === 'semana' ? 'Semana siguiente' : 'Mes siguiente'} →
+            </Link>
+          </div>
+        )}
+      </nav>
+
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         {[
-          ['Turnos del día', String(citas.length)],
+          [vista === 'dia' ? 'Turnos del día' : vista === 'semana' ? 'Turnos de la semana' : 'Turnos del mes', String(citas.length)],
           ['Completados', String(citas.filter((c) => c.estado === 'completado').length)],
           ['Facturado', guaranies(facturado)],
         ].map(([etiqueta, valor]) => (
@@ -133,7 +220,7 @@ export default async function PaginaAgenda({
 
       <Tarjeta>
         <BarraFiltros
-          fijos={<FiltroFecha valor={dia} />}
+          fijos={vista === 'dia' ? <FiltroFecha valor={dia} /> : undefined}
           busqueda={<CampoBusqueda placeholder="Cliente, teléfono o servicio" />}
           avanzados={
             <>
@@ -155,7 +242,7 @@ export default async function PaginaAgenda({
           // explícitos para que el reporte exporte el día que se está
           // viendo, no el mes entero.
           acciones={
-            <BotonExportar tipo="agenda" searchParams={{ ...params, desde: dia, hasta: dia }} />
+            <BotonExportar tipo="agenda" searchParams={{ ...params, desde: rango.desde, hasta: rango.hasta }} />
           }
         />
 
@@ -174,6 +261,19 @@ export default async function PaginaAgenda({
           }}
         />
 
+        {vista === 'semana' && (
+          <div className="p-4">
+            <CalendarioSemana desde={rango.desde} citas={citas} hoy={hoy} barbero={barbero} />
+          </div>
+        )}
+        {vista === 'mes' && (
+          <div className="p-4">
+            <CalendarioMes fecha={dia} citas={citas} hoy={hoy} barbero={barbero} />
+          </div>
+        )}
+
+        {vista === 'dia' && (
+        <>
         <Tabla titulo={`Turnos agendados para el ${dia}`}>
           <TablaEncabezado>
             <Th>Hora</Th>
@@ -218,11 +318,14 @@ export default async function PaginaAgenda({
                     <ChipEstado presentacion={PRESENTACION_CITA[c.estado]} />
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    {(c.estado === 'pendiente' ||
-                      c.estado === 'confirmado' ||
-                      c.estado === 'en_proceso') && (
-                      <PanelCierreServicio idCita={c.id_cita} nombreCliente={c.cliente.nombre} />
-                    )}
+                    <span className="inline-flex items-center gap-1">
+                      <PanelDetalleCita cita={c} />
+                      {(c.estado === 'pendiente' ||
+                        c.estado === 'confirmado' ||
+                        c.estado === 'en_proceso') && (
+                        <PanelCierreServicio idCita={c.id_cita} nombreCliente={c.cliente.nombre} />
+                      )}
+                    </span>
                   </Td>
                 </Tr>
               ))
@@ -230,6 +333,8 @@ export default async function PaginaAgenda({
           </TablaCuerpo>
         </Tabla>
         <Paginacion {...pagCitas.paginacion} />
+        </>
+        )}
       </Tarjeta>
     </>
   );

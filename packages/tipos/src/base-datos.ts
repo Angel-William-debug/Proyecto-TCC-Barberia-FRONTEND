@@ -222,6 +222,8 @@ export interface Cita extends AuditoriaTemporal, BorradoLogico {
   fecha_hora: string;
   estado: EstadoCita;
   observaciones: string | null;
+  /** Por que se cancelo (CU-006 4b). Lo completa el panel al cancelar. */
+  motivo_cancelacion: string | null;
   /** Lo calcula el trigger `trg_detalle_cita_after_insert`. No enviarlo al crear. */
   total: number;
 }
