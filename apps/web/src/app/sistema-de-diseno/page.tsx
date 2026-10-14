@@ -298,6 +298,27 @@ export default function PaginaSistemaDeDiseno() {
               error="Ingrese un correo con el formato nombre@dominio.com"
             />
             <Campo etiqueta="Campo deshabilitado" defaultValue="No editable" disabled />
+            {/* 8/10/2026: toda contraseña lleva el ojo para mostrarla u ocultarla. */}
+            <Campo
+              etiqueta="Contraseña"
+              type="password"
+              defaultValue="BarberTCC2026"
+              ayuda="El ojo muestra u oculta lo escrito"
+            />
+          </div>
+
+          {/* 14/10/2026: la valoración del cliente, como la muestra el Ranking. */}
+          <div className="border-borde-sutil mt-6 flex flex-wrap items-center gap-6 border-t pt-6">
+            <p className="text-cuerpo-sm text-secundario">Valoración de un turno</p>
+            <span className="text-2xl leading-none" aria-label="4 de 5 estrellas">
+              <span className="text-marca">★★★★</span>
+              <span className="text-deshabilitado">★</span>
+            </span>
+            <span className="text-cuerpo tabular-nums">
+              <span className="text-marca" aria-hidden="true">★ </span>4,6
+              <span className="text-terciario text-cuerpo-sm"> (21)</span>
+            </span>
+            <span className="text-cuerpo-sm text-terciario">Sin calificar</span>
           </div>
         </Seccion>
 
