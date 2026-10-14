@@ -24,7 +24,7 @@ import { CATEGORIAS_PRODUCTO_DEMO, PRODUCTOS_DEMO } from '../demo/datos-catalogo
 import { MOVIMIENTOS_DEMO } from '../demo/datos-operacion';
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
-import { traducirError } from '../errores';
+import { ErrorAplicacion, traducirError } from '../errores';
 import { actualizar, crear, rechazarSiEsDemo } from '../compartido/escritura';
 import { coincideEstado, coincideTexto, entreFechas, type FiltroTabla } from '../compartido/filtros';
 import { uno } from '../compartido/relaciones';
@@ -94,6 +94,8 @@ export async function listarProductosConNivel(
 export interface FiltroMovimientos extends FiltroTabla {
   /** `entrada`, `salida` o `ajuste`. */
   tipos?: string[];
+  /** Solo los de un producto (detalle del producto, vista 65). */
+  idProducto?: number;
 }
 
 export async function listarMovimientos(
@@ -118,6 +120,7 @@ export async function listarMovimientos(
     .limit(200);
 
   if (filtro.tipos?.length) consulta = consulta.in('tipo', filtro.tipos);
+  if (filtro.idProducto) consulta = consulta.eq('id_producto', filtro.idProducto);
   if (filtro.desde) consulta = consulta.gte('fecha', `${filtro.desde}T00:00:00`);
   if (filtro.hasta) consulta = consulta.lte('fecha', `${filtro.hasta}T23:59:59`);
 
@@ -313,4 +316,41 @@ export async function actualizarLineaReceta(
   entrada: EntradaLineaReceta,
 ): Promise<void> {
   return actualizar('servicio_producto', id, filaLineaReceta(entrada));
+}
+
+// ---------------------------------------------------------------------------
+// Movimientos cargados a mano (vistas 66 y 67): entrada sin orden de compra,
+// salida por merma o rotura, y ajuste despues de contar la estanteria. El
+// stock y el movimiento cambian juntos en `fn_movimiento_manual`.
+// ---------------------------------------------------------------------------
+
+export type TipoMovimientoManual = 'entrada' | 'salida' | 'ajuste';
+
+/**
+ * Registra el movimiento y devuelve el stock que queda. En un ajuste,
+ * `cantidad` es lo que se conto, no la diferencia.
+ */
+export async function registrarMovimientoManual(
+  idProducto: number,
+  tipo: TipoMovimientoManual,
+  cantidad: number,
+  motivo: string,
+): Promise<number> {
+  rechazarSiEsDemo();
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase.rpc('fn_movimiento_manual', {
+    p_id_producto: idProducto,
+    p_tipo: tipo,
+    p_cantidad: cantidad,
+    p_motivo: motivo,
+  });
+  if (error) {
+    // RN-031 se traduce pensando en el cierre de un servicio, que ofrece
+    // confirmar la excepcion. Una salida manual no la ofrece.
+    if (/RN-031/.test(error.message)) {
+      throw new ErrorAplicacion('No hay tanto stock para dar de baja.', 'RN-031', error);
+    }
+    throw traducirError(error);
+  }
+  return Number(data);
 }

@@ -1,14 +1,26 @@
 /** Accion de servidor de las compras (CU-017). */
 'use server';
 
+import { revalidatePath } from 'next/cache';
+
 import {
   actualizarProveedor,
+  cancelarPedido,
   crearPagoProveedor,
   crearPedido,
   crearProveedor,
+  ErrorAplicacion,
   exigirSesion,
+  listarPedidos,
+  obtenerPedido,
+  recibirPedido,
 } from '@barber-shop/api';
-import { ESTADOS_PEDIDO, type EstadoPedido } from '@barber-shop/tipos';
+import {
+  ESTADOS_PEDIDO,
+  type EstadoPedido,
+  type PedidoDeLista,
+  type PedidoDetalle,
+} from '@barber-shop/tipos';
 
 import {
   CORREO,
@@ -123,4 +135,45 @@ export async function guardarProveedor(datos: FormData): Promise<ResultadoAccion
   return ejecutar('/panel/compras', () =>
     id ? actualizarProveedor(id, entrada) : crearProveedor(entrada),
   );
+}
+
+// ---------------------------------------------------------------------------
+// Detalle de la orden y su ciclo (vistas 75 y 76), y las ordenes de un
+// proveedor (vista 72). Las lecturas devuelven el error como dato, igual que
+// las escrituras, para que el panel lo muestre.
+// ---------------------------------------------------------------------------
+
+type Lectura<T> = { ok: true; datos: T } | { ok: false; error: string };
+
+async function leer<T>(consulta: () => Promise<T>): Promise<Lectura<T>> {
+  await exigirSesion();
+  try {
+    return { ok: true, datos: await consulta() };
+  } catch (causa) {
+    return {
+      ok: false,
+      error: causa instanceof ErrorAplicacion ? causa.message : 'No se pudo cargar. Intente de nuevo.',
+    };
+  }
+}
+
+export async function obtenerDetalleOrden(idPedido: number): Promise<Lectura<PedidoDetalle>> {
+  return leer(() => obtenerPedido(idPedido));
+}
+
+export async function ordenesDelProveedor(nombre: string): Promise<Lectura<PedidoDeLista[]>> {
+  return leer(() => listarPedidos({ proveedor: nombre }));
+}
+
+/** La mercaderia llego. Dispara la entrada de stock. */
+export async function recibirOrden(idPedido: number): Promise<ResultadoAccion> {
+  await exigirSesion();
+  const r = await ejecutar('/panel/compras', () => recibirPedido(idPedido));
+  if (r.ok) revalidatePath('/panel/inventario');
+  return r;
+}
+
+export async function cancelarOrden(idPedido: number): Promise<ResultadoAccion> {
+  await exigirSesion();
+  return ejecutar('/panel/compras', () => cancelarPedido(idPedido));
 }

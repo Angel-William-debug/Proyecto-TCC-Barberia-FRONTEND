@@ -39,6 +39,8 @@ import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { FormularioOrdenCompra } from '@/componentes/compras/formulario-orden-compra';
 import { FormularioPagoProveedor } from '@/componentes/compras/formulario-pago-proveedor';
 import { FormularioProveedor } from '@/componentes/compras/formulario-proveedor';
+import { PanelDetalleOrden } from '@/componentes/compras/panel-detalle-orden';
+import { PanelDetalleProveedor } from '@/componentes/compras/panel-detalle-proveedor';
 import {
   comunes,
   fecha,
@@ -177,10 +179,11 @@ export default async function PaginaCompras({
             <Th numerico>Ítems</Th>
             <Th numerico>Total</Th>
             <Th>Estado</Th>
+            <Th><span className="solo-lectores">Acciones</span></Th>
           </TablaEncabezado>
           <TablaCuerpo>
             {pedidos.length === 0 ? (
-              <TdCompleta colSpan={7}>
+              <TdCompleta colSpan={8}>
                 <EstadoVacio
                   icono="clipboard-list"
                   titulo="No se encontraron órdenes"
@@ -200,6 +203,9 @@ export default async function PaginaCompras({
                   <Td numerico etiqueta="Total">{guaranies(p.total)}</Td>
                   <Td etiqueta="Estado">
                     <ChipEstado presentacion={PRESENTACION_PEDIDO[p.estado]} />
+                  </Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    <PanelDetalleOrden idPedido={p.id_pedido} />
                   </Td>
                 </Tr>
               ))
@@ -260,6 +266,7 @@ export default async function PaginaCompras({
                   <Td className="text-secundario" etiqueta="Dirección">{p.direccion ?? '—'}</Td>
                   <Td etiqueta="Acciones" className="text-right">
                     <div className="flex justify-end gap-1">
+                      <PanelDetalleProveedor proveedor={p} />
                       <FormularioProveedor proveedor={p} />
                       <BotonBorrar tabla="proveedores" id={p.id_proveedor} nombre={p.nombre} />
                     </div>

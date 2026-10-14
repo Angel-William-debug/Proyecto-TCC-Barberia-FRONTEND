@@ -71,6 +71,41 @@ const REGLAS_DE_NEGOCIO: Array<{ patron: RegExp; mensaje: string; regla: string 
     mensaje: 'El stock disponible no alcanza. Confirme la excepcion para continuar.',
     regla: 'RN-031',
   },
+  {
+    patron: /RN-015/,
+    mensaje: 'El barbero ya tiene otro turno en ese horario.',
+    regla: 'RN-015',
+  },
+  {
+    patron: /CU-020: la barberia no atiende/,
+    mensaje: 'La barberia no atiende ese dia.',
+    regla: 'CU-020',
+  },
+  {
+    patron: /CU-020/,
+    mensaje: 'Ese horario queda fuera del horario de atencion de la barberia.',
+    regla: 'CU-020',
+  },
+  {
+    patron: /No se puede mover un turno al pasado/,
+    mensaje: 'No se puede mover un turno a un momento que ya paso.',
+    regla: 'CU-006',
+  },
+  {
+    patron: /MOV-001/,
+    mensaje: 'Indique el motivo del movimiento.',
+    regla: 'MOV-001',
+  },
+  {
+    patron: /MOV-002/,
+    mensaje: 'La cantidad debe ser mayor a cero.',
+    regla: 'MOV-002',
+  },
+  {
+    patron: /MOV-003/,
+    mensaje: 'El conteo coincide con el stock del sistema: no hay nada que ajustar.',
+    regla: 'MOV-003',
+  },
 ];
 
 /** Restricciones cuyo nombre identifica el problema con precision. */

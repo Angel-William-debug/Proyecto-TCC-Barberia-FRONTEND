@@ -10,10 +10,12 @@ import {
   crearProducto,
   exigirSesion,
   listarAlertas,
+  listarMovimientos,
   listarRecetaServicio,
   marcarAlertaResuelta,
+  registrarMovimientoManual,
 } from '@barber-shop/api';
-import type { AlertaDeLista, RecetaLinea } from '@barber-shop/tipos';
+import type { AlertaDeLista, MovimientoDeLista, RecetaLinea } from '@barber-shop/tipos';
 
 import { Validacion, booleano, ejecutar, numero, texto, textoOpcional } from './base';
 import type { ResultadoAccion } from './base';
@@ -134,4 +136,38 @@ export async function guardarProducto(datos: FormData): Promise<ResultadoAccion>
   return ejecutar('/panel/inventario', () =>
     id ? actualizarProducto(id, entrada) : crearProducto(entrada),
   );
+}
+
+// ---------------------------------------------------------------------------
+// Detalle del producto y movimientos a mano (vistas 65, 66 y 67).
+// ---------------------------------------------------------------------------
+
+export async function movimientosDelProducto(idProducto: number): Promise<MovimientoDeLista[]> {
+  await exigirSesion();
+  return listarMovimientos({ idProducto }).catch(() => []);
+}
+
+const TIPOS_MANUALES = ['entrada', 'salida', 'ajuste'] as const;
+
+export async function guardarMovimiento(datos: FormData): Promise<ResultadoAccion> {
+  await exigirSesion();
+  const idProducto = numero(datos, 'id_producto');
+  const tipo = texto(datos, 'tipo') as (typeof TIPOS_MANUALES)[number];
+  const cantidad = numero(datos, 'cantidad');
+  const motivo = texto(datos, 'motivo');
+
+  const v = new Validacion();
+  v.exigir(idProducto !== null, 'id_producto', 'Falta el producto.');
+  v.exigir(TIPOS_MANUALES.includes(tipo), 'tipo', 'Elija qué tipo de movimiento es.');
+  v.exigir(
+    cantidad !== null && (tipo === 'ajuste' ? cantidad >= 0 : cantidad > 0),
+    'cantidad',
+    tipo === 'ajuste' ? 'Indique cuánto contó.' : 'Indique una cantidad mayor a cero.',
+  );
+  v.exigir(motivo.length >= 3, 'motivo', 'Escriba el motivo.');
+  if (v.hayErrores) return v.resultado;
+
+  return ejecutar('/panel/inventario', async () => {
+    await registrarMovimientoManual(idProducto!, tipo, cantidad!, motivo.slice(0, 300));
+  });
 }

@@ -9,6 +9,7 @@ import type {
   EstadoPedido,
   PagoProveedorDeLista,
   PedidoDeLista,
+  PedidoDetalle,
   PedidoPendientePago,
   Proveedor,
 } from '@barber-shop/tipos';
@@ -20,6 +21,7 @@ import { ErrorAplicacion, traducirError } from '../errores';
 import { coincideEstado, coincideTexto, entreFechas, type FiltroTabla } from '../compartido/filtros';
 import { actualizar, crear, rechazarSiEsDemo } from '../compartido/escritura';
 import { uno } from '../compartido/relaciones';
+import { usuarioActual } from './sesion';
 
 export async function listarProveedores(filtro: FiltroTabla = {}): Promise<Proveedor[]> {
   // El marcador de la busqueda promete nombre, correo o telefono; antes la
@@ -126,11 +128,15 @@ export async function crearPedido(entrada: EntradaNuevoPedido): Promise<number> 
   }
 
   const supabase = await clienteServidor();
+  // Quien carga la orden queda en ella; la entrada de stock al recibirla
+  // toma ese usuario para el movimiento.
+  const usuario = await usuarioActual();
 
   const { data: pedido, error: errorPedido } = await supabase
     .from('pedidos')
     .insert({
       id_proveedor: entrada.idProveedor,
+      id_usuario: usuario?.idUsuario ?? null,
       fecha_pedido: entrada.fechaPedido,
       estado: entrada.estado,
     })
@@ -297,4 +303,86 @@ export async function crearProveedor(entrada: EntradaProveedor): Promise<number>
 /** Edicion de un proveedor (CU-016). */
 export async function actualizarProveedor(id: number, entrada: EntradaProveedor): Promise<void> {
   return actualizar('proveedores', id, { ...entrada });
+}
+
+// ---------------------------------------------------------------------------
+// Detalle de una orden y su ciclo (vistas 75 y 76). Una orden se crea como
+// «pedido» y mas tarde, cuando llega la mercaderia, se marca recibida: ese
+// paso dispara la entrada de stock (fn_trg_pedido_recibido). Antes no habia
+// forma de darlo desde la pantalla, y una orden cargada como pedido quedaba
+// asi para siempre.
+// ---------------------------------------------------------------------------
+
+export async function obtenerPedido(idPedido: number): Promise<PedidoDetalle> {
+  rechazarSiEsDemo();
+  const supabase = await clienteServidor();
+
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select(
+      `id_pedido, fecha_pedido, fecha_recepcion, estado, total,
+       proveedores ( nombre, telefono ),
+       detalle_pedido ( id_detalle_pedido, cantidad, precio_unit, subtotal, productos ( nombre, unidad_medida ) ),
+       pagos_proveedor ( monto, estado )`,
+    )
+    .eq('id_pedido', idPedido)
+    .eq('deleted', false)
+    .single();
+
+  if (error) throw traducirError(error);
+
+  const proveedor = uno<{ nombre: string; telefono: string | null }>(data.proveedores);
+  const lineas = (Array.isArray(data.detalle_pedido) ? data.detalle_pedido : []).map((l) => {
+    const producto = uno<{ nombre: string; unidad_medida: string | null }>(l.productos);
+    return {
+      id_detalle_pedido: l.id_detalle_pedido,
+      nombre_producto: producto?.nombre ?? 'Producto eliminado',
+      unidad_medida: producto?.unidad_medida ?? null,
+      cantidad: Number(l.cantidad),
+      precio_unit: Number(l.precio_unit),
+      subtotal: Number(l.subtotal),
+    };
+  });
+  const pagos = Array.isArray(data.pagos_proveedor) ? data.pagos_proveedor : [];
+
+  return {
+    id_pedido: data.id_pedido,
+    nombre_proveedor: proveedor?.nombre ?? 'Proveedor eliminado',
+    telefono_proveedor: proveedor?.telefono ?? null,
+    fecha_pedido: data.fecha_pedido,
+    fecha_recepcion: data.fecha_recepcion,
+    cantidad_items: lineas.length,
+    estado: data.estado,
+    total: Number(data.total),
+    lineas,
+    pagado: pagos
+      .filter((p: { estado: string }) => p.estado === 'pagado')
+      .reduce((suma: number, p: { monto: number }) => suma + Number(p.monto), 0),
+  };
+}
+
+/** Cambia el estado solo si la orden sigue en «pedido»; si no, avisa. */
+async function cerrarPedido(idPedido: number, cambios: Record<string, unknown>): Promise<void> {
+  rechazarSiEsDemo();
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase
+    .from('pedidos')
+    .update(cambios)
+    .eq('id_pedido', idPedido)
+    .eq('estado', 'pedido')
+    .select('id_pedido');
+  if (error) throw traducirError(error);
+  if (!data?.length) {
+    throw new ErrorAplicacion('Esa orden ya no esta pendiente: alguien la recibio o la cancelo.');
+  }
+}
+
+/** La mercaderia llego: la orden pasa a recibida y el stock entra solo. */
+export async function recibirPedido(idPedido: number): Promise<void> {
+  return cerrarPedido(idPedido, { estado: 'recibido', fecha_recepcion: new Date().toISOString() });
+}
+
+/** El proveedor no la va a entregar. No mueve stock. */
+export async function cancelarPedido(idPedido: number): Promise<void> {
+  return cerrarPedido(idPedido, { estado: 'cancelado' });
 }

@@ -176,6 +176,20 @@ export interface PedidoDeLista {
   total: number;
 }
 
+/** Una orden con su detalle y sus pagos (vista 75). */
+export interface PedidoDetalle extends PedidoDeLista {
+  telefono_proveedor: string | null;
+  lineas: Array<{
+    id_detalle_pedido: number;
+    nombre_producto: string;
+    unidad_medida: string | null;
+    cantidad: number;
+    precio_unit: number;
+    subtotal: number;
+  }>;
+  pagado: number;
+}
+
 /** CU-018 — pago al proveedor. */
 export interface PagoProveedorDeLista {
   id_pago_prov: number;

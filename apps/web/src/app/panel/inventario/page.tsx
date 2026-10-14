@@ -37,6 +37,7 @@ import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { BotonResolverAlerta } from '@/componentes/inventario/boton-resolver-alerta';
 import { FormularioCategoriaProducto } from '@/componentes/inventario/formulario-categoria-producto';
 import { FormularioProducto } from '@/componentes/inventario/formulario-producto';
+import { PanelProducto } from '@/componentes/inventario/panel-producto';
 import { comunes, fecha, lista, paginarFilas, texto, type Parametros } from '@/lib/filtros';
 
 export const metadata = { title: 'Inventario' };
@@ -105,6 +106,12 @@ export default async function PaginaInventario({
     ajuste: 'arrow-left-right',
   } as const;
 
+  const nombreCategoria = new Map(categorias.map((c) => [c.id_categoria_p, c.nombre]));
+  const productosPorCategoria = new Map<number, number>();
+  for (const p of productos) {
+    productosPorCategoria.set(p.id_categoria_p, (productosPorCategoria.get(p.id_categoria_p) ?? 0) + 1);
+  }
+
   const pagProductos = paginarFilas(productos, params);
   const pagMovimientos = paginarFilas(movimientos, params, 'pagina_movimientos');
 
@@ -114,10 +121,7 @@ export default async function PaginaInventario({
         titulo="Inventario"
         descripcion={`${plural(productos.length, 'producto', 'productos')} en el catálogo`}
         accion={
-          <div className="flex items-center gap-2">
-            <FormularioCategoriaProducto />
-            <FormularioProducto categorias={categorias} />
-          </div>
+          <FormularioProducto categorias={categorias} />
         }
       />
 
@@ -204,6 +208,7 @@ export default async function PaginaInventario({
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
                     <div className="flex justify-end gap-1">
+                      <PanelProducto producto={p} categoria={nombreCategoria.get(p.id_categoria_p) ?? null} />
                       <FormularioProducto producto={p} categorias={categorias} />
                       <BotonBorrar tabla="productos" id={p.id_producto} nombre={p.nombre} />
                     </div>
@@ -214,6 +219,49 @@ export default async function PaginaInventario({
           </TablaCuerpo>
         </Tabla>
         <Paginacion {...pagProductos.paginacion} />
+      </Tarjeta>
+
+      {/* Vistas 61 y 62: antes solo se podía crear una categoría, sin ver las
+          que había ni corregirlas. */}
+      <Tarjeta className="mb-6">
+        <TarjetaEncabezado
+          titulo="Categorías de producto"
+          descripcion="Agrupan el catálogo en el formulario del producto"
+          accion={<FormularioCategoriaProducto />}
+        />
+        <Tabla titulo="Categorías de producto">
+          <TablaEncabezado>
+            <Th>Categoría</Th>
+            <Th>Descripción</Th>
+            <Th numerico>Productos</Th>
+            <Th><span className="solo-lectores">Acciones</span></Th>
+          </TablaEncabezado>
+          <TablaCuerpo>
+            {categorias.length === 0 ? (
+              <TdCompleta colSpan={4}>
+                <EstadoVacio
+                  icono="tag"
+                  titulo="Sin categorías"
+                  descripcion="Cree la primera para poder cargar productos."
+                />
+              </TdCompleta>
+            ) : (
+              categorias.map((c) => (
+                <Tr key={c.id_categoria_p}>
+                  <Td className="font-medium" etiqueta="Categoría">{c.nombre}</Td>
+                  <Td className="text-secundario" etiqueta="Descripción">{c.descripcion ?? '—'}</Td>
+                  <Td numerico etiqueta="Productos">{productosPorCategoria.get(c.id_categoria_p) ?? 0}</Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <FormularioCategoriaProducto categoria={c} />
+                      <BotonBorrar tabla="categorias_producto" id={c.id_categoria_p} nombre={c.nombre} />
+                    </div>
+                  </Td>
+                </Tr>
+              ))
+            )}
+          </TablaCuerpo>
+        </Tabla>
       </Tarjeta>
 
       <Tarjeta>
