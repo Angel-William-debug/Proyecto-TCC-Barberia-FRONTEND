@@ -80,6 +80,8 @@ export async function rankingBarberos(filtro: FiltroRanking = {}): Promise<FilaR
         clientesDistintos: [31, 26, 21][i] ?? 9,
         minutosOcupados: [2_040, 1_610, 1_205][i] ?? 500,
         ultimoServicio: null,
+        valoracionPromedio: [4.8, 4.5, 4.9][i] ?? null,
+        valoraciones: [21, 14, 9][i] ?? 0,
         posicion: 0,
       })),
       criterio,
@@ -95,15 +97,25 @@ export async function rankingBarberos(filtro: FiltroRanking = {}): Promise<FilaR
   if (filtro.desde) ocupacion = ocupacion.gte('dia', filtro.desde);
   if (filtro.hasta) ocupacion = ocupacion.lte('dia', filtro.hasta);
 
-  const [resumen, tickets, ocupaciones] = await Promise.all([
+  const [resumen, tickets, ocupaciones, valoraciones] = await Promise.all([
     supabase.from('v_profesionales_resumen').select('*'),
     supabase.from('v_ticket_promedio_barbero').select('*'),
     ocupacion,
+    // Lo que califican los clientes (14/10/2026). Es de todo el historico:
+    // el rango de fechas filtra la actividad, no las opiniones.
+    supabase.from('v_valoracion_por_barbero').select('id_profesional, promedio, cantidad'),
   ]);
 
   if (resumen.error) throw traducirError(resumen.error);
   if (tickets.error) throw traducirError(tickets.error);
   if (ocupaciones.error) throw traducirError(ocupaciones.error);
+  if (valoraciones.error) throw traducirError(valoraciones.error);
+
+  const porValoracion = new Map(
+    ((valoraciones.data ?? []) as Array<{ id_profesional: number; promedio: number; cantidad: number }>).map(
+      (v) => [v.id_profesional, v],
+    ),
+  );
 
   const porTicket = new Map(
     ((tickets.data ?? []) as VistaTicketPromedioBarbero[]).map((t) => [
@@ -133,6 +145,10 @@ export async function rankingBarberos(filtro: FiltroRanking = {}): Promise<FilaR
       clientesDistintos: p.clientes_distintos,
       minutosOcupados: minutos.get(p.id_profesional) ?? 0,
       ultimoServicio: p.ultimo_servicio,
+      valoracionPromedio: porValoracion.has(p.id_profesional)
+        ? Number(porValoracion.get(p.id_profesional)!.promedio)
+        : null,
+      valoraciones: porValoracion.get(p.id_profesional)?.cantidad ?? 0,
       posicion: 0,
     }));
 

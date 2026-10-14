@@ -12,6 +12,7 @@ export const CRITERIOS_RANKING = [
   'ticket',
   'clientes',
   'ocupacion',
+  'valoracion',
 ] as const;
 export type CriterioRanking = (typeof CRITERIOS_RANKING)[number];
 
@@ -21,6 +22,7 @@ export const TITULOS_CRITERIO: Record<CriterioRanking, string> = {
   ticket: 'Ticket promedio',
   clientes: 'Clientes distintos',
   ocupacion: 'Horas ocupadas',
+  valoracion: 'Valoración de los clientes',
 };
 
 export interface FilaRanking {
@@ -36,6 +38,13 @@ export interface FilaRanking {
   /** Suma de `minutos_ocupados` de la agenda, en minutos. */
   minutosOcupados: number;
   ultimoServicio: string | null;
+  /**
+   * Promedio de 1 a 5 de los turnos que los clientes calificaron (14/10/2026,
+   * v_valoracion_por_barbero). `null` si nadie lo califico todavia.
+   */
+  valoracionPromedio: number | null;
+  /** Cuantos turnos calificados entran en ese promedio. */
+  valoraciones: number;
   /** Posición en el criterio elegido, empezando en 1. */
   posicion: number;
 }
@@ -48,4 +57,6 @@ export const valorPorCriterio: Record<CriterioRanking, (f: FilaRanking) => numbe
   ticket: (f) => f.ticketPromedio,
   clientes: (f) => f.clientesDistintos,
   ocupacion: (f) => f.minutosOcupados,
+  // Sin calificaciones va al fondo, no al medio: 0 es menos que cualquier nota.
+  valoracion: (f) => f.valoracionPromedio ?? 0,
 };

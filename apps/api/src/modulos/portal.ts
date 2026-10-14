@@ -607,6 +607,46 @@ export async function actualizarMiPerfil(cambios: CambiosPerfilCliente): Promise
   if (error) throw traducirError(error);
 }
 
+// ---------------------------------------------------------------------------
+// Valoraciones (14/10/2026)
+// ---------------------------------------------------------------------------
+
+export interface MiValoracion {
+  idCita: number;
+  puntaje: number;
+  comentario: string | null;
+}
+
+/** Las calificaciones del cliente, por turno. Por `fn_mis_valoraciones()`. */
+export async function misValoraciones(): Promise<Map<number, MiValoracion>> {
+  if (MODO_DEMO) return new Map();
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase.rpc('fn_mis_valoraciones');
+  if (error) throw traducirError(error);
+  return new Map(
+    ((data ?? []) as Array<{ id_cita: number; puntaje: number; comentario: string | null }>).map((v) => [
+      v.id_cita,
+      { idCita: v.id_cita, puntaje: v.puntaje, comentario: v.comentario },
+    ]),
+  );
+}
+
+/**
+ * El cliente califica un turno suyo ya completado, de 1 a 5, con un
+ * comentario opcional. Volver a calificar lo cambia. Las reglas -que sea
+ * suyo, que este completado- las aplica `fn_valorar_turno()` en la base.
+ */
+export async function valorarTurno(idCita: number, puntaje: number, comentario?: string): Promise<void> {
+  if (MODO_DEMO) throw new ErrorAplicacion('El modo demostracion no guarda cambios.');
+  const supabase = await clienteServidor();
+  const { error } = await supabase.rpc('fn_valorar_turno', {
+    p_id_cita: idCita,
+    p_puntaje: puntaje,
+    p_comentario: comentario?.trim() || null,
+  });
+  if (error) throw traducirError(error);
+}
+
 export async function misFacturas(): Promise<FacturaDelCliente[]> {
   if (MODO_DEMO) return FACTURAS_PORTAL_DEMO;
 

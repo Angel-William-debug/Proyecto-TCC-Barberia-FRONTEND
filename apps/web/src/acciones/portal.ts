@@ -20,6 +20,7 @@ import {
   generarMisRecomendaciones,
   registrarCliente,
   reservarTurno,
+  valorarTurno,
 } from '@barber-shop/api';
 
 import { CORREO, ejecutar, numero, texto, textoOpcional, Validacion, type ResultadoAccion } from './base';
@@ -93,6 +94,19 @@ export async function accionReservarTurno(datos: FormData): Promise<ResultadoAcc
       idProfesional: idProfesional!,
       observaciones: textoOpcional(datos, 'observaciones') ?? undefined,
     }),
+  );
+}
+
+/** El cliente califica un turno completado, de 1 a 5 (14/10/2026). */
+export async function accionValorarTurno(datos: FormData): Promise<ResultadoAccion> {
+  const idCita = numero(datos, 'idCita');
+  const puntaje = numero(datos, 'puntaje');
+  if (idCita == null) return { ok: false, error: 'No se identificó el turno.' };
+  if (puntaje == null || puntaje < 1 || puntaje > 5) {
+    return { ok: false, error: 'Elija de 1 a 5 estrellas.' };
+  }
+  return ejecutar(`${PORTAL}/historial`, () =>
+    valorarTurno(idCita, puntaje, textoOpcional(datos, 'comentario') ?? undefined),
   );
 }
 

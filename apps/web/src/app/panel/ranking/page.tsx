@@ -125,6 +125,7 @@ export default async function Ranking({
               <Th numerico>Facturado</Th>
               <Th numerico>Ticket promedio</Th>
               <Th numerico>Horas ocupadas</Th>
+              <Th numerico>Valoración</Th>
               <Th>Último servicio</Th>
             </TablaEncabezado>
 
@@ -167,6 +168,19 @@ export default async function Ranking({
                   </Td>
                   <Td etiqueta="Horas ocupadas" numerico>
                     {f.minutosOcupados ? duracion(f.minutosOcupados) : '—'}
+                  </Td>
+                  {/* Promedio y cuántas calificaciones lo sostienen: un 5 con
+                      una sola opinión no vale lo mismo que un 4,6 con veinte. */}
+                  <Td etiqueta="Valoración" numerico>
+                    {f.valoracionPromedio != null ? (
+                      <span title={`${f.valoraciones} ${f.valoraciones === 1 ? 'turno calificado' : 'turnos calificados'}`}>
+                        <span className="text-marca" aria-hidden="true">★ </span>
+                        {f.valoracionPromedio.toFixed(1).replace('.', ',')}
+                        <span className="text-terciario text-cuerpo-sm"> ({f.valoraciones})</span>
+                      </span>
+                    ) : (
+                      <span className="text-terciario">Sin calificar</span>
+                    )}
                   </Td>
                   <Td etiqueta="Último servicio">
                     {f.ultimoServicio ? fechaCorta(f.ultimoServicio) : 'Sin servicios'}

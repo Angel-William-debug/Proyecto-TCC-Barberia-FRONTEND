@@ -16,6 +16,7 @@ import { usarColoresChart } from '../graficos/usar-colores-chart';
 function formatearValor(valor: number, criterio: CriterioRanking): string {
   if (criterio === 'facturado' || criterio === 'ticket') return `Gs. ${guaraniesSinSimbolo(valor)}`;
   if (criterio === 'ocupacion') return duracion(valor);
+  if (criterio === 'valoracion') return valor ? `${valor.toFixed(1).replace('.', ',')} de 5` : 'Sin calificar';
   return cantidad(valor);
 }
 

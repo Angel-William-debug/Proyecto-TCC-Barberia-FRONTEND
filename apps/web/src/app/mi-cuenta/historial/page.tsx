@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { misFacturas, misTurnos, MODO_DEMO } from '@barber-shop/api';
+import { misFacturas, misTurnos, misValoraciones, MODO_DEMO } from '@barber-shop/api';
 import {
   ChipEstado,
   EstadoVacio,
@@ -10,6 +10,8 @@ import {
   guaranies,
   hora,
 } from '@barber-shop/ui';
+
+import { CalificarTurno } from '@/componentes/portal/calificar-turno';
 
 export const metadata = {
   title: 'Historial',
@@ -29,7 +31,11 @@ export const metadata = {
  * tarjeta.
  */
 export default async function Historial() {
-  const [{ pasados }, facturas] = await Promise.all([misTurnos(), misFacturas()]);
+  const [{ pasados }, facturas, valoraciones] = await Promise.all([
+    misTurnos(),
+    misFacturas(),
+    misValoraciones(),
+  ]);
 
   return (
     <div className="mt-2 flex flex-col gap-10">
@@ -91,6 +97,14 @@ export default async function Historial() {
                 <p className="text-cuerpo text-principal w-24 text-right font-medium tabular-nums">
                   {guaranies(t.total)}
                 </p>
+
+                {/* Solo los completados se califican: uno cancelado o al que no
+                    vino no tiene servicio que opinar. */}
+                {t.estado === 'completado' && (
+                  <div className="basis-full">
+                    <CalificarTurno idCita={t.idCita} actual={valoraciones.get(t.idCita) ?? null} />
+                  </div>
+                )}
               </li>
             ))}
           </ul>
