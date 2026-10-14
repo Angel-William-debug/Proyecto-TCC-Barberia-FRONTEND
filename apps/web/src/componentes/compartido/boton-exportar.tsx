@@ -1,13 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { MODO_DEMO } from '@barber-shop/api/demo';
 import type { TipoReporte } from '@barber-shop/api';
 import { Icono, cn } from '@barber-shop/ui';
 
+import { enviarReportePorCorreoAccion } from '@/acciones/reportes';
 import { fecha, texto, type Parametros } from '@/lib/filtros';
+
+type EstadoEnvio =
+  | { fase: 'inactivo' }
+  | { fase: 'enviando' }
+  | { fase: 'enviado'; email: string }
+  | { fase: 'error'; mensaje: string };
 
 /**
  * Un solo botón "Exportar", con un menú desplegable para Excel, PDF y —si el
@@ -35,6 +42,8 @@ export function BotonExportar({
   individual?: { href: string; etiqueta?: string };
 }) {
   const contenedor = useRef<HTMLDetailsElement>(null);
+  const [estadoEnvio, setEstadoEnvio] = useState<EstadoEnvio>({ fase: 'inactivo' });
+  const [enviando, iniciarEnvio] = useTransition();
 
   // Cierra al hacer clic fuera. `<details>` no lo hace por su cuenta.
   useEffect(() => {
@@ -65,6 +74,18 @@ export function BotonExportar({
 
   function cerrar() {
     if (contenedor.current) contenedor.current.open = false;
+  }
+
+  function enviarPorCorreo() {
+    setEstadoEnvio({ fase: 'enviando' });
+    iniciarEnvio(async () => {
+      const r = await enviarReportePorCorreoAccion(tipo, {
+        desde: desde || undefined,
+        hasta: hasta || undefined,
+        busqueda: busqueda || undefined,
+      });
+      setEstadoEnvio(r.ok ? { fase: 'enviado', email: r.email } : { fase: 'error', mensaje: r.error });
+    });
   }
 
   return (
@@ -102,6 +123,32 @@ export function BotonExportar({
           etiqueta="Descargar PDF"
           onClick={cerrar}
         />
+
+        <button
+          type="button"
+          role="menuitem"
+          disabled={enviando}
+          onClick={enviarPorCorreo}
+          className={cn(
+            'text-cuerpo-sm text-principal flex w-full items-center gap-2.5',
+            'rounded-sm px-2.5 py-2 text-left hover:bg-superficie',
+            'disabled:pointer-events-none disabled:opacity-60',
+          )}
+        >
+          <Icono
+            nombre={enviando ? 'loader-circle' : 'mail'}
+            tamano="sm"
+            className={cn('text-terciario shrink-0', enviando && 'animate-spin')}
+          />
+          {enviando ? 'Enviando…' : 'Enviar por correo'}
+        </button>
+        {estadoEnvio.fase === 'enviado' && (
+          <p className="text-exito text-cuerpo-sm px-2.5 py-1">Enviado a {estadoEnvio.email}</p>
+        )}
+        {estadoEnvio.fase === 'error' && (
+          <p className="text-peligro text-cuerpo-sm px-2.5 py-1">{estadoEnvio.mensaje}</p>
+        )}
+
         {individual && (
           <>
             <div className="bg-borde-sutil my-1 h-px" />

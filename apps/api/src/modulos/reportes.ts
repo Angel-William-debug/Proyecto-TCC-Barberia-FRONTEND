@@ -17,6 +17,7 @@ import { ErrorAplicacion, traducirError } from '../errores';
 import { uno } from '../compartido/relaciones';
 import { generarExcel } from '../compartido/exportacion/excel';
 import { generarPdfTabla } from '../compartido/exportacion/pdf';
+import { enviarCorreo } from '../compartido/correo';
 import { listarProfesionales } from './barberos';
 import { listarServicios } from './servicios';
 import { listarUsuarios } from './usuarios';
@@ -705,4 +706,30 @@ export async function exportarReportePdf(tipo: TipoReporte, filtro: FiltroReport
     })),
     filasTexto,
   );
+}
+
+/**
+ * Manda el PDF de un reporte por correo, al destinatario que indique quien
+ * llama -nunca a uno arbitrario: eso lo garantiza la accion de servidor, que
+ * siempre pasa el correo de la propia sesion (RN-050).
+ */
+export async function enviarReportePorCorreo(
+  tipo: TipoReporte,
+  destinatario: { email: string; nombre: string },
+  filtro: FiltroReporte = {},
+): Promise<void> {
+  const pdf = await exportarReportePdf(tipo, filtro);
+  const titulo = TITULOS_TIPO_REPORTE[tipo];
+
+  await enviarCorreo({
+    destinatarioEmail: destinatario.email,
+    destinatarioNombre: destinatario.nombre,
+    asunto: `${titulo} — Barber Shop`,
+    textoPlano: `Hola ${destinatario.nombre}, adjuntamos el ${titulo.toLowerCase()} solicitado desde el panel de Barber Shop.`,
+    parrafosHtml: [
+      `Hola ${destinatario.nombre},`,
+      `Adjuntamos el <strong>${titulo.toLowerCase()}</strong> solicitado desde el panel.`,
+    ],
+    adjuntos: [{ nombreArchivo: `${tipo}.pdf`, contenido: pdf, tipoMime: 'application/pdf' }],
+  });
 }

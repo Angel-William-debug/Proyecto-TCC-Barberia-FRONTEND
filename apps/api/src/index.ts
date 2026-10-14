@@ -156,6 +156,7 @@ export {
   previsualizarReporte,
   exportarReporteExcel,
   exportarReportePdf,
+  enviarReportePorCorreo,
   type TipoReporte,
   type FiltroReporte,
   type PrevisualizacionReporte,

@@ -57,5 +57,7 @@ export function entornoPrivado() {
     ),
     claveResend: process.env.RESEND_API_KEY ?? null,
     urlServicioMl: process.env.URL_SERVICIO_ML ?? null,
+    claveBrevo: process.env.BREVO_API_KEY ?? null,
+    correoRemitente: process.env.CORREO_REMITENTE ?? null,
   };
 }
