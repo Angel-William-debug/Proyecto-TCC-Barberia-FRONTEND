@@ -552,13 +552,12 @@ export async function cancelarMiTurno(idCita: number): Promise<void> {
 export async function miPerfil(): Promise<PerfilCliente> {
   if (MODO_DEMO) return PERFIL_PORTAL_DEMO;
 
+  // Por `fn_mi_perfil()` y no leyendo `clientes` (14/10/2026): el cliente ya
+  // no tiene SELECT sobre la tabla, porque con el podia leer `notas_internas`
+  // -las anotaciones del mostrador, RN-008- llamando a la API directamente.
+  // La funcion devuelve solo lo suyo. Ver la migracion 20261014150000.
   const supabase = await clienteServidor();
-  const { data, error } = await supabase
-    .from('clientes')
-    // `notas_internas` queda fuera a proposito (RN-008): son las anotaciones
-    // que el mostrador hace sobre el cliente, no para el cliente.
-    .select('id_cliente, nombre, email, telefono, direccion, fecha_nacimiento, fecha_registro')
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('fn_mi_perfil').maybeSingle();
 
   if (error) throw traducirError(error);
   if (!data) throw new ErrorAplicacion('Su cuenta todavia no tiene una ficha de cliente.');
@@ -589,8 +588,8 @@ export async function miPerfil(): Promise<PerfilCliente> {
  *
  * El correo no esta: cambiarlo significa cambiar la credencial de Auth, que es
  * otro flujo -con confirmacion al correo nuevo- y no una edicion de perfil.
- * Los campos de control tampoco: `trg_cliente_campos_de_control` los rechaza
- * aunque alguien los mande.
+ * Los campos de control tampoco. Por `fn_actualizar_mi_perfil()`, que solo
+ * cambia esos cuatro campos de la ficha propia (ver `miPerfil`).
  */
 export async function actualizarMiPerfil(cambios: CambiosPerfilCliente): Promise<void> {
   if (MODO_DEMO) {
@@ -598,21 +597,12 @@ export async function actualizarMiPerfil(cambios: CambiosPerfilCliente): Promise
   }
 
   const supabase = await clienteServidor();
-  const { data: idCliente, error: errorId } = await supabase.rpc('fn_id_cliente_actual');
-
-  if (errorId || idCliente == null) {
-    throw new ErrorAplicacion('Su cuenta todavia no tiene una ficha de cliente.');
-  }
-
-  const { error } = await supabase
-    .from('clientes')
-    .update({
-      nombre: cambios.nombre,
-      telefono: cambios.telefono,
-      direccion: cambios.direccion ?? null,
-      fecha_nacimiento: cambios.fechaNacimiento || null,
-    })
-    .eq('id_cliente', idCliente as number);
+  const { error } = await supabase.rpc('fn_actualizar_mi_perfil', {
+    p_nombre: cambios.nombre,
+    p_telefono: cambios.telefono,
+    p_direccion: cambios.direccion ?? null,
+    p_fecha_nacimiento: cambios.fechaNacimiento || null,
+  });
 
   if (error) throw traducirError(error);
 }

@@ -77,10 +77,20 @@ export async function obtenerFactura(idFactura: number): Promise<FacturaCompleta
 
   if (errorLineas) throw traducirError(errorLineas);
 
+  // El cliente que baja su propio comprobante ya no lee `clientes` (migracion
+  // 20261014150000), asi que la relacion embebida le llega vacia: su nombre
+  // sale de `fn_mi_perfil()`. Para el personal la relacion sigue viniendo.
+  let nombreCliente = uno<{ nombre: string }>(factura.clientes)?.nombre;
+  if (!nombreCliente) {
+    const { data: propio } = await supabase.rpc('fn_mi_perfil').maybeSingle();
+    const ficha = propio as { id_cliente: number; nombre: string } | null;
+    if (ficha && ficha.id_cliente === factura.id_cliente) nombreCliente = ficha.nombre;
+  }
+
   return {
     id_factura: factura.id_factura,
     id_cliente: factura.id_cliente,
-    nombre_cliente: uno<{ nombre: string }>(factura.clientes)?.nombre ?? 'Cliente eliminado',
+    nombre_cliente: nombreCliente ?? 'Cliente eliminado',
     id_cita: factura.id_cita,
     fecha_emision: factura.fecha_emision,
     subtotal: factura.subtotal,
