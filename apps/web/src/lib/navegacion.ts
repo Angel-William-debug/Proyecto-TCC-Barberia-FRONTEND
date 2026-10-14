@@ -53,6 +53,8 @@ export const TITULO_GRUPO: Record<NombreGrupo, string> = {
 
 export const MENU: EntradaMenu[] = [
   // --- Operación: lo que se usa con el cliente enfrente ---------------------
+  // Primera para el barbero, que es el único que la ve (MODULOS_POR_ROL).
+  { modulo: 'mi-dia', etiqueta: 'Mi día', ruta: '/panel/mi-dia', icono: 'clock', grupo: 'operacion' },
   { modulo: 'agenda', etiqueta: 'Agenda', ruta: '/panel/agenda', icono: 'calendar-days', grupo: 'operacion' },
   { modulo: 'cobros', etiqueta: 'Cobros', ruta: '/panel/cobros', icono: 'receipt', grupo: 'operacion' },
   { modulo: 'facturas', etiqueta: 'Facturas', ruta: '/panel/facturas', icono: 'file-text', grupo: 'operacion' },

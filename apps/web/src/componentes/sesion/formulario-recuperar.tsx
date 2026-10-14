@@ -150,7 +150,7 @@ export function FormularioRecuperar() {
     // Ya tiene sesión: entra como en el ingreso. El panel manda a cada uno a
     // su zona según el rol (los clientes, al portal).
     router.refresh();
-    router.push('/panel/agenda');
+    router.push('/panel');
   }
 
   // ----------------------------------------------------------------- vista

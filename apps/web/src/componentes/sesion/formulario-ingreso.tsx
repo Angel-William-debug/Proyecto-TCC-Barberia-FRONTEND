@@ -45,7 +45,7 @@ export function FormularioIngreso() {
 
     // En modo demostracion no hay credenciales que validar: se entra directo.
     if (MODO_DEMO) {
-      router.push('/panel/agenda');
+      router.push('/panel');
       return;
     }
 
@@ -78,7 +78,7 @@ export function FormularioIngreso() {
       }
 
       router.refresh();
-      router.push('/panel/agenda');
+      router.push('/panel');
     } catch (causa) {
       const mensaje =
         causa instanceof Error && causa.message.includes('variable de entorno')

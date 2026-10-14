@@ -46,6 +46,8 @@ export interface UsuarioSesion {
  * pantallas que despues van a fallar.
  */
 export const MODULOS = [
+  /** El panel del barbero: su agenda de hoy, sus servicios y sus comisiones. */
+  'mi-dia',
   'agenda',
   /** Pantalla resumen que reune los catalogos maestros en un solo apartado. */
   'datos-generales',
@@ -76,7 +78,8 @@ export type Modulo = (typeof MODULOS)[number];
  * la identidad visual con las pantallas del mostrador.
  */
 export const MODULOS_POR_ROL: Record<NombreRol, readonly Modulo[]> = {
-  administrador: MODULOS,
+  // "Mi día" es del barbero: el administrador no tiene agenda ni comisiones propias.
+  administrador: MODULOS.filter((m) => m !== 'mi-dia'),
   recepcionista: [
     'agenda', 'datos-generales', 'clientes', 'servicios', 'profesionales', 'cobros',
     'facturas', 'inventario', 'papelera',
@@ -86,7 +89,7 @@ export const MODULOS_POR_ROL: Record<NombreRol, readonly Modulo[]> = {
   // `profesionales` y `profesional_ve_lo_suyo` sobre su historial. Vera el
   // ranking completo por volumen, que es informacion del equipo, no de nadie
   // en particular.
-  profesional: ['agenda', 'comisiones', 'ranking'],
+  profesional: ['mi-dia', 'agenda', 'comisiones', 'ranking'],
   cliente: [],
 };
 

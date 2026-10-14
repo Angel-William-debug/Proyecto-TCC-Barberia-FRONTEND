@@ -200,6 +200,9 @@ export {
   type CambiosUsuario,
 } from './modulos/usuarios';
 
+// --- Mi día (panel del barbero) ---------------------------------------------
+export { miDia, type MiDia, type ServicioRealizado } from './modulos/mi-dia';
+
 // --- Auditoria -------------------------------------------------------------
 export { listarAuditoria } from './modulos/auditoria';
 

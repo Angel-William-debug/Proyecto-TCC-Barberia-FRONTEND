@@ -49,7 +49,7 @@ export async function middleware(peticion: NextRequest) {
   // visitarse. Sin esta salvedad quedaria inaccesible.
   if (ruta === '/ingresar' && autenticado && !MODO_DEMO) {
     const destino = peticion.nextUrl.clone();
-    destino.pathname = '/panel/agenda';
+    destino.pathname = '/panel';
     destino.search = '';
     return NextResponse.redirect(destino);
   }
