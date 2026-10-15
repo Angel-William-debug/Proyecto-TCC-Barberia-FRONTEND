@@ -3,14 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 
-import { Boton } from '@barber-shop/ui';
+import { Boton, useConfirmar } from '@barber-shop/ui';
 
 import { accionCancelarTurno } from '@/acciones/portal';
 
 /**
  * Cancelar un turno reservado.
  *
- * Pide confirmacion con `window.confirm`, igual que `BotonBorrar`: el sistema
+ * Pide confirmacion con el dialogo del sistema (`useConfirmar`), igual que `BotonBorrar`: el sistema
  * de diseno todavia no tiene un dialogo propio, y cancelar un turno no se
  * deshace desde el portal -para volver a tenerlo hay que reservar de nuevo, y
  * el horario puede haberlo tomado otro-.
@@ -24,9 +24,16 @@ export function BotonCancelarTurno({ idCita }: { idCita: number }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [ocupado, iniciar] = useTransition();
+  const confirmar = useConfirmar();
 
-  function cancelar() {
-    if (!window.confirm('¿Cancelar este turno? Para volver a tenerlo habrá que reservar de nuevo.')) {
+  async function cancelar() {
+    if (!await confirmar({
+        titulo: '¿Cancelar este turno?',
+        mensaje: 'Para volver a tenerlo habrá que reservar de nuevo.',
+        textoConfirmar: 'Cancelar turno',
+        textoCancelar: 'Volver',
+        peligro: true,
+      })) {
       return;
     }
 

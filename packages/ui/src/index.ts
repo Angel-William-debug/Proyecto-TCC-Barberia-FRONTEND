@@ -25,6 +25,11 @@ export { Icono, type PropsIcono } from './componentes/icono';
 export { Boton, BotonIcono, type PropsBoton, type PropsBotonIcono } from './componentes/boton';
 export { ChipEstado, PuntoEstado, type PropsChipEstado } from './componentes/chip-estado';
 export {
+  ProveedorConfirmacion,
+  useConfirmar,
+  type OpcionesConfirmacion,
+} from './componentes/dialogo-confirmacion';
+export {
   PanelLateral,
   type PropsPanelLateral,
   type AnchoPanel,

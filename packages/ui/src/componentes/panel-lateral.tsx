@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
 import { BotonIcono } from './boton';
+import { useConfirmar } from './dialogo-confirmacion';
 import { cn } from '../utilidades';
 
 /**
@@ -92,8 +93,19 @@ export function PanelLateral({
     return () => clearTimeout(t);
   }, [abierto]);
 
-  function pedirCierre() {
-    if (hayCambios && !window.confirm('Hay cambios sin guardar. Cerrar de todos modos?')) {
+  const confirmar = useConfirmar();
+
+  async function pedirCierre() {
+    if (
+      hayCambios &&
+      !(await confirmar({
+        titulo: 'Hay cambios sin guardar',
+        mensaje: 'Si cierra el panel, se pierden.',
+        textoConfirmar: 'Cerrar sin guardar',
+        textoCancelar: 'Seguir editando',
+        peligro: true,
+      }))
+    ) {
       return;
     }
     onCerrar();
@@ -105,6 +117,9 @@ export function PanelLateral({
     if (!abierto) return;
 
     function alPresionar(e: KeyboardEvent) {
+      // Con una confirmacion abierta encima (<dialog> modal), el teclado es
+      // de ella: Escape la cierra a ella y no al panel, y Tab no se atrapa aca.
+      if (document.querySelector('dialog[open]')) return;
       if (e.key === 'Escape') {
         e.stopPropagation();
         pedirCierre();

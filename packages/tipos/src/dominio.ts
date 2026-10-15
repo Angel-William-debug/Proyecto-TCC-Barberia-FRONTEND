@@ -46,6 +46,8 @@ export interface UsuarioSesion {
  * pantallas que despues van a fallar.
  */
 export const MODULOS = [
+  /** Tablero del administrador (vista 77, CU-024): su pantalla de inicio. */
+  'tablero',
   /** El panel del barbero: su agenda de hoy, sus servicios y sus comisiones. */
   'mi-dia',
   'agenda',

@@ -119,7 +119,7 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
           : undefined
       }
       usuario={{ nombre: usuario.nombre, rol: usuario.rol }}
-      inicio="/panel/agenda"
+      inicio="/panel"
       aviso={MODO_DEMO ? <AvisoDemo /> : undefined}
       acciones={
         <>

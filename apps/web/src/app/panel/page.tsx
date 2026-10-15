@@ -12,5 +12,12 @@ import { usuarioActual } from '@barber-shop/api';
  */
 export default async function PaginaPanel() {
   const sesion = await usuarioActual();
-  redirect(sesion?.rol === 'profesional' ? '/panel/mi-dia' : '/panel/agenda');
+  // El administrador empieza en su Tablero (vista 77, desde el 15/10/2026).
+  redirect(
+    sesion?.rol === 'profesional'
+      ? '/panel/mi-dia'
+      : sesion?.rol === 'administrador'
+        ? '/panel/tablero'
+        : '/panel/agenda',
+  );
 }

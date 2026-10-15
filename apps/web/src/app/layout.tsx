@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 
-import { COLOR_TEMA_NAVEGADOR } from '@barber-shop/ui';
+import { COLOR_TEMA_NAVEGADOR, ProveedorConfirmacion } from '@barber-shop/ui';
+
+import { AvisoSinConexion } from '@/componentes/armazon/aviso-sin-conexion';
 
 import './globals.css';
 
@@ -104,7 +106,9 @@ export default function LayoutRaiz({ children }: { children: React.ReactNode }) 
         >
           Saltar al contenido principal
         </a>
-        {children}
+        {/* Vista 96: el dialogo de confirmacion, uno solo para toda la app. */}
+        <ProveedorConfirmacion>{children}</ProveedorConfirmacion>
+        <AvisoSinConexion />
       </body>
     </html>
   );

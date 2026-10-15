@@ -20,6 +20,7 @@ import {
   Th,
   Tr,
   cantidad,
+  useConfirmar,
 } from '@barber-shop/ui';
 
 import { borrarRegistro } from '@/acciones/borrado';
@@ -53,6 +54,7 @@ export function PanelReceta({
   const [huboCarga, setHuboCarga] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ocupado, iniciar] = useTransition();
+  const confirmar = useConfirmar();
 
   const [idProducto, setIdProducto] = useState('');
   const [cantidadNueva, setCantidadNueva] = useState('');
@@ -91,8 +93,13 @@ export function PanelReceta({
     });
   }
 
-  function quitar(idLinea: number, nombreProducto: string) {
-    if (!window.confirm(`¿Quitar ${nombreProducto} de la receta de ${nombreServicio}?`)) return;
+  async function quitar(idLinea: number, nombreProducto: string) {
+    if (!await confirmar({
+        titulo: `¿Quitar ${nombreProducto} de la receta?`,
+        mensaje: `Deja de proponerse al cerrar un turno de ${nombreServicio}.`,
+        textoConfirmar: 'Quitar',
+        peligro: true,
+      })) return;
 
     iniciar(async () => {
       await borrarRegistro('servicio_producto', idLinea);

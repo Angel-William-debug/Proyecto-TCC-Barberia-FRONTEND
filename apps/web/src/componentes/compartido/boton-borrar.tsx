@@ -4,13 +4,13 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 
 import type { TablaEscribible } from '@barber-shop/api';
-import { BotonIcono } from '@barber-shop/ui';
+import { BotonIcono, useConfirmar } from '@barber-shop/ui';
 
 import { borrarRegistro } from '@/acciones/borrado';
 
 /**
  * Botón de borrar genérico, para las pantallas de catálogo. Pide
- * confirmación con `window.confirm` -mismo mecanismo que ya usa
+ * confirmación con `useConfirmar` (antes `window.confirm`) -el mismo que usa
  * `PanelLateral` para "hay cambios sin guardar"- porque no existe todavía un
  * componente de diálogo propio en el sistema de diseño.
  */
@@ -26,9 +26,16 @@ export function BotonBorrar({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [ocupado, iniciar] = useTransition();
+  const confirmar = useConfirmar();
 
-  function borrar() {
-    if (!window.confirm(`¿Borrar "${nombre}"? Se puede restaurar desde la Papelera.`)) return;
+  async function borrar() {
+    const ok = await confirmar({
+      titulo: `¿Borrar «${nombre}»?`,
+      mensaje: 'Se puede restaurar desde la Papelera.',
+      textoConfirmar: 'Borrar',
+      peligro: true,
+    });
+    if (!ok) return;
 
     setError(null);
     iniciar(async () => {

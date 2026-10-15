@@ -24,6 +24,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { PanelDetalleAuditoria } from '@/componentes/auditoria/panel-detalle-auditoria';
 import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import {
   comunes,
@@ -126,10 +127,11 @@ export default async function PaginaAuditoria({
             <Th>Acción</Th>
             <Th>Registro</Th>
             <Th>Detalle</Th>
+            <Th><span className="solo-lectores">Acciones</span></Th>
           </TablaEncabezado>
           <TablaCuerpo>
             {registros.length === 0 ? (
-              <TdCompleta colSpan={6}>
+              <TdCompleta colSpan={7}>
                 <EstadoVacio
                   icono="scroll-text"
                   titulo="No hay movimientos registrados"
@@ -157,6 +159,14 @@ export default async function PaginaAuditoria({
                   </Td>
                   <Td className="font-mono" etiqueta="Registro">{identificador(r.registro_id)}</Td>
                   <Td className="text-secundario" etiqueta="Detalle">{r.detalle ?? '—'}</Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    <PanelDetalleAuditoria
+                      registro={r}
+                      presentacion={
+                        PRESENTACION_ACCION[r.accion] ?? { etiqueta: r.accion, tono: 'neutro', icono: 'circle-alert' }
+                      }
+                    />
+                  </Td>
                 </Tr>
               ))
             )}

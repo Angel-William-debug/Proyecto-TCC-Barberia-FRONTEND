@@ -23,6 +23,8 @@ export interface FiltroAuditoria extends FiltroTabla {
   acciones?: string[];
   /** Solo lo que hizo un usuario (detalle del usuario, vista 7). */
   idUsuario?: number;
+  /** La historia de un registro puntual (detalle de auditoria, vista 15). */
+  registroId?: number;
 }
 
 /**
@@ -55,6 +57,7 @@ export async function listarAuditoria(
   if (filtro.acciones?.length) consulta = consulta.in('accion', filtro.acciones);
   if (filtro.tabla) consulta = consulta.eq('tabla_afectada', filtro.tabla);
   if (filtro.idUsuario) consulta = consulta.eq('id_usuario', filtro.idUsuario);
+  if (filtro.registroId !== undefined) consulta = consulta.eq('registro_id', filtro.registroId);
   if (filtro.desde) consulta = consulta.gte('fecha_accion', `${filtro.desde}T00:00:00`);
   if (filtro.hasta) consulta = consulta.lte('fecha_accion', `${filtro.hasta}T23:59:59`);
 

@@ -12,6 +12,7 @@ import {
   Icono,
   PanelLateral,
   cantidad,
+  useConfirmar,
 } from '@barber-shop/ui';
 
 import { completarCitaAccion, registrarInsumosAccion } from '@/acciones/agenda';
@@ -57,18 +58,19 @@ function aServicios(sugerencias: SugerenciaCierre[]): ServicioConInsumos[] {
 export function PanelCierreServicio({ idCita, nombreCliente }: { idCita: number; nombreCliente: string }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
+  const pedirConfirmacion = useConfirmar();
   const [servicios, setServicios] = useState<ServicioConInsumos[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ocupado, iniciar] = useTransition();
 
-  function iniciarCierre() {
-    if (
-      !window.confirm(
-        `¿Completar el turno de ${nombreCliente}? Esta acción no se puede deshacer.`,
-      )
-    ) {
-      return;
-    }
+  async function iniciarCierre() {
+    const ok = await pedirConfirmacion({
+      titulo: `¿Completar el turno de ${nombreCliente}?`,
+      mensaje: 'Esta acción no se puede deshacer: el turno queda cerrado y se genera la comisión.',
+      textoConfirmar: 'Completar turno',
+      peligro: true,
+    });
+    if (!ok) return;
 
     setError(null);
     iniciar(async () => {

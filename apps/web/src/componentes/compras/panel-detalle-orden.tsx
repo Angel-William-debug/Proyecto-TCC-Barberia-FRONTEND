@@ -13,6 +13,7 @@ import {
   GrupoCampos,
   PRESENTACION_PEDIDO,
   PanelLateral,
+  useConfirmar,
   cantidad,
   fechaCorta,
   guaranies,
@@ -36,6 +37,7 @@ export function PanelDetalleOrden({ idPedido }: { idPedido: number }) {
   const [orden, setOrden] = useState<PedidoDetalle | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ocupado, iniciar] = useTransition();
+  const confirmar = useConfirmar();
 
   function abrir() {
     setAbierto(true);
@@ -47,12 +49,23 @@ export function PanelDetalleOrden({ idPedido }: { idPedido: number }) {
     });
   }
 
-  function cambiar(accion: 'recibir' | 'cancelar') {
-    const pregunta =
+  async function cambiar(accion: 'recibir' | 'cancelar') {
+    const ok = await confirmar(
       accion === 'recibir'
-        ? '¿Marcar la orden como recibida? El stock de cada producto se suma ahora y no se puede deshacer.'
-        : '¿Cancelar la orden? No se puede deshacer.';
-    if (!window.confirm(pregunta)) return;
+        ? {
+            titulo: '¿Marcar la orden como recibida?',
+            mensaje: 'El stock de cada producto se suma ahora y no se puede deshacer.',
+            textoConfirmar: 'Marcar recibida',
+          }
+        : {
+            titulo: '¿Cancelar la orden?',
+            mensaje: 'No se puede deshacer.',
+            textoConfirmar: 'Cancelar orden',
+            textoCancelar: 'Volver',
+            peligro: true,
+          },
+    );
+    if (!ok) return;
     setError(null);
     iniciar(async () => {
       const r = await (accion === 'recibir' ? recibirOrden(idPedido) : cancelarOrden(idPedido));
