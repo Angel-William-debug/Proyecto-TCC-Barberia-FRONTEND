@@ -53,11 +53,17 @@ export const TIPOS_MOVIMIENTO = ['entrada', 'salida', 'ajuste'] as const;
 export type TipoMovimiento = (typeof TIPOS_MOVIMIENTO)[number];
 
 /** `notificaciones.tipo` — RN-042. */
-export const TIPOS_NOTIFICACION = ['confirmacion', 'recordatorio'] as const;
+export const TIPOS_NOTIFICACION = [
+  'confirmacion',
+  'recordatorio',
+  'turno_confirmado',
+  'turno_cancelado',
+  'turno_reprogramado',
+] as const;
 export type TipoNotificacion = (typeof TIPOS_NOTIFICACION)[number];
 
 /** `notificaciones.estado_envio` */
-export const ESTADOS_ENVIO = ['pendiente', 'enviado', 'fallido', 'sin_email'] as const;
+export const ESTADOS_ENVIO = ['pendiente', 'enviado', 'fallido', 'sin_email', 'sin_dispositivo'] as const;
 export type EstadoEnvio = (typeof ESTADOS_ENVIO)[number];
 
 /** `auditoria.accion` */

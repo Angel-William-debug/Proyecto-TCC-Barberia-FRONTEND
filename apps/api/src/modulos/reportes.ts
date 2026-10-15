@@ -140,6 +140,77 @@ export async function comisionesPendientes(): Promise<VistaComisionPendiente[]> 
 }
 
 // ---------------------------------------------------------------------------
+// Servicios mas solicitados (vista 79) y retencion de clientes (vista 82),
+// 15/10/2026. Las dos vistas SQL existian desde el principio; ninguna
+// pantalla las leia.
+// ---------------------------------------------------------------------------
+
+export interface ServicioSolicitado {
+  id_servicio: number;
+  nombre: string;
+  categoria: string | null;
+  veces_realizado: number;
+  facturado: number;
+}
+
+export async function serviciosMasSolicitados(limite = 8): Promise<ServicioSolicitado[]> {
+  if (MODO_DEMO) return [];
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase
+    .from('v_servicios_mas_solicitados')
+    .select('id_servicio, nombre, categoria, veces_realizado, facturado')
+    .order('veces_realizado', { ascending: false })
+    .limit(limite);
+  if (error) throw traducirError(error);
+  return (data ?? []).map((f) => ({ ...f, veces_realizado: Number(f.veces_realizado), facturado: Number(f.facturado) }));
+}
+
+export interface ResumenRetencion {
+  /** Clientes con al menos una visita. */
+  conVisitas: number;
+  /** De esos, cuantos volvieron al menos una vez mas. */
+  volvieron: number;
+  /** Sin venir hace mas del umbral de `v_clientes_inactivos`. */
+  inactivos: number;
+  frecuentes: Array<{ id_cliente: number; nombre: string; cantidad_visitas: number; ticket_promedio: number }>;
+}
+
+export async function resumenRetencion(): Promise<ResumenRetencion> {
+  if (MODO_DEMO) return { conVisitas: 0, volvieron: 0, inactivos: 0, frecuentes: [] };
+  const supabase = await clienteServidor();
+  const [historial, inactivos, frecuentes] = await Promise.all([
+    supabase.from('historial_servicio').select('id_cliente, id_cita'),
+    supabase.from('v_clientes_inactivos').select('id_cliente', { count: 'exact', head: true }),
+    supabase
+      .from('v_clientes_frecuentes')
+      .select('id_cliente, nombre, cantidad_visitas, ticket_promedio')
+      .order('cantidad_visitas', { ascending: false })
+      .limit(5),
+  ]);
+  if (historial.error) throw traducirError(historial.error);
+  if (frecuentes.error) throw traducirError(frecuentes.error);
+
+  // Una visita es un turno, no un servicio: un corte y una barba el mismo
+  // dia no son dos visitas.
+  const turnosPorCliente = new Map<number, Set<number | null>>();
+  for (const h of historial.data ?? []) {
+    const turnos = turnosPorCliente.get(h.id_cliente) ?? new Set();
+    turnos.add(h.id_cita);
+    turnosPorCliente.set(h.id_cliente, turnos);
+  }
+  return {
+    conVisitas: turnosPorCliente.size,
+    volvieron: [...turnosPorCliente.values()].filter((t) => t.size >= 2).length,
+    inactivos: inactivos.count ?? 0,
+    frecuentes: (frecuentes.data ?? []).map((f) => ({
+      ...f,
+      cantidad_visitas: Number(f.cantidad_visitas),
+      ticket_promedio: Number(f.ticket_promedio),
+    })),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // CU-014 — Exportar. Seis tipos de reporte, cada uno sobre la vista SQL que
 // ya trae el agregado resuelto; aca solo se define que columnas mostrar y
 // como filtrar por rango de fechas y busqueda antes de exportar.

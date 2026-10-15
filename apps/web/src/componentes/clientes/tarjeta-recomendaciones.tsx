@@ -38,7 +38,25 @@ export function TarjetaRecomendaciones({
         descripcion="K-Means + filtrado colaborativo sobre el historial de servicios"
       />
       <div className="p-6">
-        {error && <p className="text-cuerpo-sm text-peligro mb-4">{error}</p>}
+        {/* Vista 98 (15/10/2026): si el motor falla, se dice que es el motor
+            -no el cliente- y se ofrece reintentar. La falta de historial
+            (RN-009) no es una falla y se muestra tal cual. */}
+        {error &&
+          (/historial|RN-009|al menos/i.test(error) ? (
+            <p className="text-cuerpo-sm text-advertencia mb-4">{error}</p>
+          ) : (
+            <div role="alert" className="border-borde-sutil bg-elevado mb-4 rounded-md border p-3">
+              <p className="text-cuerpo-sm text-principal font-medium">
+                El motor de recomendaciones no está disponible ahora
+              </p>
+              <p className="text-cuerpo-sm text-secundario mt-1">
+                {error} El resto del perfil funciona igual.
+              </p>
+              <button type="button" onClick={generar} className="text-marca text-cuerpo-sm mt-2 font-medium">
+                Reintentar
+              </button>
+            </div>
+          ))}
 
         {recomendaciones.length === 0 ? (
           <EstadoVacio

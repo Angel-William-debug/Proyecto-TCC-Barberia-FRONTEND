@@ -283,3 +283,85 @@ export async function crearCliente(entrada: EntradaCliente): Promise<number> {
 export async function actualizarCliente(id: number, entrada: EntradaCliente): Promise<void> {
   return actualizar('clientes', id, filaCliente(entrada));
 }
+
+// ---------------------------------------------------------------------------
+// Perfil del cliente: cada visita con lo que se uso, y sus pagos (vistas 21,
+// 22 y 23; 15/10/2026). El historial de arriba queda para el PDF.
+// ---------------------------------------------------------------------------
+
+export interface VisitaCliente {
+  id_historial: number;
+  id_cita: number | null;
+  fecha_realizacion: string;
+  nombre_servicio: string;
+  nombre_profesional: string;
+  costo_cobrado: number;
+  observaciones: string | null;
+  productos: Array<{ nombre: string; cantidad: number; unidad: string | null; excepcion: boolean }>;
+}
+
+export async function listarVisitasCliente(idCliente: number): Promise<VisitaCliente[]> {
+  if (MODO_DEMO) return [];
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase
+    .from('historial_servicio')
+    .select(
+      `id_historial, id_cita, fecha_realizacion, costo_cobrado, observaciones,
+       servicios ( nombre ), profesionales ( nombre ),
+       productos_utilizados ( cantidad_usada, excepcion_stock, productos ( nombre, unidad_uso ) )`,
+    )
+    .eq('id_cliente', idCliente)
+    .order('fecha_realizacion', { ascending: false });
+  if (error) throw traducirError(error);
+
+  return (data ?? []).map((f) => ({
+    id_historial: f.id_historial,
+    id_cita: f.id_cita,
+    fecha_realizacion: f.fecha_realizacion,
+    nombre_servicio: uno<{ nombre: string }>(f.servicios)?.nombre ?? '—',
+    nombre_profesional: uno<{ nombre: string }>(f.profesionales)?.nombre ?? '—',
+    costo_cobrado: Number(f.costo_cobrado),
+    observaciones: f.observaciones,
+    productos: (Array.isArray(f.productos_utilizados) ? f.productos_utilizados : []).map((u) => {
+      const p = uno<{ nombre: string; unidad_uso: string | null }>(u.productos);
+      return {
+        nombre: p?.nombre ?? 'Producto eliminado',
+        cantidad: Number(u.cantidad_usada),
+        unidad: p?.unidad_uso ?? null,
+        excepcion: Boolean(u.excepcion_stock),
+      };
+    }),
+  }));
+}
+
+export interface PagoCliente {
+  id_cobro: number;
+  id_cita: number;
+  fecha_turno: string | null;
+  fecha_pago: string | null;
+  metodo: string;
+  monto: number;
+  estado: string;
+}
+
+export async function listarPagosCliente(idCliente: number): Promise<PagoCliente[]> {
+  if (MODO_DEMO) return [];
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase
+    .from('cobros_cliente')
+    .select('id_cobro, id_cita, monto, estado, fecha_pago, metodos_pago ( nombre ), citas!inner ( id_cliente, fecha_hora )')
+    .eq('citas.id_cliente', idCliente)
+    .eq('deleted', false)
+    .order('fecha_pago', { ascending: false, nullsFirst: true });
+  if (error) throw traducirError(error);
+
+  return (data ?? []).map((f) => ({
+    id_cobro: f.id_cobro,
+    id_cita: f.id_cita,
+    fecha_turno: uno<{ fecha_hora: string }>(f.citas)?.fecha_hora ?? null,
+    fecha_pago: f.fecha_pago,
+    metodo: uno<{ nombre: string }>(f.metodos_pago)?.nombre ?? '—',
+    monto: Number(f.monto),
+    estado: f.estado,
+  }));
+}

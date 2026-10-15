@@ -8,7 +8,15 @@
  */
 'use server';
 
-import { actualizarServicio, crearServicio } from '@barber-shop/api';
+import {
+  actualizarCategoriaServicio,
+  actualizarServicio,
+  crearCategoriaServicio,
+  crearServicio,
+  estadisticaServicio,
+  exigirSesion,
+  type EstadisticaServicio,
+} from '@barber-shop/api';
 
 import { Validacion, booleano, ejecutar, numero, texto, textoOpcional } from './base';
 import type { ResultadoAccion } from './base';
@@ -39,4 +47,23 @@ export async function guardarServicio(datos: FormData): Promise<ResultadoAccion>
   return ejecutar('/panel/servicios', () =>
     id ? actualizarServicio(id, entrada) : crearServicio(entrada),
   );
+}
+
+/** Alta y edicion de una categoria de servicio (vistas 28 y 29). */
+export async function guardarCategoriaServicio(datos: FormData): Promise<ResultadoAccion> {
+  const id = numero(datos, 'id_categoria');
+  const nombre = texto(datos, 'nombre');
+  const v = new Validacion();
+  v.exigir(nombre.length >= 3, 'nombre', 'Ingrese el nombre de la categoría.');
+  if (v.hayErrores) return v.resultado;
+  const entrada = { nombre, descripcion: textoOpcional(datos, 'descripcion') };
+  return ejecutar('/panel/servicios', () =>
+    id ? actualizarCategoriaServicio(id, entrada) : crearCategoriaServicio(entrada),
+  );
+}
+
+/** Lo que muestra el detalle del servicio (vista 32). */
+export async function obtenerEstadisticaServicio(idServicio: number): Promise<EstadisticaServicio | null> {
+  await exigirSesion();
+  return estadisticaServicio(idServicio).catch(() => null);
 }

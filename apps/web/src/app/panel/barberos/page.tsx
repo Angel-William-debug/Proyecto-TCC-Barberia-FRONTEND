@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { listarProfesionales } from '@barber-shop/api';
 import {
   BarraFiltros,
@@ -16,6 +18,7 @@ import {
   Td,
   TdCompleta,
   Th,
+  BotonIcono,
   Tr,
   iniciales,
   plural,
@@ -151,6 +154,9 @@ export default async function PaginaBarberos({
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Link href={`/panel/barberos/${b.id_profesional}`} className="inline-flex">
+                        <BotonIcono icono="eye" etiqueta={`Ver el perfil de ${b.nombre}`} variante="terciario" tamano="sm" />
+                      </Link>
                       <FormularioBarbero barbero={b} />
                       <BotonBorrar tabla="profesionales" id={b.id_profesional} nombre={b.nombre} />
                     </div>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { Boton } from '@barber-shop/ui';
+import { Boton, Icono } from '@barber-shop/ui';
 
 import { FormularioIngreso } from '@/componentes/sesion/formulario-ingreso';
 import { MarcoSesion } from '@/componentes/sesion/marco-sesion';
@@ -13,8 +13,17 @@ export const metadata = { title: 'Ingresar' };
  * La credencial vive en `auth.users` de Supabase Auth (RN-001); el sistema
  * nunca guarda ni compara contraseñas por su cuenta. La columna
  * `usuarios.password_hash` se eliminó por eso mismo.
+ *
+ * Si llega con `?volver=` es porque el middleware lo mandó acá desde una
+ * pantalla privada: la sesión venció (o nunca la hubo). Se avisa (vista 93) y,
+ * al ingresar, vuelve a esa pantalla.
  */
-export default function PaginaIngresar() {
+export default async function PaginaIngresar({
+  searchParams,
+}: {
+  searchParams: Promise<{ volver?: string }>;
+}) {
+  const { volver } = await searchParams;
   return (
     <MarcoSesion
       descripcion="Ingrese con su cuenta del sistema"
@@ -24,6 +33,15 @@ export default function PaginaIngresar() {
         </Link>
       }
     >
+      {volver && (
+        <div
+          role="status"
+          className="border-borde-sutil text-cuerpo-sm text-secundario bg-elevado mb-5 flex items-start gap-2 rounded-md border p-3"
+        >
+          <Icono nombre="clock" tamano="sm" className="text-marca mt-0.5" />
+          <span>Su sesión terminó. Ingrese de nuevo y lo llevamos a la pantalla donde estaba.</span>
+        </div>
+      )}
       <FormularioIngreso />
 
       <div className="border-borde-sutil mt-6 border-t pt-5 text-center">

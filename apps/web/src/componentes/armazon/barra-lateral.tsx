@@ -160,18 +160,25 @@ export function BarraLateral({
       </div>
 
       <div className="border-borde-sutil shrink-0 border-t p-3">
-        {colapsada ? (
-          <div className="bg-elevado text-marca text-etiqueta mx-auto flex h-9 w-9 items-center justify-center rounded-full font-semibold">
-            {usuario.nombre.slice(0, 2).toUpperCase()}
-          </div>
-        ) : (
-          <div className="px-1">
-            <p className="text-cuerpo text-principal truncate font-medium">{usuario.nombre}</p>
-            <div className="mt-1.5">
-              <ChipEstado presentacion={PRESENTACION_ROL[usuario.rol]} />
+        {/* Lleva a «Mi perfil» (vistas 3 y 4): datos de la cuenta y cambio de contraseña. */}
+        <Link
+          href="/panel/perfil"
+          aria-label={`Mi perfil: ${usuario.nombre}`}
+          className="hover:bg-elevado block rounded-md p-1 transition-colors"
+        >
+          {colapsada ? (
+            <div className="bg-elevado text-marca text-etiqueta mx-auto flex h-9 w-9 items-center justify-center rounded-full font-semibold">
+              {usuario.nombre.slice(0, 2).toUpperCase()}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="px-1">
+              <p className="text-cuerpo text-principal truncate font-medium">{usuario.nombre}</p>
+              <div className="mt-1.5">
+                <ChipEstado presentacion={PRESENTACION_ROL[usuario.rol]} />
+              </div>
+            </div>
+          )}
+        </Link>
       </div>
     </aside>
   );

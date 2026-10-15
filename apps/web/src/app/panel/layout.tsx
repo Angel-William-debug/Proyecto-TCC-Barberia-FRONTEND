@@ -1,13 +1,15 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { listarAlertas, MODO_DEMO, usuarioActual } from '@barber-shop/api';
+import { listarAlertas, listarNotificaciones, MODO_DEMO, usuarioActual } from '@barber-shop/api';
 import { usaElPortal } from '@barber-shop/tipos';
 import { Boton, EstadoVacio, Tarjeta } from '@barber-shop/ui';
 
 import { AvisoDemo } from '@/componentes/armazon/aviso-demo';
 import { BotonSalir } from '@/componentes/armazon/boton-salir';
+import { BusquedaGlobal } from '@/componentes/armazon/busqueda-global';
 import { CampanaAlertas } from '@/componentes/armazon/campana-alertas';
+import { GuardaRuta } from '@/componentes/armazon/guarda-ruta';
 import { MarcoLateral } from '@/componentes/armazon/marco-lateral';
 import { SelectorTema } from '@/componentes/armazon/selector-tema';
 import {
@@ -16,6 +18,7 @@ import {
   gruposConfiguracionPara,
   gruposPara,
   menuPara,
+  rutasPorPermiso,
 } from '@/lib/navegacion';
 
 /**
@@ -92,13 +95,16 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
   const tieneConfiguracion = entradas.some((e) => e.modulo === 'configuracion');
   const areaConfiguracion = tieneConfiguracion ? gruposConfiguracionPara(usuario.rol) : [];
 
-  // La campanita solo se ofrece a quien ya tiene Inventario en su menu: el
-  // enlace que abre lleva ahi, y mostrarla a quien no puede entrar solo
-  // generaria una alerta sin adonde ir.
-  const tieneInventario = entradas.some((e) => e.modulo === 'inventario');
-  const alertasSinResolver = tieneInventario
-    ? await listarAlertas({ soloNoResueltas: true }).catch(() => [])
-    : [];
+  // La campanita lleva a la bandeja de Notificaciones (vista 95) y cuenta lo
+  // mismo que ella: alertas de stock sin resolver y recordatorios que no
+  // salieron. Solo se ofrece a quien tiene ese modulo en el menu.
+  const tieneBandeja = entradas.some((e) => e.modulo === 'notificaciones');
+  const [alertasSinResolver, recordatoriosCaidos] = tieneBandeja
+    ? await Promise.all([
+        listarAlertas({ soloNoResueltas: true }).catch(() => []),
+        listarNotificaciones({ soloPorAtender: true }).catch(() => []),
+      ])
+    : [[], []];
 
   return (
     <MarcoLateral
@@ -117,13 +123,18 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
       aviso={MODO_DEMO ? <AvisoDemo /> : undefined}
       acciones={
         <>
-          {tieneInventario && <CampanaAlertas cantidad={alertasSinResolver.length} />}
+          <BusquedaGlobal />
+          {tieneBandeja && (
+            <CampanaAlertas cantidad={alertasSinResolver.length + recordatoriosCaidos.length} />
+          )}
           <SelectorTema />
           <BotonSalir />
         </>
       }
     >
-      {children}
+      <GuardaRuta {...rutasPorPermiso(usuario.rol)} inicio="/panel">
+        {children}
+      </GuardaRuta>
     </MarcoLateral>
   );
 }

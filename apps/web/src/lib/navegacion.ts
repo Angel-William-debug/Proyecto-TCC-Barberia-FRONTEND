@@ -65,6 +65,13 @@ export const MENU: EntradaMenu[] = [
     icono: 'hand-coins',
     grupo: 'operacion',
   },
+  {
+    modulo: 'notificaciones',
+    etiqueta: 'Notificaciones',
+    ruta: '/panel/notificaciones',
+    icono: 'bell',
+    grupo: 'operacion',
+  },
 
   // --- Datos generales: los catálogos maestros ------------------------------
   {
@@ -270,4 +277,20 @@ export function gruposConfiguracionPara(rol: NombreRol): GrupoBarra[] {
     titulo: TITULO_GRUPO_CONFIGURACION[grupo],
     entradas: entradas.filter((e) => e.grupo === grupo),
   })).filter((g) => g.entradas.length > 0);
+}
+
+/**
+ * Las rutas del panel que un rol NO puede abrir (vista 92, acceso denegado).
+ *
+ * Son las de todos los menues cuyo modulo no tiene. `GuardaRuta` las compara
+ * con la ruta actual por el prefijo mas largo, asi `/panel/configuracion`
+ * negado no tapa a `/panel/papelera` permitido.
+ */
+export function rutasPorPermiso(rol: NombreRol): { permitidas: string[]; negadas: string[] } {
+  const permitidos = new Set<Modulo>(MODULOS_POR_ROL[rol]);
+  const todas = [...MENU, ...MENU_CONFIGURACION];
+  return {
+    permitidas: todas.filter((e) => permitidos.has(e.modulo)).map((e) => e.ruta),
+    negadas: todas.filter((e) => !permitidos.has(e.modulo)).map((e) => e.ruta),
+  };
 }

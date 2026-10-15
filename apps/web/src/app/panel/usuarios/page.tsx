@@ -25,6 +25,8 @@ import {
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { FormularioUsuario } from '@/componentes/usuarios/formulario-usuario';
+import { MatrizPermisos } from '@/componentes/usuarios/matriz-permisos';
+import { PanelDetalleUsuario } from '@/componentes/usuarios/panel-detalle-usuario';
 import {
   ETIQUETAS_ACTIVO,
   OPCIONES_ACTIVO,
@@ -147,7 +149,10 @@ export default async function PaginaUsuarios({
                     />
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    <FormularioUsuario usuario={u} roles={roles} />
+                    <div className="flex justify-end gap-1">
+                      <PanelDetalleUsuario usuario={u} />
+                      <FormularioUsuario usuario={u} roles={roles} />
+                    </div>
                   </Td>
                 </Tr>
               ))
@@ -156,6 +161,8 @@ export default async function PaginaUsuarios({
         </Tabla>
         <Paginacion {...pagUsuarios.paginacion} />
       </Tarjeta>
+
+      <MatrizPermisos />
 
       <p className="text-cuerpo-sm text-terciario mt-4">
         El alta crea la credencial en Supabase Auth con una contraseña inicial que usted

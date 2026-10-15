@@ -1,7 +1,14 @@
 /** Accion de servidor de usuarios y roles (CU-019). */
 'use server';
 
-import { actualizarUsuario, crearUsuario, exigirSesion, listarRoles } from '@barber-shop/api';
+import {
+  actualizarUsuario,
+  crearUsuario,
+  exigirSesion,
+  listarAuditoria,
+  listarRoles,
+} from '@barber-shop/api';
+import type { AuditoriaDeLista } from '@barber-shop/tipos';
 
 import { CORREO, Validacion, booleano, ejecutar, numero, texto } from './base';
 import type { ResultadoAccion } from './base';
@@ -83,4 +90,10 @@ export async function guardarCambiosUsuario(datos: FormData): Promise<ResultadoA
   return ejecutar('/panel/usuarios', () =>
     actualizarUsuario(id!, { idRol: idRol!, estado: booleano(datos, 'estado') }),
   );
+}
+
+/** Lo último que hizo un usuario, para su detalle (vista 7). */
+export async function actividadDelUsuario(idUsuario: number): Promise<AuditoriaDeLista[]> {
+  await exigirSesion();
+  return listarAuditoria({ idUsuario }).then((f) => f.slice(0, 20)).catch(() => []);
 }

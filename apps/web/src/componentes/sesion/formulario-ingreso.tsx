@@ -15,6 +15,19 @@ import { Boton, Campo, Icono } from '@barber-shop/ui';
  * contrasena es incorrecta». Hacerlo permitiria averiguar que cuentas estan
  * dadas de alta probando correos, que es el primer paso de un ataque dirigido.
  */
+
+/**
+ * Adónde volver después de ingresar. El middleware manda a `/ingresar` con
+ * `?volver=/panel/...` cuando la sesión venció; antes se ignoraba y se caía
+ * siempre en el inicio. Solo se aceptan rutas propias del panel o del
+ * portal: un `volver=https://otro-sitio` no tiene que poder usarse para
+ * mandar a alguien afuera después de ingresar.
+ */
+function destinoTrasIngresar(): string {
+  const volver = new URLSearchParams(window.location.search).get('volver');
+  if (volver && /^\/(panel|mi-cuenta)(\/|\?|$)/.test(volver)) return volver;
+  return '/panel';
+}
 export function FormularioIngreso() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -66,19 +79,29 @@ export function FormularioIngreso() {
         // fallo sigue siendo el mensaje generico, para no revelar si un
         // correo tiene cuenta.
         const pendiente = errorAuth.code === 'email_not_confirmed';
+        // Supabase no lanza cuando se corta la red: devuelve el error dentro
+        // de `error`, con estado 0. Antes eso se leia como «la contraseña no
+        // es correcta» y la persona probaba otra. Tampoco el limite de
+        // intentos dice nada sobre si la cuenta existe.
+        const sinRed = errorAuth.name === 'AuthRetryableFetchError' || errorAuth.status === 0;
+        const demasiados = errorAuth.status === 429;
         setSinConfirmar(pendiente ? email : null);
         setReenvio('nada');
         setError(
           pendiente
             ? 'Todavía no confirmó su correo. Abra el enlace que le enviamos al crear la cuenta (revise también el correo no deseado).'
-            : 'El correo o la contraseña no son correctos.',
+            : sinRed
+              ? 'No se pudo conectar con el servidor. Revise su conexión e intente de nuevo.'
+              : demasiados
+                ? 'Demasiados intentos seguidos. Espere unos minutos y vuelva a probar.'
+                : 'El correo o la contraseña no son correctos.',
         );
         setEnviando(false);
         return;
       }
 
       router.refresh();
-      router.push('/panel');
+      router.push(destinoTrasIngresar());
     } catch (causa) {
       const mensaje =
         causa instanceof Error && causa.message.includes('variable de entorno')

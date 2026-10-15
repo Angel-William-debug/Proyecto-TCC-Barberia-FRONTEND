@@ -69,6 +69,10 @@ export {
   obtenerCliente,
   desactivarCliente,
   listarHistorialCliente,
+  listarVisitasCliente,
+  listarPagosCliente,
+  type VisitaCliente,
+  type PagoCliente,
   generarFichaClientePdf,
   exportarFichasClientesZip,
   crearCliente,
@@ -82,7 +86,12 @@ export {
   listarCategoriasServicio,
   crearServicio,
   actualizarServicio,
+  crearCategoriaServicio,
+  actualizarCategoriaServicio,
+  estadisticaServicio,
   type EntradaServicio,
+  type EntradaCategoriaServicio,
+  type EstadisticaServicio,
 } from './modulos/servicios';
 
 // --- Barberos --------------------------------------------------------------
@@ -133,6 +142,14 @@ export {
   type EntradaLineaReceta,
 } from './modulos/inventario';
 
+// --- Notificaciones (vistas 86, 87, 95, 100) ------------------------------
+export {
+  listarNotificaciones,
+  listarRecordatoriosProgramados,
+  reintentarNotificacion,
+  type FiltroNotificaciones,
+} from './modulos/notificaciones';
+
 // --- Compras ---------------------------------------------------------------
 export {
   listarProveedores,
@@ -161,6 +178,10 @@ export {
   ingresosPorPeriodo,
   stockCritico,
   comisionesPendientes,
+  serviciosMasSolicitados,
+  resumenRetencion,
+  type ServicioSolicitado,
+  type ResumenRetencion,
   TIPOS_REPORTE,
   TITULOS_TIPO_REPORTE,
   previsualizarReporte,

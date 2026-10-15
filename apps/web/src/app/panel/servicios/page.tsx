@@ -13,6 +13,7 @@ import {
   TablaCuerpo,
   TablaEncabezado,
   Tarjeta,
+  TarjetaEncabezado,
   Td,
   TdCompleta,
   Th,
@@ -26,6 +27,8 @@ import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { BotonBorrar } from '@/componentes/compartido/boton-borrar';
 import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { FormularioServicio } from '@/componentes/servicios/formulario-servicio';
+import { FormularioCategoriaServicio } from '@/componentes/servicios/formulario-categoria-servicio';
+import { PanelDetalleServicio } from '@/componentes/servicios/panel-detalle-servicio';
 import { PanelReceta } from '@/componentes/servicios/panel-receta';
 import {
   ETIQUETAS_ACTIVO,
@@ -59,6 +62,10 @@ export default async function PaginaServicios({
     .map((p) => ({ id_producto: p.id_producto, nombre: p.nombre }));
 
   const pagServicios = paginarFilas(servicios, params);
+  const serviciosPorCategoria = new Map<number, number>();
+  for (const s of servicios) {
+    serviciosPorCategoria.set(s.id_categoria, (serviciosPorCategoria.get(s.id_categoria) ?? 0) + 1);
+  }
 
   return (
     <>
@@ -152,6 +159,10 @@ export default async function PaginaServicios({
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
                     <div className="flex justify-end gap-1">
+                      <PanelDetalleServicio
+                        servicio={s}
+                        categoria={nombreCategoria.get(s.id_categoria) ?? null}
+                      />
                       <PanelReceta
                         idServicio={s.id_servicio}
                         nombreServicio={s.nombre}
@@ -167,6 +178,48 @@ export default async function PaginaServicios({
           </TablaCuerpo>
         </Tabla>
         <Paginacion {...pagServicios.paginacion} />
+      </Tarjeta>
+
+      {/* Vistas 28 y 29: antes las categorías solo se cargaban desde la base. */}
+      <Tarjeta className="mt-6">
+        <TarjetaEncabezado
+          titulo="Categorías de servicio"
+          descripcion="Agrupan el catálogo en la reserva y en los reportes"
+          accion={<FormularioCategoriaServicio />}
+        />
+        <Tabla titulo="Categorías de servicio">
+          <TablaEncabezado>
+            <Th>Categoría</Th>
+            <Th>Descripción</Th>
+            <Th numerico>Servicios</Th>
+            <Th><span className="solo-lectores">Acciones</span></Th>
+          </TablaEncabezado>
+          <TablaCuerpo>
+            {categorias.length === 0 ? (
+              <TdCompleta colSpan={4}>
+                <EstadoVacio
+                  icono="tag"
+                  titulo="Sin categorías"
+                  descripcion="Cree la primera para poder cargar servicios."
+                />
+              </TdCompleta>
+            ) : (
+              categorias.map((c) => (
+                <Tr key={c.id_categoria}>
+                  <Td className="font-medium" etiqueta="Categoría">{c.nombre}</Td>
+                  <Td className="text-secundario" etiqueta="Descripción">{c.descripcion ?? '—'}</Td>
+                  <Td numerico etiqueta="Servicios">{serviciosPorCategoria.get(c.id_categoria) ?? 0}</Td>
+                  <Td etiqueta="Acciones" className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <FormularioCategoriaServicio categoria={c} />
+                      <BotonBorrar tabla="categorias_servicio" id={c.id_categoria} nombre={c.nombre} />
+                    </div>
+                  </Td>
+                </Tr>
+              ))
+            )}
+          </TablaCuerpo>
+        </Tabla>
       </Tarjeta>
     </>
   );

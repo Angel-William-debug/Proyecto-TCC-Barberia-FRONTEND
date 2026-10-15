@@ -12,6 +12,7 @@ import { CATEGORIAS_SERVICIO_DEMO, SERVICIOS_DEMO } from '../demo/datos-catalogo
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
 import { traducirError } from '../errores';
+import { uno } from '../compartido/relaciones';
 import { coincideEstado, coincideTexto, entreFechas, type FiltroTabla } from '../compartido/filtros';
 import { actualizar, crear } from '../compartido/escritura';
 
@@ -97,4 +98,59 @@ export async function crearServicio(entrada: EntradaServicio): Promise<number> {
 /** Edicion de un servicio (CU-003). */
 export async function actualizarServicio(id: number, entrada: EntradaServicio): Promise<void> {
   return actualizar('servicios', id, filaServicio(entrada));
+}
+
+// ---------------------------------------------------------------------------
+// Categorias de servicio (vistas 28 y 29) y detalle del servicio (vista 32),
+// 15/10/2026. Antes las categorias solo se podian crear desde la base.
+// ---------------------------------------------------------------------------
+
+export interface EntradaCategoriaServicio {
+  nombre: string;
+  descripcion: string | null;
+}
+
+export async function crearCategoriaServicio(entrada: EntradaCategoriaServicio): Promise<number> {
+  return crear('categorias_servicio', { ...entrada, estado: true });
+}
+
+export async function actualizarCategoriaServicio(
+  id: number,
+  entrada: EntradaCategoriaServicio,
+): Promise<void> {
+  return actualizar('categorias_servicio', id, { ...entrada });
+}
+
+/** Cuanto se hizo un servicio en los ultimos dias, y quienes lo hicieron. */
+export interface EstadisticaServicio {
+  veces: number;
+  facturado: number;
+  ultimaVez: string | null;
+  porBarbero: Array<{ nombre: string; veces: number }>;
+}
+
+export async function estadisticaServicio(idServicio: number, dias = 90): Promise<EstadisticaServicio> {
+  if (MODO_DEMO) return { veces: 0, facturado: 0, ultimaVez: null, porBarbero: [] };
+  const supabase = await clienteServidor();
+  const desde = new Date(Date.now() - dias * 86_400_000).toISOString();
+  const { data, error } = await supabase
+    .from('historial_servicio')
+    .select('fecha_realizacion, costo_cobrado, profesionales ( nombre )')
+    .eq('id_servicio', idServicio)
+    .gte('fecha_realizacion', desde)
+    .order('fecha_realizacion', { ascending: false });
+  if (error) throw traducirError(error);
+
+  const filas = data ?? [];
+  const porBarbero = new Map<string, number>();
+  for (const f of filas) {
+    const nombre = uno<{ nombre: string }>(f.profesionales)?.nombre ?? '—';
+    porBarbero.set(nombre, (porBarbero.get(nombre) ?? 0) + 1);
+  }
+  return {
+    veces: filas.length,
+    facturado: filas.reduce((suma, f) => suma + Number(f.costo_cobrado), 0),
+    ultimaVez: filas[0]?.fecha_realizacion ?? null,
+    porBarbero: [...porBarbero].map(([nombre, veces]) => ({ nombre, veces })).sort((a, b) => b.veces - a.veces),
+  };
 }

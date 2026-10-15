@@ -66,6 +66,8 @@ export const MODULOS = [
   'usuarios',
   'papelera',
   'auditoria',
+  /** Bandeja, cola de recordatorios e historial de envíos (vistas 86, 87, 95, 100). */
+  'notificaciones',
 ] as const;
 export type Modulo = (typeof MODULOS)[number];
 
@@ -82,7 +84,7 @@ export const MODULOS_POR_ROL: Record<NombreRol, readonly Modulo[]> = {
   administrador: MODULOS.filter((m) => m !== 'mi-dia'),
   recepcionista: [
     'agenda', 'datos-generales', 'clientes', 'servicios', 'profesionales', 'cobros',
-    'facturas', 'inventario', 'papelera',
+    'facturas', 'inventario', 'papelera', 'notificaciones',
   ],
   // El ranking se le ofrece al barbero porque las tres vistas que lo alimentan
   // ya le son legibles: `profesional_consulta` le da lectura sobre
@@ -554,4 +556,34 @@ export interface FacturaDelCliente {
   fechaEmision: string;
   total: number;
   estado: EstadoFactura;
+}
+
+/** Una notificacion con el turno y el cliente a los que se refiere (vista 86). */
+export interface NotificacionDeLista {
+  id_notificacion: number;
+  id_cita: number | null;
+  tipo: string | null;
+  mensaje: string | null;
+  email_destino: string | null;
+  estado_envio: string;
+  fecha_envio: string | null;
+  proveedor: string | null;
+  intentos: number;
+  created_at: string;
+  nombre_cliente: string | null;
+  fecha_turno: string | null;
+  estado_turno: string | null;
+}
+
+/** Un turno que viene, con cuando sale su recordatorio (vista 100). */
+export interface RecordatorioProgramado {
+  id_cita: number;
+  fecha_hora: string;
+  nombre_cliente: string;
+  email: string | null;
+  /** Cuando entra en la ventana de aviso. */
+  sale_a_partir_de: string;
+  /** Estado del recordatorio si ya se intento, o null si todavia no. */
+  estado_envio: string | null;
+  intentos: number;
 }

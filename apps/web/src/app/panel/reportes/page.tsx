@@ -3,9 +3,10 @@ import Link from 'next/link';
 import {
   comisionesPendientes,
   ingresosPorPeriodo,
-  MODO_DEMO,
   previsualizarReporte,
   resumenKpis,
+  resumenRetencion,
+  serviciosMasSolicitados,
   stockCritico,
   TIPOS_REPORTE,
   TITULOS_TIPO_REPORTE,
@@ -13,7 +14,6 @@ import {
 import type { TipoReporte } from '@barber-shop/api';
 import {
   BarraFiltros,
-  Boton,
   CampoBusqueda,
   EstadoVacio,
   Indicador,
@@ -35,6 +35,7 @@ import {
 } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { BotonExportar } from '@/componentes/compartido/boton-exportar';
 import { GraficoIngresos } from '@/componentes/reportes/grafico-ingresos';
 import { GraficoStockCritico } from '@/componentes/reportes/grafico-stock-critico';
 import { fecha, paginarFilas, texto, type Parametros } from '@/lib/filtros';
@@ -71,7 +72,10 @@ export default async function PaginaReportes({
   const params = await searchParams;
   const hoy = new Date();
   const desde = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
-  const hasta = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-28`;
+  // El ultimo dia del mes de verdad: hasta el 15/10/2026 decia 28 fijo y los
+  // indicadores dejaban afuera del 29 al 31.
+  const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+  const hasta = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`;
 
   const tipoParametro = texto(params, 'tipo') ?? '';
   const tipo: TipoReporte = esTipoReporte(tipoParametro) ? tipoParametro : 'general';
@@ -82,13 +86,16 @@ export default async function PaginaReportes({
     busqueda: texto(params, 'q'),
   };
 
-  const [kpis, ingresos, criticos, comisiones, previsualizacion] = await Promise.all([
+  const [kpis, ingresos, criticos, comisiones, previsualizacion, masSolicitados, retencion] = await Promise.all([
     resumenKpis(desde, hasta),
     ingresosPorPeriodo(),
     stockCritico(),
     comisionesPendientes(),
     previsualizarReporte(tipo, filtroReporte),
+    serviciosMasSolicitados().catch(() => []),
+    resumenRetencion().catch(() => null),
   ]);
+  const tasaRetorno = retencion && retencion.conVisitas > 0 ? retencion.volvieron / retencion.conVisitas : 0;
 
   const queryExportar = new URLSearchParams();
   queryExportar.set('tipo', tipo);
@@ -201,6 +208,81 @@ export default async function PaginaReportes({
         </div>
       </div>
 
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        {/* Vista 79 */}
+        <Tarjeta>
+          <TarjetaEncabezado titulo="Servicios más solicitados" descripcion="Desde el inicio, por cantidad de veces" />
+          <Tabla titulo="Servicios más solicitados">
+            <TablaEncabezado>
+              <Th>Servicio</Th>
+              <Th>Categoría</Th>
+              <Th numerico>Veces</Th>
+              <Th numerico>Facturado</Th>
+            </TablaEncabezado>
+            <TablaCuerpo>
+              {masSolicitados.length === 0 ? (
+                <TdCompleta colSpan={4}>
+                  <EstadoVacio icono="sparkles" titulo="Todavía no hay servicios realizados" />
+                </TdCompleta>
+              ) : (
+                masSolicitados.map((s) => (
+                  <Tr key={s.id_servicio}>
+                    <Td className="font-medium" etiqueta="Servicio">{s.nombre}</Td>
+                    <Td className="text-secundario" etiqueta="Categoría">{s.categoria ?? '—'}</Td>
+                    <Td numerico etiqueta="Veces">{s.veces_realizado}</Td>
+                    <Td numerico etiqueta="Facturado">{guaranies(s.facturado)}</Td>
+                  </Tr>
+                ))
+              )}
+            </TablaCuerpo>
+          </Tabla>
+        </Tarjeta>
+
+        {/* Vista 82 */}
+        <Tarjeta>
+          <TarjetaEncabezado
+            titulo="Retención de clientes"
+            descripcion="Cuántos vuelven después de la primera visita"
+            accion={
+              <Link href="/panel/reportes?tipo=inactivos" className="text-cuerpo-sm text-marca font-medium">
+                Ver inactivos
+              </Link>
+            }
+          />
+          {!retencion ? (
+            <EstadoVacio icono="user-round" titulo="No se pudo calcular la retención" />
+          ) : (
+            <div className="px-4 pb-6 sm:px-6">
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  ['Volvieron', porcentaje(tasaRetorno * 100)],
+                  ['Con visitas', String(retencion.conVisitas)],
+                  ['Inactivos', String(retencion.inactivos)],
+                ].map(([etiqueta, valor]) => (
+                  <div key={etiqueta} className="border-borde-sutil rounded-md border p-3">
+                    <p className="text-titulillo text-terciario uppercase">{etiqueta}</p>
+                    <p className="text-titulo-3 text-principal mt-1 font-semibold tabular-nums">{valor}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-titulillo text-terciario mt-5 mb-1 uppercase">Clientes más fieles</p>
+              <ul className="divide-borde-sutil divide-y">
+                {retencion.frecuentes.map((c) => (
+                  <li key={c.id_cliente} className="text-cuerpo-sm flex justify-between gap-3 py-2">
+                    <Link href={`/panel/clientes/${c.id_cliente}`} className="text-principal hover:text-marca">
+                      {c.nombre}
+                    </Link>
+                    <span className="text-secundario tabular-nums">
+                      {c.cantidad_visitas} visitas · {guaranies(c.ticket_promedio)} promedio
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Tarjeta>
+      </div>
+
       <Tarjeta className="mt-6">
         <TarjetaEncabezado
           titulo="Generar reporte"
@@ -225,24 +307,9 @@ export default async function PaginaReportes({
             {previsualizacion.titulo}
             {previsualizacion.filas.length >= 50 && ' · vista previa limitada a 50 filas'}
           </p>
-          {MODO_DEMO ? (
-            <p className="text-cuerpo-sm text-terciario">
-              La exportación no está disponible en modo demostración.
-            </p>
-          ) : (
-            <div className="flex gap-2">
-              <Link href={`/panel/reportes/exportar?${queryExportar.toString()}&formato=excel`}>
-                <Boton variante="secundario" icono="download">
-                  Excel
-                </Boton>
-              </Link>
-              <Link href={`/panel/reportes/exportar?${queryExportar.toString()}&formato=pdf`}>
-                <Boton variante="secundario" icono="download">
-                  PDF
-                </Boton>
-              </Link>
-            </div>
-          )}
+          {/* Mismo menú que el resto de los paneles: con el error y «Reintentar»
+              dentro (vista 99) y el envío por correo. */}
+          <BotonExportar tipo={tipo} searchParams={params} />
         </div>
 
         <Tabla titulo={previsualizacion.titulo}>
