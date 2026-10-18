@@ -64,9 +64,10 @@ export default async function PaginaCobros({
   const cobrado = cobros
     .filter((c) => c.estado === 'pagado' || c.estado === 'parcial')
     .reduce((suma, c) => suma + c.monto, 0);
-  const pendiente = cobros
-    .filter((c) => c.estado === 'pendiente')
-    .reduce((suma, c) => suma + c.monto, 0);
+  // Lo que falta cobrar son los turnos completados con saldo: un turno sin
+  // cobrar no tiene fila en cobros_cliente, asi que sumar los cobros en estado
+  // «pendiente» daba siempre cero (18/10/2026).
+  const pendiente = citasPendientes.reduce((suma, c) => suma + Number(c.saldo), 0);
 
   const pagCobros = paginarFilas(cobros, params);
 

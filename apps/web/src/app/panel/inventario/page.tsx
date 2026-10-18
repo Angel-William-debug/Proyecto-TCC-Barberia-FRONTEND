@@ -95,8 +95,11 @@ export default async function PaginaInventario({
   const criticos = productos.filter(
     (p) => p.nivel === 'sin_stock' || p.nivel === 'critico',
   ).length;
+  // El stock va en la unidad de uso (ml, g) y el precio es el de la unidad de
+  // compra (el frasco, el pote): se convierte con la equivalencia. Hasta el
+  // 18/10/2026 se multiplicaban directo y la cifra salia en miles de millones.
   const valorizado = productos.reduce(
-    (suma, p) => suma + Math.max(0, p.stock_actual) * p.precio_unitario,
+    (suma, p) => suma + (Math.max(0, p.stock_actual) / (p.cantidad_uso_estandar || 1)) * p.precio_unitario,
     0,
   );
 
