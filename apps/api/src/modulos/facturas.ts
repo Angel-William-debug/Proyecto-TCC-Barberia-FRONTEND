@@ -202,6 +202,26 @@ export async function crearFactura(idCobro: number): Promise<number> {
   return idFactura;
 }
 
+/**
+ * Quien atendio el turno, para el comprobante. Los ids salen de detalle_cita
+ * (el cliente ve el de sus turnos) y los nombres de v_publico_barberos: el
+ * cliente no lee profesionales. Un barbero que ya no esta activo no figura en
+ * la vista; si no queda ninguno, el comprobante sale sin esa linea.
+ */
+async function barberosDeLaCita(idCita: number | null): Promise<string | null> {
+  if (!idCita) return null;
+  const supabase = await clienteServidor();
+  const { data: detalle } = await supabase.from('detalle_cita').select('id_profesional').eq('id_cita', idCita);
+  const ids = [...new Set((detalle ?? []).map((d) => d.id_profesional as number))];
+  if (ids.length === 0) return null;
+  const { data: barberos } = await supabase
+    .from('v_publico_barberos')
+    .select('id_profesional, nombre')
+    .in('id_profesional', ids);
+  const nombres = (barberos ?? []).map((b) => b.nombre as string);
+  return nombres.length ? nombres.join(', ') : null;
+}
+
 /** El PDF del comprobante (CU-025), con los datos del establecimiento (CU-020). */
 export async function generarFacturaPdf(idFactura: number): Promise<Buffer> {
   const [factura, configuracion] = await Promise.all([
@@ -211,6 +231,8 @@ export async function generarFacturaPdf(idFactura: number): Promise<Buffer> {
 
   if (!factura) throw new ErrorAplicacion('No se encontró la factura solicitada.');
 
+  const atendidoPor = await barberosDeLaCita(factura.id_cita);
+
   return generarPdfFactura({
     numero: String(factura.id_factura).padStart(6, '0'),
     fechaEmision: FECHA(factura.fecha_emision),
@@ -218,6 +240,7 @@ export async function generarFacturaPdf(idFactura: number): Promise<Buffer> {
     rucBarberia: configuracion.ruc,
     direccionBarberia: configuracion.direccion,
     nombreCliente: factura.nombre_cliente,
+    atendidoPor,
     observaciones: factura.observaciones,
     lineas: factura.lineas.map((l) => ({
       descripcion: l.descripcion,

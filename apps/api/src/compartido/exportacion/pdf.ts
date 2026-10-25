@@ -191,6 +191,8 @@ export interface DatosFacturaPdf {
   rucBarberia: string | null;
   direccionBarberia?: string | null;
   nombreCliente: string;
+  /** El barbero o los barberos del turno. */
+  atendidoPor?: string | null;
   observaciones: string | null;
   lineas: Array<{ descripcion: string; cantidad: number; precioUnitario: string; subtotal: string }>;
   subtotal: string;
@@ -267,6 +269,10 @@ export async function generarPdfFactura(datos: DatosFacturaPdf): Promise<Buffer>
 
   escribir('Cliente', MARGEN, y, { size: 8, color: COLOR_TEXTO_SECUNDARIO });
   escribir(datos.nombreCliente, MARGEN, y - 14, { size: 12, negrita: true });
+  if (datos.atendidoPor) {
+    escribir(`Atendido por: ${datos.atendidoPor}`, MARGEN, y - 28, { size: 9, color: COLOR_TEXTO_SECUNDARIO });
+    y -= 14;
+  }
   y -= 40;
 
   const columnas = [
