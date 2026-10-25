@@ -1,5 +1,6 @@
 import { listarCitasPendientesDeCobro, listarCobros, listarMetodosPago } from '@barber-shop/api';
 import { ESTADOS_COBRO } from '@barber-shop/tipos';
+import Link from 'next/link';
 import {
   BarraFiltros,
   CampoBusqueda,
@@ -162,7 +163,17 @@ export default async function PaginaCobros({
                     <ChipEstado presentacion={PRESENTACION_COBRO[c.estado]} />
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    {c.estado === 'pagado' && <BotonEmitirFactura idCobro={c.id_cobro} />}
+                    {c.id_factura ? (
+                      <Link
+                        href={`/panel/facturas/${c.id_factura}/pdf`}
+                        target="_blank"
+                        className="text-cuerpo-sm text-marca font-medium"
+                      >
+                        Ver factura
+                      </Link>
+                    ) : (
+                      c.estado === 'pagado' && <BotonEmitirFactura idCobro={c.id_cobro} />
+                    )}
                   </Td>
                 </Tr>
               ))

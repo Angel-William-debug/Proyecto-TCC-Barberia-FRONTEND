@@ -39,7 +39,8 @@ export async function listarCobros(filtro: FiltroCobros = {}): Promise<CobroDeLi
     .select(
       `id_cobro, id_cita, monto, estado, fecha_pago,
        metodos_pago ( nombre ),
-       citas ( clientes ( nombre ) )`,
+       citas ( clientes ( nombre ) ),
+       facturas ( id_factura, deleted )`,
     )
     .eq('deleted', false)
     .order('fecha_pago', { ascending: false, nullsFirst: false })
@@ -56,6 +57,8 @@ export async function listarCobros(filtro: FiltroCobros = {}): Promise<CobroDeLi
     const cita = uno<{ clientes: unknown }>(f.citas);
     const cliente = uno<{ nombre: string }>(cita?.clientes);
     const metodo = uno<{ nombre: string }>(f.metodos_pago);
+    // La factura vigente del cobro: con ella la lista ya no ofrece «Facturar».
+    const factura = ((f.facturas ?? []) as { id_factura: number; deleted: boolean }[]).find((x) => !x.deleted);
 
     return {
       id_cobro: f.id_cobro,
@@ -65,6 +68,7 @@ export async function listarCobros(filtro: FiltroCobros = {}): Promise<CobroDeLi
       monto: f.monto,
       estado: f.estado,
       fecha_pago: f.fecha_pago,
+      id_factura: factura?.id_factura ?? null,
     } satisfies CobroDeLista;
   });
 

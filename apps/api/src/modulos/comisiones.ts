@@ -150,7 +150,9 @@ export async function exportarFichasComisionesZip(): Promise<Buffer> {
 /**
  * Liquidacion de comisiones (CU-009).
  *
- * Marca como pagadas las comisiones pendientes y les pone la fecha. Se puede
+ * Marca como liquidadas las comisiones pendientes y les pone la fecha. El
+ * estado es 'liquidado': la base (pagos_profesional_estado_check) no acepta
+ * 'pagado', que es el de los cobros y los pagos a proveedores. Se puede
  * acotar a un barbero; sin barbero, liquida todas.
  *
  * La fecha la pone el servidor y no el formulario: si la eligiera el usuario
@@ -163,7 +165,7 @@ export async function liquidarComisiones(idProfesional?: number): Promise<number
 
   let consulta = supabase
     .from('pagos_profesional')
-    .update({ estado: 'pagado', fecha_liquidacion: new Date().toISOString().slice(0, 10) })
+    .update({ estado: 'liquidado', fecha_liquidacion: new Date().toISOString().slice(0, 10) })
     .eq('estado', 'pendiente');
 
   if (idProfesional) consulta = consulta.eq('id_profesional', idProfesional);

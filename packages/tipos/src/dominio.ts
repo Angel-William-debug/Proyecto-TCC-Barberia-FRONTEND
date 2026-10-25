@@ -156,6 +156,8 @@ export interface CobroDeLista {
   monto: number;
   estado: EstadoCobro;
   fecha_pago: string | null;
+  /** La factura vigente del cobro, si ya se emitio. */
+  id_factura?: number | null;
 }
 
 export interface ComisionDeLista {

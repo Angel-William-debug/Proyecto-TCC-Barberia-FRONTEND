@@ -37,8 +37,18 @@ const REGLAS_DE_NEGOCIO: Array<{ patron: RegExp; mensaje: string; regla: string 
     regla: 'RN-009',
   },
   {
+    patron: /RN-018b/,
+    mensaje: 'No se puede completar un turno de un día que todavía no llegó.',
+    regla: 'RN-018b',
+  },
+  {
+    patron: /RN-008b/,
+    mensaje: 'La fecha de nacimiento no puede ser futura.',
+    regla: 'RN-008b',
+  },
+  {
     patron: /RN-018/,
-    mensaje: 'Esta cita ya esta completada o cancelada y no puede modificarse.',
+    mensaje: 'Esta cita ya está completada o cancelada y no puede modificarse.',
     regla: 'RN-018',
   },
   {
@@ -53,7 +63,7 @@ const REGLAS_DE_NEGOCIO: Array<{ patron: RegExp; mensaje: string; regla: string 
   },
   {
     patron: /RN-027/,
-    mensaje: 'Una comision liquidada no puede modificarse ni revertirse.',
+    mensaje: 'Una comisión liquidada no puede modificarse ni revertirse.',
     regla: 'RN-027',
   },
   {
@@ -68,7 +78,7 @@ const REGLAS_DE_NEGOCIO: Array<{ patron: RegExp; mensaje: string; regla: string 
   },
   {
     patron: /RN-031/,
-    mensaje: 'El stock disponible no alcanza. Confirme la excepcion para continuar.',
+    mensaje: 'El stock disponible no alcanza. Confirme la excepción para continuar.',
     regla: 'RN-031',
   },
   {
@@ -78,17 +88,17 @@ const REGLAS_DE_NEGOCIO: Array<{ patron: RegExp; mensaje: string; regla: string 
   },
   {
     patron: /CU-020: la barberia no atiende/,
-    mensaje: 'La barberia no atiende ese dia.',
+    mensaje: 'La barbería no atiende ese día.',
     regla: 'CU-020',
   },
   {
     patron: /CU-020/,
-    mensaje: 'Ese horario queda fuera del horario de atencion de la barberia.',
+    mensaje: 'Ese horario queda fuera del horario de atención de la barbería.',
     regla: 'CU-020',
   },
   {
     patron: /No se puede mover un turno al pasado/,
-    mensaje: 'No se puede mover un turno a un momento que ya paso.',
+    mensaje: 'No se puede mover un turno a un momento que ya pasó.',
     regla: 'CU-006',
   },
   {
@@ -110,12 +120,12 @@ const REGLAS_DE_NEGOCIO: Array<{ patron: RegExp; mensaje: string; regla: string 
 
 /** Restricciones cuyo nombre identifica el problema con precision. */
 const RESTRICCIONES: Record<string, string> = {
-  citas_estado_check: 'El estado indicado para la cita no es valido.',
-  cobros_cliente_estado_check: 'El estado indicado para el cobro no es valido.',
-  pagos_profesional_estado_check: 'El estado indicado para la comision no es valido.',
-  pedidos_estado_check: 'El estado indicado para el pedido no es valido.',
-  usuarios_email_key: 'Ya existe un usuario con ese correo electronico.',
-  clientes_email_key: 'Ya existe un cliente con ese correo electronico.',
+  citas_estado_check: 'El estado indicado para la cita no es válido.',
+  cobros_cliente_estado_check: 'El estado indicado para el cobro no es válido.',
+  pagos_profesional_estado_check: 'El estado indicado para la comisión no es válido.',
+  pedidos_estado_check: 'El estado indicado para el pedido no es válido.',
+  usuarios_email_key: 'Ya existe un usuario con ese correo electrónico.',
+  clientes_email_key: 'Ya existe un cliente con ese correo electrónico.',
 
   // Indices unicos parciales del borrado logico. Chocan en dos situaciones:
   // al dar de alta con un valor que ya usa un registro vigente, y al RESTAURAR
@@ -123,44 +133,44 @@ const RESTRICCIONES: Record<string, string> = {
   // desconcierta si el mensaje no lo nombra: el registro que estorba estuvo
   // invisible todo el tiempo.
   clientes_email_vigente:
-    'Ese correo ya pertenece a otro cliente. Si esta restaurando un cliente '
-    + 'borrado, primero cambie el correo del que lo esta ocupando.',
+    'Ese correo ya pertenece a otro cliente. Si está restaurando un cliente '
+    + 'borrado, primero cambie el correo del que lo está ocupando.',
   usuarios_email_vigente:
-    'Ese correo ya pertenece a otro usuario. Si esta restaurando un usuario '
-    + 'borrado, primero cambie el correo del que lo esta ocupando.',
+    'Ese correo ya pertenece a otro usuario. Si está restaurando un usuario '
+    + 'borrado, primero cambie el correo del que lo está ocupando.',
   servicios_categoria_nombre_vigente:
-    'Ya existe un servicio con ese nombre en la misma categoria.',
-  categorias_servicio_nombre_vigente: 'Ya existe una categoria de servicio con ese nombre.',
-  categorias_producto_nombre_vigente: 'Ya existe una categoria de producto con ese nombre.',
-  metodos_pago_nombre_vigente: 'Ya existe un metodo de pago con ese nombre.',
-  servicio_producto_vigente: 'Ese producto ya esta en la receta de este servicio.',
-  horarios_atencion_dia_vigente: 'Ya existe un horario definido para ese dia.',
-  usuarios_email_formato_check: 'El correo electronico no tiene un formato valido.',
-  clientes_email_formato_check: 'El correo electronico no tiene un formato valido.',
-  proveedores_email_formato_check: 'El correo electronico no tiene un formato valido.',
-  servicios_categoria_nombre_key: 'Ya existe un servicio con ese nombre en la misma categoria.',
-  profesionales_porcentaje_com_check: 'El porcentaje de comision debe estar entre 0 y 100.',
-  servicios_duracion_min_check: 'La duracion debe ser mayor a cero.',
+    'Ya existe un servicio con ese nombre en la misma categoría.',
+  categorias_servicio_nombre_vigente: 'Ya existe una categoría de servicio con ese nombre.',
+  categorias_producto_nombre_vigente: 'Ya existe una categoría de producto con ese nombre.',
+  metodos_pago_nombre_vigente: 'Ya existe un método de pago con ese nombre.',
+  servicio_producto_vigente: 'Ese producto ya está en la receta de este servicio.',
+  horarios_atencion_dia_vigente: 'Ya existe un horario definido para ese día.',
+  usuarios_email_formato_check: 'El correo electrónico no tiene un formato válido.',
+  clientes_email_formato_check: 'El correo electrónico no tiene un formato válido.',
+  proveedores_email_formato_check: 'El correo electrónico no tiene un formato válido.',
+  servicios_categoria_nombre_key: 'Ya existe un servicio con ese nombre en la misma categoría.',
+  profesionales_porcentaje_com_check: 'El porcentaje de comisión debe estar entre 0 y 100.',
+  servicios_duracion_min_check: 'La duración debe ser mayor a cero.',
   servicios_precio_base_check: 'El precio no puede ser negativo.',
-  productos_stock_min_max_check: 'El stock maximo debe ser mayor o igual al minimo.',
+  productos_stock_min_max_check: 'El stock máximo debe ser mayor o igual al mínimo.',
   pagos_profesional_id_historial_key:
-    'Ese servicio ya tiene su comision registrada. No se puede liquidar dos veces.',
-  horarios_atencion_dia_semana_key: 'Ya existe un horario definido para ese dia.',
+    'Ese servicio ya tiene su comisión registrada. No se puede liquidar dos veces.',
+  horarios_atencion_dia_semana_key: 'Ya existe un horario definido para ese día.',
   horarios_atencion_check: 'La hora de cierre debe ser posterior a la de apertura.',
 };
 
 /** Codigos de PostgreSQL que llegan sin un nombre de restriccion util. */
 const CODIGOS: Record<string, string> = {
-  '23503': 'El registro esta vinculado a otros datos y no se puede completar la operacion.',
+  '23503': 'El registro está vinculado a otros datos y no se puede completar la operación.',
   '23505': 'Ya existe un registro con esos datos.',
-  '23514': 'Los datos no cumplen una validacion de la base.',
-  '42501': 'No tiene permisos para realizar esta operacion.',
-  PGRST116: 'No se encontro el registro solicitado.',
-  PGRST301: 'La sesion expiro. Vuelva a iniciar sesion.',
+  '23514': 'Los datos no cumplen una validación de la base.',
+  '42501': 'No tiene permisos para realizar esta operación.',
+  PGRST116: 'No se encontró el registro solicitado.',
+  PGRST301: 'La sesión expiró. Vuelva a iniciar sesión.',
 };
 
 export function traducirError(error: PostgrestError | Error | null): ErrorAplicacion {
-  if (!error) return new ErrorAplicacion('Ocurrio un error desconocido.');
+  if (!error) return new ErrorAplicacion('Ocurrió un error desconocido.');
 
   const mensaje = error.message ?? '';
 
@@ -181,7 +191,7 @@ export function traducirError(error: PostgrestError | Error | null): ErrorAplica
   // Ultimo recurso. Se conserva la causa para el registro del servidor, pero
   // no se muestra al usuario.
   return new ErrorAplicacion(
-    'No se pudo completar la operacion. Intente nuevamente en unos instantes.',
+    'No se pudo completar la operación. Intente nuevamente en unos instantes.',
     undefined,
     error,
   );
@@ -194,7 +204,7 @@ export async function ejecutar<T>(
   const { data, error } = await consulta;
   if (error) throw traducirError(error);
   if (data === null) {
-    throw new ErrorAplicacion('La consulta no devolvio datos.');
+    throw new ErrorAplicacion('La consulta no devolvió datos.');
   }
   return data;
 }

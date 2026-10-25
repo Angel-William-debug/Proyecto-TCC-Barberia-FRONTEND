@@ -1,4 +1,5 @@
 import type {
+  EstadoCita,
   ResumenKpis,
   VistaComisionPendiente,
   VistaIngresoPorPeriodo,
@@ -264,6 +265,10 @@ export interface FiltroReporte {
   desde?: string;
   hasta?: string;
   busqueda?: string;
+  /** Agenda: el barbero filtrado en pantalla (id). */
+  barbero?: string;
+  /** Agenda: estados filtrados, separados por coma. */
+  estado?: string;
 }
 
 interface ColumnaDef {
@@ -582,7 +587,13 @@ async function datosReporte(tipo: TipoReporte, filtro: FiltroReporte): Promise<D
         filtro.desde ?? `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
       const hasta = filtro.hasta ?? hoy.toISOString().slice(0, 10);
 
-      const filas = await listarAgenda({ desde, hasta, busqueda: filtro.busqueda });
+      const filas = await listarAgenda({
+        desde,
+        hasta,
+        busqueda: filtro.busqueda,
+        idProfesional: filtro.barbero ? Number(filtro.barbero) : undefined,
+        estados: filtro.estado ? (filtro.estado.split(',') as EstadoCita[]) : undefined,
+      });
 
       return {
         titulo,

@@ -189,6 +189,7 @@ export interface DatosFacturaPdf {
   fechaEmision: string;
   nombreBarberia: string;
   rucBarberia: string | null;
+  direccionBarberia?: string | null;
   nombreCliente: string;
   observaciones: string | null;
   lineas: Array<{ descripcion: string; cantidad: number; precioUnitario: string; subtotal: string }>;
@@ -240,10 +241,13 @@ export async function generarPdfFactura(datos: DatosFacturaPdf): Promise<Buffer>
   if (datos.rucBarberia) {
     escribir(`RUC: ${datos.rucBarberia}`, MARGEN, y - 18, { size: 9, color: COLOR_TEXTO_SECUNDARIO });
   }
+  if (datos.direccionBarberia) {
+    escribir(datos.direccionBarberia, MARGEN, y - 30, { size: 9, color: COLOR_TEXTO_SECUNDARIO });
+  }
 
   escribir('COMPROBANTE DE VENTA', ANCHO_PAGINA - MARGEN - 200, y, { size: 12, negrita: true });
-  escribir(`N.o ${datos.numero}`, ANCHO_PAGINA - MARGEN - 200, y - 16, { size: 10 });
-  escribir(`Emision: ${datos.fechaEmision}`, ANCHO_PAGINA - MARGEN - 200, y - 30, {
+  escribir(`N.º ${datos.numero}`, ANCHO_PAGINA - MARGEN - 200, y - 16, { size: 10 });
+  escribir(`Emisión: ${datos.fechaEmision}`, ANCHO_PAGINA - MARGEN - 200, y - 30, {
     size: 9,
     color: COLOR_TEXTO_SECUNDARIO,
   });
@@ -266,7 +270,7 @@ export async function generarPdfFactura(datos: DatosFacturaPdf): Promise<Buffer>
   y -= 40;
 
   const columnas = [
-    { titulo: 'Descripcion', ancho: 3 },
+    { titulo: 'Descripción', ancho: 3 },
     { titulo: 'Cant.', ancho: 1 },
     { titulo: 'Precio unit.', ancho: 1.3 },
     { titulo: 'Subtotal', ancho: 1.3 },

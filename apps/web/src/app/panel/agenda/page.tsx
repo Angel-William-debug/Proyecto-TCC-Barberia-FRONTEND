@@ -146,7 +146,9 @@ export default async function PaginaAgenda({
           <FormularioTurno
             clientes={clientes?.datos ?? []}
             servicios={servicios}
-            profesionales={barberos}
+            // Para dar un turno, solo los barberos activos. El filtro de la
+            // agenda sigue mostrando todos, para ver turnos viejos de un inactivo.
+            profesionales={barberos.filter((b) => b.estado)}
             fecha={dia}
           />
         }
@@ -320,11 +322,16 @@ export default async function PaginaAgenda({
                   <Td etiqueta="Acciones" className="text-right">
                     <span className="inline-flex items-center gap-1">
                       <PanelDetalleCita cita={c} />
-                      {(c.estado === 'pendiente' ||
-                        c.estado === 'confirmado' ||
-                        c.estado === 'en_proceso') && (
-                        <PanelCierreServicio idCita={c.id_cita} nombreCliente={c.cliente.nombre} />
-                      )}
+                      {/* Siempre montado: al completar, la fila se refresca como
+                          completada y el panel de insumos tiene que seguir abierto.
+                          Solo el boton depende del estado. */}
+                      <PanelCierreServicio
+                        idCita={c.id_cita}
+                        nombreCliente={c.cliente.nombre}
+                        puedeCompletar={
+                          c.estado === 'pendiente' || c.estado === 'confirmado' || c.estado === 'en_proceso'
+                        }
+                      />
                     </span>
                   </Td>
                 </Tr>

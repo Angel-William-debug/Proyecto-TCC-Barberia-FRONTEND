@@ -20,7 +20,13 @@ import { generarPdfFactura } from '../compartido/exportacion/pdf';
 import { obtenerConfiguracion } from './configuracion';
 
 const GUARANIES = (n: number) => `Gs. ${Math.round(n).toLocaleString('es-PY')}`;
-const FECHA = (iso: string) => new Date(iso).toLocaleDateString('es-PY');
+const FECHA = (iso: string) =>
+  new Date(iso).toLocaleDateString('es-PY', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'America/Asuncion',
+  });
 
 export async function listarFacturas(filtro: FiltroTabla = {}): Promise<FacturaDeLista[]> {
   if (MODO_DEMO) return [];
@@ -203,13 +209,14 @@ export async function generarFacturaPdf(idFactura: number): Promise<Buffer> {
     obtenerConfiguracion(),
   ]);
 
-  if (!factura) throw new ErrorAplicacion('No se encontro la factura solicitada.');
+  if (!factura) throw new ErrorAplicacion('No se encontró la factura solicitada.');
 
   return generarPdfFactura({
     numero: String(factura.id_factura).padStart(6, '0'),
     fechaEmision: FECHA(factura.fecha_emision),
     nombreBarberia: configuracion.nombre_barberia,
     rucBarberia: configuracion.ruc,
+    direccionBarberia: configuracion.direccion,
     nombreCliente: factura.nombre_cliente,
     observaciones: factura.observaciones,
     lineas: factura.lineas.map((l) => ({

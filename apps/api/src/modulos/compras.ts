@@ -138,7 +138,10 @@ export async function crearPedido(entrada: EntradaNuevoPedido): Promise<number> 
       id_proveedor: entrada.idProveedor,
       id_usuario: usuario?.idUsuario ?? null,
       fecha_pedido: entrada.fechaPedido,
-      estado: entrada.estado,
+      // Siempre nace como pedido: la entrada de stock la hace el disparador
+      // fn_trg_pedido_recibido al CAMBIAR a recibido, y en el alta todavia no
+      // hay detalle. El estado elegido se aplica despues de cargar las lineas.
+      estado: 'pedido',
     })
     .select('id_pedido')
     .single();
@@ -160,6 +163,15 @@ export async function crearPedido(entrada: EntradaNuevoPedido): Promise<number> 
   if (errorDetalle) {
     await supabase.from('pedidos').delete().eq('id_pedido', idPedido);
     throw traducirError(errorDetalle);
+  }
+
+  if (entrada.estado && entrada.estado !== 'pedido') {
+    const cambios: Record<string, string> = { estado: entrada.estado };
+    if (entrada.estado === 'recibido' || entrada.estado === 'completado') {
+      cambios.fecha_recepcion = new Date().toISOString();
+    }
+    const { error: errorEstado } = await supabase.from('pedidos').update(cambios).eq('id_pedido', idPedido);
+    if (errorEstado) throw traducirError(errorEstado);
   }
 
   return idPedido;

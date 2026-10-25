@@ -122,10 +122,13 @@ export async function accionCancelarTurno(datos: FormData): Promise<ResultadoAcc
 export async function accionActualizarPerfil(datos: FormData): Promise<ResultadoAccion> {
   const nombre = texto(datos, 'nombre');
   const telefono = texto(datos, 'telefono');
+  const nacimiento = textoOpcional(datos, 'fechaNacimiento');
 
   const v = new Validacion();
   v.exigir(nombre.length >= 3, 'nombre', 'Escriba su nombre y apellido.');
   v.exigir(telefono.length >= 6, 'telefono', 'Escriba un teléfono de contacto.');
+  // aaaa-MM-dd se compara como texto. La base tambien lo rechaza (RN-008b).
+  v.exigir(!nacimiento || nacimiento <= new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Asuncion' }).format(new Date()), 'fechaNacimiento', 'La fecha de nacimiento no puede ser futura.');
 
   if (v.hayErrores) return v.resultado;
 
@@ -134,7 +137,7 @@ export async function accionActualizarPerfil(datos: FormData): Promise<Resultado
       nombre,
       telefono,
       direccion: textoOpcional(datos, 'direccion') ?? undefined,
-      fechaNacimiento: textoOpcional(datos, 'fechaNacimiento') ?? undefined,
+      fechaNacimiento: nacimiento ?? undefined,
     }),
   );
 }

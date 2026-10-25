@@ -54,8 +54,21 @@ function aServicios(sugerencias: SugerenciaCierre[]): ServicioConInsumos[] {
  * mientras el disparador ya generó el historial y la comisión. Si el usuario
  * cierra sin confirmar, el turno queda completado sin insumos registrados;
  * hoy no hay forma de retomarlo desde aca, es una limitacion conocida.
+ *
+ * La agenda lo deja montado aunque el turno ya este completado
+ * (`puedeCompletar` en false): al completar, la pagina se refresca y la fila
+ * pasa a «completado». Antes el componente se desmontaba en ese momento y el
+ * panel se cerraba solo, sin dejar confirmar el consumo (QA del 25/10/2026).
  */
-export function PanelCierreServicio({ idCita, nombreCliente }: { idCita: number; nombreCliente: string }) {
+export function PanelCierreServicio({
+  idCita,
+  nombreCliente,
+  puedeCompletar = true,
+}: {
+  idCita: number;
+  nombreCliente: string;
+  puedeCompletar?: boolean;
+}) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const pedirConfirmacion = useConfirmar();
@@ -143,9 +156,16 @@ export function PanelCierreServicio({ idCita, nombreCliente }: { idCita: number;
 
   return (
     <>
-      <Boton variante="secundario" tamano="sm" icono="check-check" onClick={iniciarCierre} disabled={ocupado}>
-        Completar
-      </Boton>
+      {puedeCompletar && (
+        <span className="inline-flex flex-col items-end gap-1">
+          <Boton variante="secundario" tamano="sm" icono="check-check" onClick={iniciarCierre} disabled={ocupado}>
+            Completar
+          </Boton>
+          {/* El error de completar (por ejemplo, un turno de un dia que no llego)
+              se ve aca: el panel lateral todavia no esta abierto. */}
+          {error && !abierto && <span className="text-etiqueta text-peligro">{error}</span>}
+        </span>
+      )}
 
       <PanelLateral
         abierto={abierto}

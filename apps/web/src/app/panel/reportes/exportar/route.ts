@@ -46,6 +46,8 @@ export async function GET(request: Request): Promise<NextResponse> {
     desde: url.searchParams.get('desde') ?? undefined,
     hasta: url.searchParams.get('hasta') ?? undefined,
     busqueda: url.searchParams.get('q') ?? undefined,
+    barbero: url.searchParams.get('barbero') ?? undefined,
+    estado: url.searchParams.get('estado') ?? undefined,
   };
 
   try {

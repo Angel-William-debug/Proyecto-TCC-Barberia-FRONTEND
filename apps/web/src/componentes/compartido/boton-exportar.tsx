@@ -77,6 +77,11 @@ export function BotonExportar({
   if (desde) query.set('desde', desde);
   if (hasta) query.set('hasta', hasta);
   if (busqueda) query.set('q', busqueda);
+  // La agenda filtra además por barbero y estado; los otros reportes los ignoran.
+  const barbero = searchParams && texto(searchParams, 'barbero');
+  const estado = searchParams && texto(searchParams, 'estado');
+  if (barbero) query.set('barbero', barbero);
+  if (estado) query.set('estado', estado);
 
   function cerrar() {
     if (contenedor.current) contenedor.current.open = false;
