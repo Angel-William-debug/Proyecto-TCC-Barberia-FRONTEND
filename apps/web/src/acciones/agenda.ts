@@ -12,6 +12,7 @@ import {
   exigirSesion,
   registrarProductosUtilizados,
   reprogramarCita,
+  stockDeProductos,
 } from '@barber-shop/api';
 import type { EntradaProductoUtilizado, SugerenciaCierre } from '@barber-shop/tipos';
 
@@ -83,6 +84,12 @@ export async function registrarInsumosAccion(
 ): Promise<ResultadoAccion> {
   await exigirSesion();
   return ejecutar('/panel/inventario', () => registrarProductosUtilizados(entradas));
+}
+
+/** Vuelve a leer el stock de los insumos del turno (después de cargar una entrada). */
+export async function stockActualAccion(ids: number[]): Promise<Record<number, number>> {
+  await exigirSesion();
+  return stockDeProductos(ids);
 }
 
 /**

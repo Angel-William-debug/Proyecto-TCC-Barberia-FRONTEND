@@ -61,6 +61,7 @@ export {
   hayConflictoHorario,
   completarCita,
   registrarProductosUtilizados,
+  stockDeProductos,
 } from './modulos/agenda';
 
 // --- Clientes --------------------------------------------------------------

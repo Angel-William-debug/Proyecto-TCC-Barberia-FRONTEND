@@ -201,14 +201,6 @@ export default async function PaginaInventario({
                   <Td className="font-medium" etiqueta="Producto">{p.nombre}</Td>
                   <Td numerico className={p.stock_actual <= 0 ? 'text-peligro font-medium' : ''} etiqueta="Stock actual">
                     {cantidad(p.stock_actual)}
-                    {/* Negativo es real, no un error de cuenta: se usó más de lo que
-                        figuraba, como excepción de stock (RN-031). Sin esta línea se
-                        leía como una falla (QA F2-02, 11/11/2026). */}
-                    {p.stock_actual < 0 && (
-                      <span className="text-titulillo text-terciario block font-normal">
-                        Se usó más de lo cargado: falta una entrada o un ajuste
-                      </span>
-                    )}
                   </Td>
                   <Td numerico className="text-secundario" etiqueta="Mínimo">
                     {cantidad(p.stock_minimo)}

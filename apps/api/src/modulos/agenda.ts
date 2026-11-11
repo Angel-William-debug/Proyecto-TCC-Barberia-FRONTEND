@@ -452,12 +452,11 @@ export async function completarCita(idCita: number): Promise<SugerenciaCierre[]>
 /**
  * Confirma el consumo de insumos de un turno recien cerrado (CU-011).
  *
- * `excepcionStock` lo decide el frontend ANTES de enviar, comparando la
- * cantidad cargada contra el `stockActual` que devolvio `completarCita`: es
- * el mismo dato, asi que no hace falta un ida y vuelta para descubrir que una
- * linea va a quedar negativa. Si el stock cambio entre la sugerencia y el
- * envio, el disparador `trg_stock_no_negativo` igual lo rechaza (RN-031) y
- * `errores.ts` lo traduce.
+ * Desde el 11/11/2026 el stock nunca queda negativo (RN-031, migracion
+ * 20261111180000): el panel no deja confirmar si algo no alcanza, y si el
+ * stock cambio entre la sugerencia y el envio, el disparador
+ * `trg_stock_no_negativo` lo rechaza y `errores.ts` lo traduce. Ya no existe
+ * la "excepcion de stock": `excepcion_stock` va siempre en false.
  */
 export async function registrarProductosUtilizados(
   entradas: EntradaProductoUtilizado[],
@@ -473,9 +472,24 @@ export async function registrarProductosUtilizados(
       id_historial: e.idHistorial,
       id_producto: e.idProducto,
       cantidad_usada: e.cantidadUsada,
-      excepcion_stock: e.excepcionStock ?? false,
+      excepcion_stock: false,
     })),
   );
 
   if (error) throw traducirError(error);
+}
+
+/**
+ * Stock actual de unos productos, para que el panel de insumos lo vuelva a
+ * leer despues de que alguien cargo una entrada, sin cerrar el panel.
+ */
+export async function stockDeProductos(ids: number[]): Promise<Record<number, number>> {
+  if (MODO_DEMO || ids.length === 0) return {};
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase
+    .from('productos')
+    .select('id_producto, stock_actual')
+    .in('id_producto', ids);
+  if (error) throw traducirError(error);
+  return Object.fromEntries((data ?? []).map((p) => [p.id_producto, Number(p.stock_actual)]));
 }

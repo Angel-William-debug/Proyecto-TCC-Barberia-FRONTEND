@@ -375,7 +375,7 @@ export interface EntradaProductoUtilizado {
   idHistorial: number;
   idProducto: number;
   cantidadUsada: number;
-  /** RN-031: el usuario confirmo consumir por encima del stock disponible. */
+  /** Ya no se usa: desde el 11/11/2026 no se puede consumir por encima del stock (RN-031). */
   excepcionStock?: boolean;
 }
 

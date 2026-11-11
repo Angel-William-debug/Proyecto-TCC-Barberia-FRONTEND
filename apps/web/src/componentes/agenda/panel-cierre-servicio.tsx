@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 
@@ -15,7 +16,7 @@ import {
   useConfirmar,
 } from '@barber-shop/ui';
 
-import { completarCitaAccion, registrarInsumosAccion } from '@/acciones/agenda';
+import { completarCitaAccion, registrarInsumosAccion, stockActualAccion } from '@/acciones/agenda';
 
 interface LineaInsumo {
   idProducto: number;
@@ -54,6 +55,12 @@ function aServicios(sugerencias: SugerenciaCierre[]): ServicioConInsumos[] {
  * mientras el disparador ya generó el historial y la comisión. Si el usuario
  * cierra sin confirmar, el turno queda completado sin insumos registrados;
  * hoy no hay forma de retomarlo desde aca, es una limitacion conocida.
+ *
+ * El stock nunca queda negativo (RN-031, desde el 11/11/2026): si lo cargado
+ * supera lo que hay -sumando el mismo producto en todos los servicios del
+ * turno-, «Confirmar consumo» queda bloqueado. Se carga la entrada en
+ * Inventario (otra pestaña) y «Actualizar stock» lo vuelve a leer sin cerrar
+ * el panel, que si se cierra ya no se retoma.
  *
  * La agenda lo deja montado aunque el turno ya este completado
  * (`puedeCompletar` en false): al completar, la pagina se refresca y la fila
@@ -131,7 +138,6 @@ export function PanelCierreServicio({
           idHistorial: s.idHistorial,
           idProducto: p.idProducto,
           cantidadUsada: p.cantidadNum,
-          excepcionStock: p.cantidadNum > p.stockActual,
         })),
     );
 
@@ -147,12 +153,49 @@ export function PanelCierreServicio({
     });
   }
 
-  const hayExcepciones = (servicios ?? []).some((s) =>
-    s.productos.some((p) => {
+  function actualizarStock() {
+    if (!servicios) return;
+    const ids = [...new Set(servicios.flatMap((s) => s.productos.map((p) => p.idProducto)))];
+    setError(null);
+    iniciar(async () => {
+      try {
+        const stock = await stockActualAccion(ids);
+        setServicios((prev) =>
+          prev
+            ? prev.map((s) => ({
+                ...s,
+                productos: s.productos.map((p) => {
+                  const nuevo = stock[p.idProducto];
+                  return nuevo === undefined ? p : { ...p, stockActual: nuevo };
+                }),
+              }))
+            : prev,
+        );
+      } catch {
+        setError('No se pudo leer el stock. Intente nuevamente.');
+      }
+    });
+  }
+
+  // Lo que se va a usar de cada producto, sumando todos los servicios del turno.
+  const usoPorProducto = new Map<
+    number,
+    { nombre: string; unidad: string | null; usado: number; stock: number }
+  >();
+  for (const s of servicios ?? []) {
+    for (const p of s.productos) {
       const n = Number(p.cantidad.replace(/\./g, '').replace(',', '.'));
-      return Number.isFinite(n) && n > p.stockActual;
-    }),
-  );
+      const previo = usoPorProducto.get(p.idProducto);
+      usoPorProducto.set(p.idProducto, {
+        nombre: p.nombreProducto,
+        unidad: p.unidadUso,
+        usado: (previo?.usado ?? 0) + (Number.isFinite(n) && n > 0 ? n : 0),
+        stock: p.stockActual,
+      });
+    }
+  }
+  const faltantes = [...usoPorProducto.entries()].filter(([, u]) => u.usado > u.stock);
+  const sinStock = new Set(faltantes.map(([id]) => id));
 
   return (
     <>
@@ -178,7 +221,12 @@ export function PanelCierreServicio({
             <Boton variante="terciario" onClick={() => setAbierto(false)} disabled={ocupado}>
               Cerrar
             </Boton>
-            <Boton variante="primario" onClick={confirmar} cargando={ocupado}>
+            <Boton
+              variante="primario"
+              onClick={confirmar}
+              cargando={ocupado}
+              disabled={faltantes.length > 0}
+            >
               Confirmar consumo
             </Boton>
           </>
@@ -186,16 +234,39 @@ export function PanelCierreServicio({
       >
         {error && <p className="text-cuerpo-sm text-peligro mb-4">{error}</p>}
 
-        {hayExcepciones && (
+        {faltantes.length > 0 && (
           <div
             role="status"
             className="border-peligro text-peligro text-cuerpo-sm mb-4 flex items-start gap-2 rounded-md border bg-[var(--chip-peligro-fondo)] p-3"
           >
             <Icono nombre="triangle-alert" tamano="sm" className="mt-0.5" />
-            <span>
-              Algún producto va a quedar con stock negativo. Se registra igual, como excepción
-              (RN-031).
-            </span>
+            <div className="flex flex-col gap-2">
+              <span>
+                No alcanza el stock, y no puede quedar negativo (RN-031). Registre la entrada o el
+                ajuste en Inventario, o corrija la cantidad, y después toque «Actualizar stock».
+              </span>
+              <ul className="list-disc pl-5">
+                {faltantes.map(([id, u]) => (
+                  <li key={id}>
+                    <Link
+                      href={`/panel/inventario?q=${encodeURIComponent(u.nombre)}`}
+                      target="_blank"
+                      className="underline"
+                    >
+                      {u.nombre}
+                    </Link>
+                    : hay {cantidad(u.stock)}
+                    {u.unidad ? ` ${u.unidad}` : ''}, se cargaron {cantidad(u.usado)}
+                    {u.unidad ? ` ${u.unidad}` : ''}
+                  </li>
+                ))}
+              </ul>
+              <span>
+                <Boton variante="secundario" tamano="sm" onClick={actualizarStock} cargando={ocupado}>
+                  Actualizar stock
+                </Boton>
+              </span>
+            </div>
           </div>
         )}
 
@@ -212,8 +283,7 @@ export function PanelCierreServicio({
                 <GrupoCampos key={s.idHistorial} titulo={s.nombreServicio}>
                   <div className="flex flex-col gap-3">
                     {s.productos.map((p) => {
-                      const usado = Number(p.cantidad.replace(/\./g, '').replace(',', '.'));
-                      const excede = Number.isFinite(usado) && usado > p.stockActual;
+                      const excede = sinStock.has(p.idProducto);
                       return (
                         <div key={p.idProducto} className="flex items-end gap-3">
                           <div className="flex-[2]">
@@ -233,7 +303,7 @@ export function PanelCierreServicio({
                               cambiarCantidad(s.idHistorial, p.idProducto, e.target.value)
                             }
                             sufijo={p.unidadUso ?? undefined}
-                            error={excede ? 'Supera el stock disponible' : undefined}
+                            error={excede ? 'No alcanza el stock' : undefined}
                             claseContenedor="w-40"
                           />
                         </div>

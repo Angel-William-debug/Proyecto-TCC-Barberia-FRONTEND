@@ -78,7 +78,7 @@ const REGLAS_DE_NEGOCIO: Array<{ patron: RegExp; mensaje: string; regla: string 
   },
   {
     patron: /RN-031/,
-    mensaje: 'El stock disponible no alcanza. Confirme la excepción para continuar.',
+    mensaje: 'El stock disponible no alcanza: el stock no puede quedar negativo. Registre la entrada del producto en Inventario y vuelva a intentar.',
     regla: 'RN-031',
   },
   {
