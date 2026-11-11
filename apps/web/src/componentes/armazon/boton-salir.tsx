@@ -21,10 +21,9 @@ export function BotonSalir() {
     }
 
     await clienteNavegador().auth.signOut();
-    // `refresh()` antes de `push()`: fuerza a que el layout del servidor
-    // vuelva a resolver la sesion y no sirva la version en cache.
-    router.refresh();
-    router.push('/ingresar');
+    // Carga completa: borra la cache del enrutador del cliente, que si no
+    // conserva pantallas de esta cuenta para la siguiente que ingrese (QA F2-15).
+    window.location.assign('/ingresar');
   }
 
   return (

@@ -5,6 +5,7 @@ import {
   actualizarConfiguracion,
   actualizarHorarios,
   actualizarMetodosPago,
+  crearMetodoPago,
   exigirSesion,
   type EntradaHorario,
 } from '@barber-shop/api';
@@ -161,4 +162,14 @@ export async function guardarMetodosPago(datos: FormData): Promise<ResultadoAcci
   }
 
   return ejecutar('/panel/configuracion/metodos-pago', () => actualizarMetodosPago(metodos));
+}
+
+/** Alta de un metodo de pago (QA F2-07). */
+export async function crearMetodoPagoAccion(datos: FormData): Promise<ResultadoAccion> {
+  await exigirSesion();
+  const nombre = texto(datos, 'nombre');
+  const v = new Validacion();
+  v.exigir(nombre.length >= 3, 'nombre', 'Ingrese el nombre del método de pago.');
+  if (v.hayErrores) return v.resultado;
+  return ejecutar('/panel/configuracion/metodos-pago', () => crearMetodoPago(nombre));
 }

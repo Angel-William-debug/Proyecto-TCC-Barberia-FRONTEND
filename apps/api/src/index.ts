@@ -213,6 +213,7 @@ export {
   listarMetodosPago,
   listarMetodosPagoTodos,
   actualizarMetodosPago,
+  crearMetodoPago,
   type EntradaConfiguracion,
   type EntradaHorario,
 } from './modulos/configuracion';
@@ -223,6 +224,8 @@ export {
   listarRoles,
   listarBarberosSinCuenta,
   crearUsuario,
+  datosDeCuenta,
+  type DatosDeCuenta,
   actualizarUsuario,
   type EntradaNuevoUsuario,
   type CambiosUsuario,

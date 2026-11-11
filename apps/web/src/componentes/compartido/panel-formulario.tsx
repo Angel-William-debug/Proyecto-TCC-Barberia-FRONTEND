@@ -36,6 +36,8 @@ export interface PropsPanelFormulario {
    * que cada uno pinte el suyo debajo en lugar de amontonarlos arriba.
    */
   children: (errores: Record<string, string>) => ReactNode;
+  /** Despues de guardar bien, con lo que se envio: para avisar algo fuera del panel. */
+  onGuardado?: (datos: FormData) => void;
 }
 
 export function PanelFormulario({
@@ -47,6 +49,7 @@ export function PanelFormulario({
   accion,
   textoGuardar = 'Guardar',
   children,
+  onGuardado,
 }: PropsPanelFormulario) {
   const [enviando, iniciar] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +73,7 @@ export function PanelFormulario({
 
       if (r.ok) {
         cerrar();
+        onGuardado?.(datos);
         return;
       }
 

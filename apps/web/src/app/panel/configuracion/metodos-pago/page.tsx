@@ -3,6 +3,7 @@ import { EstadoVacio, Tarjeta } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { AjustesMetodosPago } from '@/componentes/configuracion/ajustes-metodos-pago';
+import { FormularioMetodoPago } from '@/componentes/configuracion/formulario-metodo-pago';
 
 export const metadata = { title: 'Métodos de pago' };
 
@@ -21,6 +22,7 @@ export default async function PaginaMetodosPago() {
       <EncabezadoVista
         titulo="Métodos de pago"
         descripcion="Con qué se puede registrar el cobro de un turno y el pago a un proveedor."
+        accion={<FormularioMetodoPago />}
       />
 
       {metodos.length > 0 ? (

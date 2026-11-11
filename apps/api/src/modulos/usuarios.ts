@@ -33,16 +33,24 @@
  * La persona la cambia cuando quiera desde «Recuperar contrasena», que es el
  * mecanismo nativo de Supabase Auth y sigue estando.
  *
- * `email_confirm: true` porque el Administrador da fe de la direccion: sin eso
- * la cuenta queda sin confirmar y no puede iniciar sesion hasta que alguien
- * abra un correo, que es exactamente lo que se quiso evitar.
+ * VERIFICACION DEL CORREO (11/11/2026, QA F2-12)
+ *
+ * Hasta el 11/11 la cuenta nacia con `email_confirm: true`: el Administrador
+ * daba fe de la direccion. El QA pidio lo contrario, que todas las cuentas
+ * verifiquen su correo igual que los clientes: un correo mal escrito quedaba
+ * como valido y nadie se enteraba. Ahora nace sin confirmar y se le manda el
+ * correo de verificacion (por el SMTP de Brevo de Auth). Hasta que lo abre,
+ * el ingreso dice «Todavia no confirmo su correo» y ofrece reenviarlo.
  */
 
 import type { Rol, VistaUsuarioPorRol } from '@barber-shop/tipos';
 
 import { MODO_DEMO } from '../demo/modo';
 import { clienteServidor } from '../supabase/cliente-servidor';
+import { createClient } from '@supabase/supabase-js';
+
 import { clienteAdmin } from '../supabase/cliente-admin';
+import { entornoPublico } from '../entorno';
 import { ErrorAplicacion, traducirError } from '../errores';
 import { actualizar, rechazarSiEsDemo } from '../compartido/escritura';
 import { coincideEstado, coincideTexto, entreFechas, type FiltroTabla } from '../compartido/filtros';
@@ -122,7 +130,7 @@ export async function listarBarberosSinCuenta(): Promise<Array<{ id_profesional:
  * se borra el usuario recien creado en Auth para no dejar una cuenta sin
  * ficha, huerfana e invisible para el resto del sistema.
  */
-export async function crearUsuario(entrada: EntradaNuevoUsuario): Promise<number> {
+export async function crearUsuario(entrada: EntradaNuevoUsuario, urlRetorno: string): Promise<number> {
   rechazarSiEsDemo();
 
   const admin = clienteAdmin();
@@ -130,7 +138,7 @@ export async function crearUsuario(entrada: EntradaNuevoUsuario): Promise<number
   const { data: creado, error: errorAuth } = await admin.auth.admin.createUser({
     email: entrada.email,
     password: entrada.password,
-    email_confirm: true,
+    email_confirm: false,
     user_metadata: { nombre: entrada.nombre },
   });
 
@@ -194,7 +202,55 @@ export async function crearUsuario(entrada: EntradaNuevoUsuario): Promise<number
     }
   }
 
+  // El correo de verificacion. `admin.createUser()` no manda ninguno; el
+  // reenvio del alta si, y a una cuenta sin confirmar le llega el mismo que
+  // a un cliente que se registra. Si falla (limite de envios), la cuenta ya
+  // esta creada: la persona lo pide de nuevo desde Ingresar.
+  const { urlSupabase, claveAnonima } = entornoPublico();
+  const anonimo = createClient(urlSupabase, claveAnonima, {
+    auth: { persistSession: false, autoRefreshToken: false, flowType: 'implicit' },
+  });
+  await anonimo.auth
+    .resend({ type: 'signup', email: entrada.email, options: { emailRedirectTo: urlRetorno } })
+    .catch(() => undefined);
+
   return idUsuario;
+}
+
+/** Lo que el detalle del usuario agrega a la fila: su cuenta de Auth y cuanto hizo. */
+export interface DatosDeCuenta {
+  correoVerificado: boolean;
+  ultimoIngreso: string | null;
+  accionesRegistradas: number;
+}
+
+/**
+ * Datos de la cuenta para el detalle del usuario (QA F2-10, 11/11/2026). La
+ * verificacion y el ultimo ingreso viven en Supabase Auth: se leen con la
+ * clave de servicio, y por eso solo despues de comprobar con la sesion del
+ * que pregunta que puede ver ese usuario (RLS `admin_total`).
+ */
+export async function datosDeCuenta(idUsuario: number): Promise<DatosDeCuenta | null> {
+  if (MODO_DEMO) return null;
+
+  const supabase = await clienteServidor();
+  const { data: usuario } = await supabase
+    .from('usuarios')
+    .select('auth_uid')
+    .eq('id_usuario', idUsuario)
+    .maybeSingle();
+  if (!usuario?.auth_uid) return null;
+
+  const [{ data: cuenta }, { count }] = await Promise.all([
+    clienteAdmin().auth.admin.getUserById(usuario.auth_uid as string),
+    supabase.from('auditoria').select('id_auditoria', { count: 'exact', head: true }).eq('id_usuario', idUsuario),
+  ]);
+
+  return {
+    correoVerificado: Boolean(cuenta?.user?.email_confirmed_at),
+    ultimoIngreso: cuenta?.user?.last_sign_in_at ?? null,
+    accionesRegistradas: count ?? 0,
+  };
 }
 
 // ---------------------------------------------------------------------------

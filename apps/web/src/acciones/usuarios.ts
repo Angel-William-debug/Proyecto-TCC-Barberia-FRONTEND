@@ -4,11 +4,14 @@
 import {
   actualizarUsuario,
   crearUsuario,
+  datosDeCuenta,
   exigirSesion,
   listarAuditoria,
   listarRoles,
 } from '@barber-shop/api';
+import type { DatosDeCuenta } from '@barber-shop/api';
 import type { AuditoriaDeLista } from '@barber-shop/tipos';
+import { headers } from 'next/headers';
 
 import { CORREO, Validacion, booleano, ejecutar, numero, texto } from './base';
 import type { ResultadoAccion } from './base';
@@ -70,8 +73,15 @@ export async function guardarUsuario(datos: FormData): Promise<ResultadoAccion> 
     }
   }
 
+  // Adonde lleva el enlace del correo de verificacion: la misma pagina que
+  // usan los clientes. Tiene que estar en las direcciones permitidas de Auth.
+  const cabeceras = await headers();
+  const host = cabeceras.get('x-forwarded-host') ?? cabeceras.get('host');
+  const protocolo = cabeceras.get('x-forwarded-proto') ?? 'https';
+  const urlRetorno = `${protocolo}://${host}/cuenta-confirmada`;
+
   return ejecutar('/panel/usuarios', () =>
-    crearUsuario({ nombre, email, idRol: idRol!, password, barbero }),
+    crearUsuario({ nombre, email, idRol: idRol!, password, barbero }, urlRetorno),
   );
 }
 
@@ -93,6 +103,12 @@ export async function guardarCambiosUsuario(datos: FormData): Promise<ResultadoA
 }
 
 /** Lo último que hizo un usuario, para su detalle (vista 7). */
+/** Verificacion del correo, ultimo ingreso y cantidad de acciones (QA F2-10). */
+export async function cuentaDelUsuario(idUsuario: number): Promise<DatosDeCuenta | null> {
+  await exigirSesion();
+  return datosDeCuenta(idUsuario).catch(() => null);
+}
+
 export async function actividadDelUsuario(idUsuario: number): Promise<AuditoriaDeLista[]> {
   await exigirSesion();
   return listarAuditoria({ idUsuario }).then((f) => f.slice(0, 20)).catch(() => []);

@@ -16,9 +16,8 @@ import { PantallaAjustes } from '@/componentes/compartido/pantalla-ajustes';
  * que hace el interruptor es sacarlo del selector de la pantalla de cobros, de
  * ahi en adelante.
  *
- * El alta de metodos nuevos no vive aca: son ocho filas fijas que carga la
- * instalacion, y agregar uno es una decision con consecuencias contables que
- * excede a esta pantalla.
+ * El alta de un metodo nuevo es `FormularioMetodoPago`, en el encabezado de la
+ * pantalla (QA F2-07, 11/11/2026). Borrar o renombrar sigue sin existir.
  */
 export function AjustesMetodosPago({ metodos }: { metodos: MetodoPago[] }) {
   return (

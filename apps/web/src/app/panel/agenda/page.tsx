@@ -7,7 +7,6 @@ import {
 import { ESTADOS_CITA, type EstadoCita } from '@barber-shop/tipos';
 import {
   BarraFiltros,
-  Boton,
   CampoBusqueda,
   ChipEstado,
   EstadoVacio,
@@ -296,10 +295,15 @@ export default async function PaginaAgenda({
                   icono="calendar-days"
                   titulo="No hay turnos para mostrar"
                   descripcion="No hay turnos ese día, o ninguno cumple con los filtros aplicados."
+                  // El mismo formulario que el boton de arriba: antes era un
+                  // Boton suelto, sin accion, y no abria nada (QA F2, 11/11/2026).
                   accion={
-                    <Boton variante="primario" icono="plus">
-                      Nuevo turno
-                    </Boton>
+                    <FormularioTurno
+                      clientes={clientes?.datos ?? []}
+                      servicios={servicios}
+                      profesionales={barberos.filter((b) => b.estado)}
+                      fecha={dia}
+                    />
                   }
                 />
               </TdCompleta>

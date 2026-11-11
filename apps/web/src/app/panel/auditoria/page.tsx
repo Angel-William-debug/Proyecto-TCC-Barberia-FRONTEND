@@ -50,14 +50,22 @@ const ETIQUETAS_ACCION = Object.fromEntries(
   ACCIONES_AUDITORIA.map((a) => [a, PRESENTACION_ACCION[a]!.etiqueta]),
 );
 
-/** Las tablas que el disparador de auditoría registra. */
+/**
+ * Las tablas que la auditoría registra. Desde el 11/11/2026 (QA F2-24) también
+ * las altas, cambios y bajas de los catálogos y las cuentas.
+ */
 const TABLAS = [
+  'categorias_producto',
+  'categorias_servicio',
   'citas',
   'clientes',
-  'cobros_cliente',
-  'pagos_profesional',
+  'configuracion_sistema',
+  'horarios_atencion',
+  'metodos_pago',
+  'pedidos',
   'productos',
   'profesionales',
+  'proveedores',
   'servicios',
   'usuarios',
 ].map((t) => ({ valor: t, etiqueta: t }));
@@ -90,7 +98,7 @@ export default async function PaginaAuditoria({
     <>
       <EncabezadoVista
         titulo="Auditoría"
-        descripcion="Quién cambió qué, y cuándo. Los últimos 100 movimientos."
+        descripcion="Quién cambió qué, y cuándo. Los 200 movimientos más recientes que cumplen el filtro."
       />
 
       <Tarjeta>

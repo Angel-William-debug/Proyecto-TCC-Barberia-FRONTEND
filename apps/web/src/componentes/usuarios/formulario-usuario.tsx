@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { Rol, VistaUsuarioPorRol } from '@barber-shop/tipos';
-import { Boton, BotonIcono, Campo, CampoSelector, GrupoCampos, Interruptor } from '@barber-shop/ui';
+import { Boton, BotonIcono, Campo, CampoSelector, GrupoCampos, Icono, Interruptor } from '@barber-shop/ui';
 
 import { guardarCambiosUsuario, guardarUsuario } from '@/acciones/usuarios';
 import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
@@ -11,8 +11,9 @@ import { PanelFormulario } from '@/componentes/compartido/panel-formulario';
 /**
  * CU-019 — alta de un usuario y cambio de rol o estado.
  *
- * El alta CREA la cuenta con una contraseña inicial; no manda una invitación.
- * El porqué del cambio está en `apps/api/src/modulos/usuarios.ts`.
+ * El alta CREA la cuenta con una contraseña inicial y le manda a la persona el
+ * correo para verificarla (desde el 11/11/2026). El porqué está en
+ * `apps/api/src/modulos/usuarios.ts`.
  *
  * Al editar no se toca el nombre ni el correo: son los datos con los que
  * Supabase Auth identifica a la persona, y cambiarlos desde acá dejaría la
@@ -31,7 +32,16 @@ export function FormularioUsuario({
   barberosSinCuenta?: Array<{ id_profesional: number; nombre: string }>;
 }) {
   const [abierto, setAbierto] = useState(false);
+  // El aviso de «creado» (QA F2-12): antes el panel se cerraba y nada decia
+  // que la cuenta existia ni que hacia falta verificar el correo.
+  const [creado, setCreado] = useState<string | null>(null);
   const editando = Boolean(usuario);
+
+  useEffect(() => {
+    if (!creado) return;
+    const t = setTimeout(() => setCreado(null), 12000);
+    return () => clearTimeout(t);
+  }, [creado]);
   const rolActual = roles.find((r) => r.nombre === usuario?.rol);
   const [idRolElegido, setIdRolElegido] = useState<string>('');
   const esProfesional = roles.find((r) => String(r.id_rol) === idRolElegido)?.nombre === 'profesional';
@@ -58,7 +68,24 @@ export function FormularioUsuario({
         </Boton>
       )}
 
+      {creado && (
+        <div
+          role="status"
+          className="border-exito bg-elevado text-cuerpo-sm text-principal shadow-2 fixed right-4 bottom-4 z-50 flex max-w-sm items-start gap-2 rounded-md border p-3"
+        >
+          <Icono nombre="circle-check" tamano="sm" className="text-exito mt-0.5" />
+          <span>
+            Usuario creado. Le enviamos a <strong>{creado}</strong> un correo para verificar su cuenta: hasta que
+            lo abra no puede ingresar.
+          </span>
+          <button type="button" aria-label="Cerrar el aviso" onClick={() => setCreado(null)} className="text-terciario">
+            <Icono nombre="x" tamano="sm" />
+          </button>
+        </div>
+      )}
+
       <PanelFormulario
+        onGuardado={editando ? undefined : (datos) => setCreado(String(datos.get('email') ?? ''))}
         abierto={abierto}
         onCerrar={() => setAbierto(false)}
         titulo={editando ? `Editar ${usuario!.nombre}` : 'Crear usuario'}

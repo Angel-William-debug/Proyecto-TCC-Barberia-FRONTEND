@@ -74,8 +74,13 @@ export default async function Ranking({
           <SelectorFiltro
             nombre="criterio"
             etiqueta="Ordenar por"
-            opciones={CRITERIOS_RANKING.map((c) => ({ valor: c, etiqueta: TITULOS_CRITERIO[c] }))}
-            textoTodos="Servicios realizados"
+            // «Servicios realizados» es la opcion vacia (el criterio por omision):
+            // si tambien estaba en la lista, aparecia dos veces (QA F2-31).
+            opciones={CRITERIOS_RANKING.filter((c) => c !== 'servicios').map((c) => ({
+              valor: c,
+              etiqueta: TITULOS_CRITERIO[c],
+            }))}
+            textoTodos={TITULOS_CRITERIO.servicios}
           />
         }
         fecha={<RangoFechas />}

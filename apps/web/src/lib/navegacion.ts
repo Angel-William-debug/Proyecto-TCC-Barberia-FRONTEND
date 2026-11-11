@@ -288,6 +288,21 @@ export function gruposConfiguracionPara(rol: NombreRol): GrupoBarra[] {
  * con la ruta actual por el prefijo mas largo, asi `/panel/configuracion`
  * negado no tapa a `/panel/papelera` permitido.
  */
+/**
+ * Si el rol puede entrar a una ruta del panel, con la misma regla que
+ * `GuardaRuta`: gana la coincidencia mas larga entre permitidas y negadas.
+ * Sirve para decidir si se respeta el `?volver=` despues de ingresar: puede
+ * venir de la sesion de OTRA cuenta (el administrador sale desde el Tablero
+ * y entra un barbero), y ahi no hay que mandarlo a una pantalla prohibida.
+ */
+export function rolPuedeEntrar(rol: NombreRol, ruta: string): boolean {
+  const { permitidas, negadas } = rutasPorPermiso(rol);
+  const camino = ruta.split('?')[0]!;
+  const coincide = (r: string) => camino === r || camino.startsWith(`${r}/`);
+  const largo = (lista: string[]) => Math.max(-1, ...lista.filter(coincide).map((r) => r.length));
+  return largo(permitidas) >= largo(negadas);
+}
+
 export function rutasPorPermiso(rol: NombreRol): { permitidas: string[]; negadas: string[] } {
   const permitidos = new Set<Modulo>(MODULOS_POR_ROL[rol]);
   const todas = [...MENU, ...MENU_CONFIGURACION];

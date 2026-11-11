@@ -25,7 +25,10 @@ import { Boton, Campo, Icono } from '@barber-shop/ui';
  */
 function destinoTrasIngresar(): string {
   const volver = new URLSearchParams(window.location.search).get('volver');
-  if (volver && /^\/(panel|mi-cuenta)(\/|\?|$)/.test(volver)) return volver;
+  // Las del panel pasan por `/panel`, que decide si el rol que entra puede
+  // ver esa pantalla: el `volver` puede ser de la sesion de otra cuenta.
+  if (volver && /^\/panel\/[a-z]/.test(volver)) return `/panel?volver=${encodeURIComponent(volver)}`;
+  if (volver && /^\/mi-cuenta(\/|\?|$)/.test(volver)) return volver;
   return '/panel';
 }
 export function FormularioIngreso() {
@@ -100,8 +103,10 @@ export function FormularioIngreso() {
         return;
       }
 
-      router.refresh();
-      router.push(destinoTrasIngresar());
+      // Carga completa y no `router.push`: el enrutador del cliente guarda en
+      // cache el armazon (menu, nombre) de la cuenta anterior, y al cambiar de
+      // cuenta se veia el de la otra hasta recargar (QA F2-15).
+      window.location.assign(destinoTrasIngresar());
     } catch (causa) {
       const mensaje =
         causa instanceof Error && causa.message.includes('variable de entorno')

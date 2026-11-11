@@ -58,6 +58,18 @@ export async function listarAuditoria(
   if (filtro.tabla) consulta = consulta.eq('tabla_afectada', filtro.tabla);
   if (filtro.idUsuario) consulta = consulta.eq('id_usuario', filtro.idUsuario);
   if (filtro.registroId !== undefined) consulta = consulta.eq('registro_id', filtro.registroId);
+  // La busqueda va en la consulta y no solo en memoria: con miles de
+  // registros de turnos, buscar sobre los ultimos 200 no encontraba nada mas
+  // viejo (QA F2-24, 11/11/2026). Busca en el detalle, la tabla y el nombre
+  // de quien lo hizo; se quitan los caracteres que PostgREST usa en `or`.
+  const busqueda = filtro.busqueda?.replace(/[,()*%]/g, ' ').trim();
+  if (busqueda) {
+    const { data: autores } = await supabase.from('usuarios').select('id_usuario').ilike('nombre', `%${busqueda}%`);
+    const ids = (autores ?? []).map((u) => u.id_usuario as number);
+    const condiciones = [`detalle.ilike.*${busqueda}*`, `tabla_afectada.ilike.*${busqueda}*`];
+    if (ids.length) condiciones.push(`id_usuario.in.(${ids.join(',')})`);
+    consulta = consulta.or(condiciones.join(','));
+  }
   if (filtro.desde) consulta = consulta.gte('fecha_accion', `${filtro.desde}T00:00:00`);
   if (filtro.hasta) consulta = consulta.lte('fecha_accion', `${filtro.hasta}T23:59:59`);
 

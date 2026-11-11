@@ -166,6 +166,24 @@ export async function actualizarHorarios(horarios: EntradaHorario[]): Promise<vo
 }
 
 /**
+ * Alta de un metodo de pago (QA F2-07, 11/11/2026). Nace habilitado. Un
+ * nombre repetido lo rechaza el indice unico `metodos_pago_nombre_vigente`.
+ */
+export async function crearMetodoPago(nombre: string): Promise<number> {
+  rechazarSiEsDemo();
+
+  const supabase = await clienteServidor();
+  const { data, error } = await supabase
+    .from('metodos_pago')
+    .insert({ nombre, estado: true })
+    .select('id_metodo')
+    .single();
+
+  if (error) throw traducirError(error);
+  return (data as { id_metodo: number }).id_metodo;
+}
+
+/**
  * Habilita o deshabilita metodos de pago (CU-020).
  *
  * No es un borrado: un metodo apagado sigue existiendo porque los cobros

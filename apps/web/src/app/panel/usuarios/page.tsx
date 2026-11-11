@@ -44,7 +44,8 @@ const ETIQUETA_ROL: Record<string, string> = {
   profesional: 'Profesional',
   cliente: 'Cliente',
 };
-const OPCIONES_ROL = ROLES.filter((r) => r !== 'cliente').map((r) => ({
+// Los cuatro roles: el cliente no se crea desde aca, pero si se busca (QA F2-09).
+const OPCIONES_ROL = ROLES.map((r) => ({
   valor: r,
   etiqueta: ETIQUETA_ROL[r]!,
 }));

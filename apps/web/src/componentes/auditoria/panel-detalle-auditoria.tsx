@@ -16,17 +16,8 @@ import {
 } from '@barber-shop/ui';
 
 import { historialDelRegistro } from '@/acciones/auditoria';
+import { RUTA_DEL_REGISTRO } from '@/lib/rutas-de-registro';
 
-/** Dónde se ve cada registro auditado, cuando hay una pantalla propia. */
-const RUTA_DEL_REGISTRO: Record<string, (id: number) => string> = {
-  clientes: (id) => `/panel/clientes/${id}`,
-  profesionales: (id) => `/panel/barberos/${id}`,
-  servicios: () => '/panel/servicios',
-  productos: () => '/panel/inventario',
-  pedidos: () => '/panel/compras',
-  cobros_cliente: () => '/panel/cobros',
-  pagos_profesional: () => '/panel/comisiones',
-};
 
 /**
  * Detalle de un registro de auditoría (vista 15 del anexo; 15/10/2026).
