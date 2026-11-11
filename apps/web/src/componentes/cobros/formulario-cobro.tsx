@@ -18,16 +18,11 @@ export function FormularioCobro({
 }) {
   const [abierto, setAbierto] = useState(false);
   const [idCita, setIdCita] = useState('');
-  const [monto, setMonto] = useState('');
 
   const citaElegida = citasPendientes.find((c) => String(c.id_cita) === idCita);
 
   function elegirCita(valor: string) {
     setIdCita(valor);
-    const cita = citasPendientes.find((c) => String(c.id_cita) === valor);
-    // Se propone el saldo completo; el usuario lo reduce si el cliente paga
-    // menos, y eso es lo que deja el cobro como parcial (RN-025).
-    if (cita) setMonto(String(cita.saldo));
   }
 
   return (
@@ -45,7 +40,7 @@ export function FormularioCobro({
         abierto={abierto}
         onCerrar={() => setAbierto(false)}
         titulo="Registrar cobro"
-        descripcion="Solo se puede cobrar un turno completado (RN-024). Si el monto no cubre el saldo, queda como pago parcial (RN-025)."
+        descripcion="Solo se puede cobrar un turno completado (RN-024). Se cobra el monto completo del turno."
         accion={guardarCobro}
         textoGuardar="Registrar cobro"
       >
@@ -83,15 +78,15 @@ export function FormularioCobro({
                   error={errores.id_metodo_pago}
                   required
                 />
+                {/* El monto es el saldo del turno y no se edita: no hay pagos en partes. */}
                 <Campo
-                  etiqueta="Monto"
+                  etiqueta="Monto a cobrar"
                   name="monto"
                   inputMode="numeric"
-                  value={monto}
-                  onChange={(e) => setMonto(e.target.value)}
+                  value={citaElegida ? String(citaElegida.saldo) : ''}
+                  placeholder="Elija un turno"
                   sufijo="Gs."
-                  error={errores.monto}
-                  required
+                  readOnly
                 />
               </FilaCampos>
             </GrupoCampos>

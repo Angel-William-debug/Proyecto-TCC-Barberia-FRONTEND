@@ -1,10 +1,12 @@
 'use client';
 
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
-import type { Cliente, Profesional, Servicio } from '@barber-shop/tipos';
+import type { Cliente, Profesional, Servicio, VistaPublicoHorario } from '@barber-shop/tipos';
 import {
   Boton, BotonIcono, Campo, CampoArea, CampoSelector, FilaCampos, GrupoCampos, guaranies,
+  PASO_RESERVA_MIN, RECREO, horarioDe, minutoDeHora, textoMinuto,
 } from '@barber-shop/ui';
 
 import { guardarTurno } from '@/acciones/agenda';
@@ -22,6 +24,25 @@ const LINEA_VACIA = (clave: number): LineaServicio => ({
   idServicio: '',
   idProfesional: '',
 });
+
+/**
+ * Las horas en punto en que se puede empezar un turno ese dia: desde la
+ * apertura hasta antes del cierre, sin las del recreo de almuerzo. Es la misma
+ * cuenta que usa el portal (`PASO_RESERVA_MIN`). `null` si la barberia no
+ * atiende ese dia.
+ */
+function horasDelDia(dia: string, horarios: VistaPublicoHorario[]): string[] | null {
+  const horario = horarioDe(dia, horarios);
+  if (!horario) return null;
+
+  const horas: string[] = [];
+  const cierre = minutoDeHora(horario.hora_cierre);
+  for (let m = minutoDeHora(horario.hora_apertura); m < cierre; m += PASO_RESERVA_MIN) {
+    if (m >= RECREO.desde && m < RECREO.hasta) continue;
+    horas.push(textoMinuto(m));
+  }
+  return horas;
+}
 
 /**
  * CU-005 - alta de un turno.
@@ -42,22 +63,44 @@ export function FormularioTurno({
   clientes,
   servicios,
   profesionales,
+  horarios,
   fecha,
 }: {
   clientes: Cliente[];
   servicios: Servicio[];
   profesionales: Profesional[];
+  /** Horario de atencion por dia. Sin el, la hora se escribe a mano. */
+  horarios: VistaPublicoHorario[];
   /** Dia que se esta mirando en la agenda. Es el que mas probablemente se quiere. */
   fecha: string;
 }) {
+  const router = useRouter();
+  const params = useSearchParams();
   const [abierto, setAbierto] = useState(false);
+  const [diaElegido, setDiaElegido] = useState(fecha);
   const [lineas, setLineas] = useState<LineaServicio[]>([LINEA_VACIA(0)]);
+
+  // Un turno para otro dia no se veia al guardar: la agenda seguia en el dia
+  // de antes y habia que buscarlo a mano. Se lleva la agenda a su fecha.
+  function irAlDiaDelTurno(datos: FormData) {
+    const dia = String(datos.get('fecha') ?? '');
+    if (!dia || dia === fecha) return;
+    const destino = new URLSearchParams(params.toString());
+    destino.set('fecha', dia);
+    destino.delete('pagina');
+    router.push(`/panel/agenda?${destino.toString()}`);
+  }
 
   const agregar = () =>
     setLineas((l) => [...l, LINEA_VACIA(Math.max(...l.map((x) => x.clave)) + 1)]);
   const quitar = (clave: number) => setLineas((l) => l.filter((x) => x.clave !== clave));
   const cambiar = (clave: number, campo: keyof LineaServicio, valor: string) =>
     setLineas((l) => l.map((x) => (x.clave === clave ? { ...x, [campo]: valor } : x)));
+
+  // Tres casos: sin horario cargado se escribe la hora a mano; con horario, una
+  // lista de horas en punto, o el aviso de que ese dia no se atiende.
+  const horas = horarios.length > 0 ? horasDelDia(diaElegido, horarios) : null;
+  const modoHora = horarios.length === 0 ? 'libre' : horas ? 'lista' : 'cerrado';
 
   const porId = new Map(servicios.map((s) => [String(s.id_servicio), s]));
   const elegidos = lineas.map((l) => porId.get(l.idServicio)).filter(Boolean) as Servicio[];
@@ -66,7 +109,14 @@ export function FormularioTurno({
 
   return (
     <>
-      <Boton variante="primario" icono="plus" onClick={() => setAbierto(true)}>
+      <Boton
+        variante="primario"
+        icono="plus"
+        onClick={() => {
+          setDiaElegido(fecha);
+          setAbierto(true);
+        }}
+      >
         Nuevo turno
       </Boton>
 
@@ -77,6 +127,7 @@ export function FormularioTurno({
         titulo="Nuevo turno"
         descripcion="El sistema avisa si el barbero ya tiene otro turno a esa hora."
         accion={guardarTurno}
+        onGuardado={irAlDiaDelTurno}
         textoGuardar="Agendar turno"
       >
         {(errores) => (
@@ -95,18 +146,43 @@ export function FormularioTurno({
                   etiqueta="Fecha"
                   name="fecha"
                   type="date"
-                  defaultValue={fecha}
+                  value={diaElegido}
+                  onChange={(e) => setDiaElegido(e.target.value)}
                   error={errores.fecha}
                   required
                 />
-                <Campo
-                  etiqueta="Hora"
-                  name="hora"
-                  type="time"
-                  step={300}
-                  error={errores.hora}
-                  required
-                />
+                {modoHora === 'libre' && (
+                  <Campo
+                    etiqueta="Hora"
+                    name="hora"
+                    type="time"
+                    step={300}
+                    error={errores.hora}
+                    required
+                  />
+                )}
+                {modoHora === 'lista' && (
+                  // `key`: al cambiar de dia la lista es otra y la hora vuelve a «Elija».
+                  <CampoSelector
+                    key={diaElegido}
+                    etiqueta="Hora"
+                    name="hora"
+                    opciones={(horas ?? []).map((h) => ({ valor: h, etiqueta: h }))}
+                    marcador="Elija una hora"
+                    error={errores.hora}
+                    required
+                  />
+                )}
+                {modoHora === 'cerrado' && (
+                  <CampoSelector
+                    etiqueta="Hora"
+                    name="hora"
+                    opciones={[]}
+                    marcador="La barbería no atiende ese día"
+                    error={errores.hora}
+                    disabled
+                  />
+                )}
               </FilaCampos>
             </GrupoCampos>
 

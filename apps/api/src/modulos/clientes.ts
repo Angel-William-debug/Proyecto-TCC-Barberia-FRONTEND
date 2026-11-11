@@ -26,6 +26,30 @@ export interface FiltroClientes extends FiltroListado {
   /** Rango sobre `fecha_registro`, aaaa-MM-dd. */
   desde?: string;
   hasta?: string;
+  /** `nombre` (A-Z, el predeterminado) o `reciente` (el ultimo agregado primero). */
+  orden?: 'nombre' | 'reciente';
+}
+
+/**
+ * Los telefonos se guardan como los escribio quien los cargo, casi siempre
+ * «0991 507 201». Quien busca escribe «0991507201» y `ilike` no lo encuentra,
+ * porque los espacios cuentan. La columna no se puede normalizar desde aca, asi
+ * que se arma cada forma en que ese numero pudo quedar escrito: con los
+ * espacios de siempre -despues del cuarto y del septimo digito- segun donde
+ * caiga el pedazo que se busca. Solo para busquedas de puros digitos.
+ */
+function variantesDeTelefono(digitos: string): string[] {
+  const variantes = new Set<string>([digitos]);
+  for (let desplazamiento = 0; desplazamiento < 10; desplazamiento++) {
+    let v = '';
+    for (let i = 0; i < digitos.length; i++) {
+      const posicion = desplazamiento + i;
+      if (i > 0 && (posicion === 4 || posicion === 7)) v += ' ';
+      v += digitos[i];
+    }
+    variantes.add(v);
+  }
+  return [...variantes];
 }
 
 export async function listarClientes(filtro: FiltroClientes = {}): Promise<Pagina<Cliente>> {
@@ -38,10 +62,19 @@ export async function listarClientes(filtro: FiltroClientes = {}): Promise<Pagin
   if (MODO_DEMO) {
     const filtrados = CLIENTES_DEMO.filter(
       (c) =>
-        coincideTexto([c.nombre, c.telefono, c.email], filtro.busqueda) &&
+        // El telefono tambien sin espacios, para que «0991507» lo encuentre.
+        coincideTexto([c.nombre, c.telefono, c.telefono.replace(/\D/g, ''), c.email], filtro.busqueda) &&
         coincideEstado(activo(c.estado), filtro.estados) &&
         entreFechas(c.fecha_registro, filtro.desde, filtro.hasta),
     );
+
+    if (filtro.orden === 'reciente') {
+      filtrados.sort(
+        (a, b) =>
+          String(b.fecha_registro).localeCompare(String(a.fecha_registro)) ||
+          b.id_cliente - a.id_cliente,
+      );
+    }
 
     return paginar(filtrados, pagina, porPagina);
   }
@@ -53,8 +86,15 @@ export async function listarClientes(filtro: FiltroClientes = {}): Promise<Pagin
     .select('*', { count: 'exact' })
     // Lo borrado logicamente no existe para la aplicacion.
     .eq('deleted', false)
-    .order('nombre', { ascending: true })
     .range(desde, desde + porPagina - 1);
+
+  // El empate por id mantiene estable el orden entre una pagina y la siguiente.
+  consulta =
+    filtro.orden === 'reciente'
+      ? consulta
+          .order('fecha_registro', { ascending: false })
+          .order('id_cliente', { ascending: false })
+      : consulta.order('nombre', { ascending: true });
 
   if (filtro.estados?.length === 1) {
     consulta = consulta.eq('estado', filtro.estados[0] === 'activo');
@@ -69,7 +109,12 @@ export async function listarClientes(filtro: FiltroClientes = {}): Promise<Pagin
     const t = filtro.busqueda.trim();
     // `%` alrededor y `ilike` para que no distinga mayusculas ni acentos
     // iniciales. `or` con comas: la sintaxis de PostgREST.
-    consulta = consulta.or(`nombre.ilike.%${t}%,telefono.ilike.%${t}%,email.ilike.%${t}%`);
+    const condiciones = [`nombre.ilike.%${t}%`, `telefono.ilike.%${t}%`, `email.ilike.%${t}%`];
+    // Solo digitos: tambien se busca el telefono con sus espacios de siempre.
+    if (/^\d{3,}$/.test(t)) {
+      for (const v of variantesDeTelefono(t)) condiciones.push(`telefono.ilike.%${v}%`);
+    }
+    consulta = consulta.or(condiciones.join(','));
   }
 
   const { data, error, count } = await consulta;

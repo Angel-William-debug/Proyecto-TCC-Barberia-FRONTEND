@@ -1,4 +1,5 @@
 import {
+  horariosPublicos,
   listarAgenda,
   listarClientes,
   listarProfesionales,
@@ -109,7 +110,7 @@ export default async function PaginaAgenda({
     return `/panel/agenda?${p.toString()}`;
   };
 
-  const [barberos, citas, clientes, servicios] = await Promise.all([
+  const [barberos, citas, clientes, servicios, horarios] = await Promise.all([
     listarProfesionales().catch(() => []),
     listarAgenda({
       desde: rango.desde,
@@ -122,6 +123,7 @@ export default async function PaginaAgenda({
     // quedo despues de filtrar la agenda.
     listarClientes({ porPagina: 500 }).catch(() => null),
     listarServicios().catch(() => []),
+    horariosPublicos().catch(() => []),
   ]);
 
   const facturado = citas
@@ -148,6 +150,7 @@ export default async function PaginaAgenda({
             // Para dar un turno, solo los barberos activos. El filtro de la
             // agenda sigue mostrando todos, para ver turnos viejos de un inactivo.
             profesionales={barberos.filter((b) => b.estado)}
+            horarios={horarios}
             fecha={dia}
           />
         }
@@ -302,6 +305,7 @@ export default async function PaginaAgenda({
                       clientes={clientes?.datos ?? []}
                       servicios={servicios}
                       profesionales={barberos.filter((b) => b.estado)}
+                      horarios={horarios}
                       fecha={dia}
                     />
                   }

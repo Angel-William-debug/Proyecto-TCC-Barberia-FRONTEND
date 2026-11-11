@@ -102,6 +102,11 @@ const REGLAS_DE_NEGOCIO: Array<{ patron: RegExp; mensaje: string; regla: string 
     regla: 'CU-006',
   },
   {
+    patron: /No se puede agendar una cita en el pasado/,
+    mensaje: 'No se puede agendar un turno en un momento que ya pasó.',
+    regla: 'CU-005',
+  },
+  {
     patron: /MOV-001/,
     mensaje: 'Indique el motivo del movimiento.',
     regla: 'MOV-001',

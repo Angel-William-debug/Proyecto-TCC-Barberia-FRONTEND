@@ -10,6 +10,7 @@ import {
   FiltrosActivos,
   Paginacion,
   RangoFechas,
+  SelectorFiltro,
   SelectorMultiple,
   Tabla,
   TablaCuerpo,
@@ -33,6 +34,7 @@ import {
   OPCIONES_ACTIVO,
   comunes,
   pagina as leerPagina,
+  texto,
   type Parametros,
 } from '@/lib/filtros';
 
@@ -51,7 +53,8 @@ export default async function PaginaClientes({
   searchParams: Promise<Parametros>;
 }) {
   const params = await searchParams;
-  const filtro = { ...comunes(params), pagina: leerPagina(params) };
+  const orden = texto(params, 'orden') === 'reciente' ? ('reciente' as const) : ('nombre' as const);
+  const filtro = { ...comunes(params), orden, pagina: leerPagina(params) };
 
   const resultado = await listarClientes(filtro);
 
@@ -67,8 +70,18 @@ export default async function PaginaClientes({
         <BarraFiltros
           busqueda={<CampoBusqueda placeholder="Nombre, teléfono o correo" />}
           fecha={<RangoFechas etiqueta="Fecha de registro" />}
-          avanzados={<SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ACTIVO} />}
-          parametrosAvanzados={['estado']}
+          avanzados={
+            <>
+              <SelectorMultiple nombre="estado" etiqueta="Estado" opciones={OPCIONES_ACTIVO} />
+              <SelectorFiltro
+                nombre="orden"
+                etiqueta="Ordenar por"
+                textoTodos="Nombre (A-Z)"
+                opciones={[{ valor: 'reciente', etiqueta: 'Último agregado' }]}
+              />
+            </>
+          }
+          parametrosAvanzados={['estado', 'orden']}
           acciones={
             <BotonExportar
               tipo="clientes"
@@ -84,6 +97,7 @@ export default async function PaginaClientes({
           etiquetas={{
             q: { titulo: 'Búsqueda' },
             estado: { titulo: 'Estado', valores: ETIQUETAS_ACTIVO },
+            orden: { titulo: 'Orden', valores: { reciente: 'Último agregado' } },
             desde: { titulo: 'Desde' },
             hasta: { titulo: 'Hasta' },
           }}

@@ -184,8 +184,8 @@ export default async function PaginaCobros({
       </Tarjeta>
 
       <p className="text-cuerpo-sm text-terciario mt-4">
-        Solo se puede registrar un cobro sobre una cita completada (RN-024), y un cobro parcial
-        deja el saldo pendiente hasta completarse (RN-025).
+        Solo se puede registrar un cobro sobre una cita completada (RN-024), y siempre por el
+        monto completo del turno.
       </p>
     </>
   );
