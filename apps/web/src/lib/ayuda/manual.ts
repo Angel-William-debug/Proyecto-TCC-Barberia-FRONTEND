@@ -25,11 +25,12 @@ function aPapel(segmentos: Segmento[]): SegmentoManual[] {
  *
  * No depende de Next ni de la sesión: lo usan la ruta del PDF y
  * `scripts/generar-manuales.ts`, que arma los cuatro PDF de una vez. Cada uno
- * le pasa su forma de conseguir las capturas.
+ * le pasa su forma de conseguir las imágenes (capturas y logo).
  */
 export async function armarDatosManual(
   rol: NombreRol,
-  leerCaptura: (archivo: string) => Promise<Uint8Array | undefined>,
+  /** Lee un archivo de `public/ayuda/` (por ejemplo `capturas/08-agenda.png`). */
+  leer: (ruta: string) => Promise<Uint8Array | undefined>,
 ): Promise<DatosManual> {
   const secciones: SeccionManual[] = await Promise.all(
     seccionesPara(rol).map(async ({ categoria, articulos }) => ({
@@ -52,7 +53,7 @@ export async function armarDatosManual(
                 return { tipo: b.tipo, items: b.items.map(aPapel) };
             }
           }),
-          imagen: a.captura ? await leerCaptura(a.captura.archivo) : undefined,
+          imagen: a.captura ? await leer(`capturas/${a.captura.archivo}`) : undefined,
           descripcionImagen: a.captura?.descripcion,
         })),
       ),
@@ -72,5 +73,6 @@ export async function armarDatosManual(
     presentacion: `${PRESENTACION_MANUAL[rol]} El mismo contenido está en el centro de ayuda del sistema, con un buscador.`,
     fecha,
     secciones,
+    logo: { portada: await leer('marca/logo-portada.png'), pie: await leer('marca/logo-pie.png') },
   };
 }

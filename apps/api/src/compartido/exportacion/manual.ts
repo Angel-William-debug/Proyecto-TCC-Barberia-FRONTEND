@@ -54,6 +54,12 @@ export interface DatosManual {
   subtitulo: string;
   /** Texto de la portada, debajo del título. */
   presentacion: string;
+  /**
+   * El logo de la barbería (PNG): `portada`, el ícono con su fondo carbón,
+   * que se lee sobre la banda ámbar; `pie`, el isotipo dorado sin fondo,
+   * chico, en el pie de cada página. Sin ellos el manual sale igual.
+   */
+  logo?: { portada?: Uint8Array; pie?: Uint8Array };
   /** Fecha de generación, ya formateada. */
   fecha: string;
   secciones: SeccionManual[];
@@ -129,10 +135,18 @@ export async function generarPdfManual(datos: DatosManual): Promise<Buffer> {
       })
       .join('');
 
+  const logoPortada = datos.logo?.portada ? await doc.embedPng(datos.logo.portada).catch(() => undefined) : undefined;
+  const logoPie = datos.logo?.pie ? await doc.embedPng(datos.logo.pie).catch(() => undefined) : undefined;
+
   // --- Portada ----------------------------------------------------------
   const portada = doc.addPage([ANCHO, ALTO]);
   portada.drawRectangle({ x: 0, y: ALTO - 300, width: ANCHO, height: 300, color: COLOR_MARCA });
   portada.drawText('BARBER SHOP', { x: MARGEN, y: ALTO - 90, size: 12, font: f.negrita, color: COLOR_MARCA_SUAVE });
+  if (logoPortada) {
+    // Arriba a la derecha de la banda, del alto del título y el subtítulo.
+    const lado = 120;
+    portada.drawImage(logoPortada, { x: ANCHO - MARGEN - lado, y: ALTO - 230, width: lado, height: lado });
+  }
   portada.drawText(apto(datos.titulo), { x: MARGEN, y: ALTO - 170, size: 34, font: f.negrita, color: COLOR_SOBRE_MARCA });
   portada.drawText(apto(datos.subtitulo), { x: MARGEN, y: ALTO - 210, size: 18, font: f.normal, color: COLOR_SOBRE_MARCA });
   portada.drawText(apto(`Generado el ${datos.fecha}`), { x: MARGEN, y: ALTO - 270, size: 10, font: f.normal, color: COLOR_MARCA_SUAVE });
@@ -387,7 +401,14 @@ export async function generarPdfManual(datos: DatosManual): Promise<Buffer> {
     if (i === 0) return;
     p.drawLine({ start: { x: MARGEN, y: PIE }, end: { x: ANCHO - MARGEN, y: PIE }, thickness: 0.5, color: COLOR_BORDE });
     const izquierda = apto(`${datos.titulo} · ${datos.subtitulo}`);
-    p.drawText(izquierda, { x: MARGEN, y: PIE - 14, size: 8, font: f.normal, color: COLOR_SECUNDARIO });
+    let xTexto = MARGEN;
+    if (logoPie) {
+      const alto = 14;
+      const ancho = (logoPie.width / logoPie.height) * alto;
+      p.drawImage(logoPie, { x: MARGEN, y: PIE - 18, width: ancho, height: alto });
+      xTexto += ancho + 6;
+    }
+    p.drawText(izquierda, { x: xTexto, y: PIE - 14, size: 8, font: f.normal, color: COLOR_SECUNDARIO });
     const numero = `Página ${i + 1} de ${paginas.length}`;
     p.drawText(apto(numero), {
       x: ANCHO - MARGEN - f.normal.widthOfTextAtSize(apto(numero), 8),

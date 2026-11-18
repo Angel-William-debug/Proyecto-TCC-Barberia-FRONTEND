@@ -25,14 +25,15 @@ const config: NextConfig = {
   transpilePackages: ['@barber-shop/ui', '@barber-shop/api', '@barber-shop/tipos'],
 
   /**
-   * El PDF del manual de usuario lleva las capturas de pantalla, que viven en
+   * El PDF del manual de usuario lleva las capturas de pantalla y el logo, en
    * `public/`. En Vercel los archivos de `public/` los sirve la CDN y no
    * viajan con la funcion: sin esto, la ruta del PDF no los encuentra en
    * disco (igual los pide por HTTP como respaldo; ver `lib/ayuda/pdf.ts`).
    */
   outputFileTracingIncludes: {
-    '/panel/ayuda/pdf': ['./public/ayuda/capturas/**'],
-    '/mi-cuenta/ayuda/pdf': ['./public/ayuda/capturas/**'],
+    '/panel/ayuda/pdf': ['./public/ayuda/**'],
+    '/mi-cuenta/ayuda/pdf': ['./public/ayuda/**'],
+    '/api/ayuda/cliente/pdf': ['./public/ayuda/**'],
   },
 
   images: {

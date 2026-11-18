@@ -16,9 +16,9 @@ import { armarDatosManual } from '../src/lib/ayuda/manual';
 const salida = process.argv[2] ?? 'manuales';
 mkdirSync(salida, { recursive: true });
 
-const leer = async (archivo: string) => {
+const leer = async (ruta: string) => {
   try {
-    return new Uint8Array(readFileSync(join('public', 'ayuda', 'capturas', archivo)));
+    return new Uint8Array(readFileSync(join('public', 'ayuda', ruta)));
   } catch {
     return undefined;
   }
