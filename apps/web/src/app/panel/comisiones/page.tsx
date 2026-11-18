@@ -2,11 +2,12 @@ import Link from 'next/link';
 
 import {
   comisionesPendientes,
+  exigirSesion,
   listarComisiones,
   listarProfesionales,
   MODO_DEMO,
 } from '@barber-shop/api';
-import { ESTADOS_COMISION } from '@barber-shop/tipos';
+import { ESTADOS_COMISION, puedeModificar } from '@barber-shop/tipos';
 import {
   BarraFiltros,
   BotonIcono,
@@ -68,7 +69,8 @@ export default async function PaginaComisiones({
   const params = await searchParams;
   const filtro = { ...comunes(params), barbero: texto(params, 'barbero') };
 
-  const [detalle, resumen, barberos] = await Promise.all([
+  const [usuario, detalle, resumen, barberos] = await Promise.all([
+    exigirSesion(),
     listarComisiones(filtro),
     comisionesPendientes().catch(() => []),
     listarProfesionales().catch(() => []),
@@ -86,6 +88,9 @@ export default async function PaginaComisiones({
         titulo="Comisiones"
         descripcion={`${guaranies(totalPendiente)} pendientes de liquidar`}
         accion={
+          // Liquidar es del administrador (RN-026). El barbero ve aca sus
+          // propias comisiones (RLS) pero no las liquida.
+          puedeModificar(usuario.rol, 'comisiones') && (
           <PanelLiquidacion
             resumen={resumen.map((r) => ({
               nombre: r.nombre_profesional,
@@ -94,6 +99,7 @@ export default async function PaginaComisiones({
               total: r.total_comision,
             }))}
           />
+          )
         }
       />
 

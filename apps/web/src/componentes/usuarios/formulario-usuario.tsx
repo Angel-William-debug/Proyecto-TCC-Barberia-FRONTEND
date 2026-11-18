@@ -49,8 +49,9 @@ export function FormularioUsuario({
   // Al crear, el rol cliente no se ofrece (14/10/2026): un cliente se
   // registra solo desde el portal o la app, y asi recibe su ficha de
   // `clientes`. Creado desde aca quedaba con cuenta y sin ficha. Al editar
-  // se lista igual, para no esconder el rol que ya tiene alguien.
-  const rolesOfrecidos = editando ? roles : roles.filter((r) => r.nombre !== 'cliente');
+  // se lista solo si ya es el rol de esa persona, para no esconderlo; pasar a
+  // alguien del personal a cliente lo dejaria igual sin ficha (18/11/2026).
+  const rolesOfrecidos = roles.filter((r) => r.nombre !== 'cliente' || usuario?.rol === 'cliente');
 
   return (
     <>

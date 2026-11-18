@@ -48,6 +48,19 @@ export default async function MisTurnos({
         </Link>
       </div>
 
+      {params.reservado === '1' && (
+        <div
+          role="status"
+          className="border-exito bg-superficie text-principal mt-6 flex items-start gap-3 rounded-lg border p-4"
+        >
+          <Icono nombre="circle-check" tamano="md" className="text-exito mt-0.5 shrink-0" />
+          <p>
+            <span className="font-semibold">Turno reservado.</span> Queda pendiente hasta que la
+            barbería lo confirme; lo ve abajo, en su calendario.
+          </p>
+        </div>
+      )}
+
       <div className="mt-6">
         <PestanasVista
           etiqueta="Cómo ver los turnos"

@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { listarProfesionales } from '@barber-shop/api';
-import { BotonIcono, ChipEstado, ZONA_HORARIA, porcentaje } from '@barber-shop/ui';
+import { exigirSesion, listarProfesionales } from '@barber-shop/api';
+import { puedeModificar } from '@barber-shop/tipos';
+import { BotonIcono, ChipEstado, EstadoVacio, Tarjeta, ZONA_HORARIA, porcentaje } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
 import { ResumenBarbero } from '@/componentes/barberos/resumen-barbero';
@@ -20,7 +21,8 @@ export default async function PaginaPerfilBarbero({ params }: { params: Promise<
   const idProfesional = Number(id);
   if (!Number.isFinite(idProfesional)) notFound();
 
-  const barbero = (await listarProfesionales({})).find((b) => b.id_profesional === idProfesional);
+  const [usuario, barberos] = await Promise.all([exigirSesion(), listarProfesionales({})]);
+  const barbero = barberos.find((b) => b.id_profesional === idProfesional);
   if (!barbero) notFound();
 
   const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_HORARIA }).format(new Date());
@@ -48,7 +50,20 @@ export default async function PaginaPerfilBarbero({ params }: { params: Promise<
           />
         }
       />
-      <ResumenBarbero idProfesional={idProfesional} hoy={hoy} propio={false} />
+      {/* El resumen lee la agenda y las comisiones del barbero, que solo el
+          administrador puede leer. A la recepcionista -que llega solo por un
+          enlace escrito a mano- se le explica en vez de mostrarle un error. */}
+      {puedeModificar(usuario.rol, 'profesionales') ? (
+        <ResumenBarbero idProfesional={idProfesional} hoy={hoy} propio={false} />
+      ) : (
+        <Tarjeta>
+          <EstadoVacio
+            icono="scissors"
+            titulo="El resumen del barbero lo consulta el administrador"
+            descripcion="Sus turnos los ve en la Agenda, filtrando por este barbero."
+          />
+        </Tarjeta>
+      )}
     </>
   );
 }

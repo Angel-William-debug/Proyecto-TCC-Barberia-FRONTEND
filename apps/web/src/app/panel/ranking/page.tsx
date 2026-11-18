@@ -36,12 +36,11 @@ export const metadata = {
 /**
  * Ranking del equipo.
  *
- * POR VOLUMEN, NO POR VALORACION, y la pantalla lo dice en voz alta en lugar
- * de dejarlo implicito. La Direccion lo pidio «segun las valoraciones o
- * volumen de atencion»; no hay tabla de valoraciones en el sistema, asi que
- * se implementa lo segundo. Presentar la facturacion como si fuera una
- * puntuacion del cliente seria atribuirle al cliente una opinion que nunca
- * dio.
+ * La Direccion lo pidio «segun las valoraciones o volumen de atencion». Al
+ * principio solo existia el volumen; desde el 14/10/2026 el cliente califica
+ * cada turno completado (1 a 5 estrellas) y «Valoracion» es un criterio mas.
+ * La nota de la pantalla decia todavia que no habia valoraciones: se corrigio
+ * el 18/11/2026, al escribir el manual de usuario.
  */
 function esCriterio(valor: string | undefined): valor is CriterioRanking {
   return !!valor && (CRITERIOS_RANKING as readonly string[]).includes(valor);
@@ -95,8 +94,8 @@ export default async function Ranking({
         <span className="medida-lectura">
           El rango de fechas afecta solo a las horas ocupadas, que es la única columna con
           fecha propia. Servicios, facturación y ticket promedio son del histórico completo.
-          El orden es por volumen de atención, no por valoración del cliente: el sistema
-          todavía no registra valoraciones.
+          La valoración es el promedio de las estrellas que los clientes dan a sus turnos
+          completados desde su historial; entre paréntesis, cuántos turnos calificaron.
         </span>
       </p>
 

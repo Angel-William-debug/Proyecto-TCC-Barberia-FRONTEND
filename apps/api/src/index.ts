@@ -264,3 +264,14 @@ export {
   type TablaEscribible,
   type RegistroBorrado,
 } from './compartido/escritura';
+
+// Manual de usuario en PDF (centro de ayuda, 18/11/2026). El contenido y el
+// filtro por rol viven en apps/web; aca solo se dibuja.
+export {
+  generarPdfManual,
+  type DatosManual,
+  type SeccionManual,
+  type ArticuloManual,
+  type BloqueManual,
+  type SegmentoManual,
+} from './compartido/exportacion/manual';

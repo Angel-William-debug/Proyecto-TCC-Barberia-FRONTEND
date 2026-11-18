@@ -166,8 +166,10 @@ export default async function PaginaUsuarios({
       <MatrizPermisos />
 
       <p className="text-cuerpo-sm text-terciario mt-4">
-        El alta crea la credencial en Supabase Auth con una contraseña inicial que usted
-        elige y le entrega a la persona; ella la cambia cuando quiera desde «Recuperar
+        El alta crea la cuenta con una contraseña inicial que usted elige y le entrega a la
+        persona. Además le llega un correo para verificar la cuenta: hasta que lo abra no
+        puede ingresar (si no le llegó, usa «Reenviar el correo» en la pantalla de ingreso).
+        Después cambia la contraseña cuando quiera desde Mi perfil o desde «Recuperar
         contraseña». La contraseña nunca se guarda en la ficha del usuario (RN-047).
         Desactivar (RN-003) conserva la cuenta y el historial de acciones.
       </p>

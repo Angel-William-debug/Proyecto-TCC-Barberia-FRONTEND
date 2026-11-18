@@ -1,11 +1,12 @@
 import {
+  exigirSesion,
   horariosPublicos,
   listarAgenda,
   listarClientes,
   listarProfesionales,
   listarServicios,
 } from '@barber-shop/api';
-import { ESTADOS_CITA, type EstadoCita } from '@barber-shop/tipos';
+import { ESTADOS_CITA, puedeModificar, type EstadoCita } from '@barber-shop/tipos';
 import {
   BarraFiltros,
   CampoBusqueda,
@@ -110,7 +111,8 @@ export default async function PaginaAgenda({
     return `/panel/agenda?${p.toString()}`;
   };
 
-  const [barberos, citas, clientes, servicios, horarios] = await Promise.all([
+  const [usuario, barberos, citas, clientes, servicios, horarios] = await Promise.all([
+    exigirSesion(),
     listarProfesionales().catch(() => []),
     listarAgenda({
       desde: rango.desde,
@@ -132,6 +134,11 @@ export default async function PaginaAgenda({
 
   const pagCitas = paginarFilas(citas, params);
 
+  // El barbero ve la agenda de todo el equipo, pero solo el mostrador agenda,
+  // confirma, reprograma, cancela y completa: la base le da solo lectura.
+  // Antes veia los mismos botones y algunos fallaban sin avisar (18/11/2026).
+  const editable = puedeModificar(usuario.rol, 'agenda');
+
   return (
     <>
       <EncabezadoVista
@@ -144,15 +151,17 @@ export default async function PaginaAgenda({
               : 'Mes completo'
         }
         accion={
-          <FormularioTurno
-            clientes={clientes?.datos ?? []}
-            servicios={servicios}
-            // Para dar un turno, solo los barberos activos. El filtro de la
-            // agenda sigue mostrando todos, para ver turnos viejos de un inactivo.
-            profesionales={barberos.filter((b) => b.estado)}
-            horarios={horarios}
-            fecha={dia}
-          />
+          editable && (
+            <FormularioTurno
+              clientes={clientes?.datos ?? []}
+              servicios={servicios}
+              // Para dar un turno, solo los barberos activos. El filtro de la
+              // agenda sigue mostrando todos, para ver turnos viejos de un inactivo.
+              profesionales={barberos.filter((b) => b.estado)}
+              horarios={horarios}
+              fecha={dia}
+            />
+          )
         }
       />
 
@@ -301,7 +310,7 @@ export default async function PaginaAgenda({
                   // El mismo formulario que el boton de arriba: antes era un
                   // Boton suelto, sin accion, y no abria nada (QA F2, 11/11/2026).
                   accion={
-                    <FormularioTurno
+                    editable && <FormularioTurno
                       clientes={clientes?.datos ?? []}
                       servicios={servicios}
                       profesionales={barberos.filter((b) => b.estado)}
@@ -329,17 +338,19 @@ export default async function PaginaAgenda({
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
                     <span className="inline-flex items-center gap-1">
-                      <PanelDetalleCita cita={c} />
+                      <PanelDetalleCita cita={c} soloLectura={!editable} />
                       {/* Siempre montado: al completar, la fila se refresca como
                           completada y el panel de insumos tiene que seguir abierto.
                           Solo el boton depende del estado. */}
-                      <PanelCierreServicio
-                        idCita={c.id_cita}
-                        nombreCliente={c.cliente.nombre}
-                        puedeCompletar={
-                          c.estado === 'pendiente' || c.estado === 'confirmado' || c.estado === 'en_proceso'
-                        }
-                      />
+                      {editable && (
+                        <PanelCierreServicio
+                          idCita={c.id_cita}
+                          nombreCliente={c.cliente.nombre}
+                          puedeCompletar={
+                            c.estado === 'pendiente' || c.estado === 'confirmado' || c.estado === 'en_proceso'
+                          }
+                        />
+                      )}
                     </span>
                   </Td>
                 </Tr>

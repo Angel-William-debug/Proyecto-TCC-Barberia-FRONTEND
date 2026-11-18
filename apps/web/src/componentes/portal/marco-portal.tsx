@@ -47,6 +47,8 @@ export const ENTRADAS_PORTAL: EntradaBarra[] = [
   { etiqueta: 'Para usted', ruta: '/mi-cuenta/para-usted', icono: 'sparkles' },
   { etiqueta: 'Historial', ruta: '/mi-cuenta/historial', icono: 'file-text' },
   { etiqueta: 'Mi perfil', ruta: '/mi-cuenta/perfil', icono: 'user-round' },
+  // El manual del cliente (centro de ayuda, 18/11/2026).
+  { etiqueta: 'Ayuda', ruta: '/mi-cuenta/ayuda', icono: 'circle-help' },
 ];
 
 export function MarcoPortal({

@@ -19,6 +19,8 @@ import {
   ArrowLeftRight,
   Ban,
   Bell,
+  BookOpen,
+  CircleHelp,
   Box,
   Brain,
   Calendar,
@@ -107,6 +109,9 @@ export const ICONOS = {
   brain: Brain,
   'scroll-text': ScrollText,
   bell: Bell,
+  // Centro de ayuda (manual de usuario, 18/11/2026).
+  'circle-help': CircleHelp,
+  'book-open': BookOpen,
   trophy: Trophy,
 
   // Estados

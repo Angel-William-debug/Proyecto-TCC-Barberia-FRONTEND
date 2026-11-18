@@ -197,7 +197,9 @@ export function FormularioReserva({
         setError(r.error);
         return;
       }
-      router.push('/mi-cuenta');
+      // La app avisaba «Turno reservado» y la web volvia a Mis turnos en
+      // silencio: el cliente no sabia si habia salido (18/11/2026).
+      router.push('/mi-cuenta?reservado=1');
     });
   }
 

@@ -1,4 +1,4 @@
-import { listarBorrados } from '@barber-shop/api';
+import { exigirSesion, listarBorrados } from '@barber-shop/api';
 import type { TablaEscribible } from '@barber-shop/api';
 import {
   BarraFiltros,
@@ -36,7 +36,6 @@ const TABLAS_PAPELERA = [
   'categorias_servicio',
   'categorias_producto',
   'metodos_pago',
-  'usuarios',
 ] as const satisfies readonly TablaEscribible[];
 
 const ETIQUETA_TABLA: Record<(typeof TABLAS_PAPELERA)[number], string> = {
@@ -48,13 +47,25 @@ const ETIQUETA_TABLA: Record<(typeof TABLAS_PAPELERA)[number], string> = {
   categorias_servicio: 'Categorías de servicio',
   categorias_producto: 'Categorías de producto',
   metodos_pago: 'Métodos de pago',
-  usuarios: 'Usuarios',
 };
 
-const OPCIONES_TABLA = TABLAS_PAPELERA.map((t) => ({ valor: t, etiqueta: ETIQUETA_TABLA[t] }));
+type TablaPapelera = (typeof TABLAS_PAPELERA)[number];
 
-function esTablaPapelera(valor: string): valor is (typeof TABLAS_PAPELERA)[number] {
-  return (TABLAS_PAPELERA as readonly string[]).includes(valor);
+/**
+ * Lo que cada rol puede restaurar.
+ *
+ * Restaurar es escribir, y la recepcionista solo escribe clientes y
+ * productos (RLS): los demas catalogos los modifica el administrador. Antes
+ * veia los nueve y en la mayoria el boton fallaba o no hacia nada.
+ *
+ * «Usuarios» salio de la lista el 18/11/2026: ninguna pantalla borra un
+ * usuario -se lo desactiva, para conservar su historial-, asi que ese
+ * catalogo estaba siempre vacio.
+ */
+const TABLAS_RECEPCION: readonly TablaPapelera[] = ['clientes', 'productos'];
+
+function tablasPara(esAdministrador: boolean): readonly TablaPapelera[] {
+  return esAdministrador ? TABLAS_PAPELERA : TABLAS_RECEPCION;
 }
 
 /**
@@ -71,8 +82,12 @@ export default async function PaginaPapelera({
   searchParams: Promise<Parametros>;
 }) {
   const params = await searchParams;
+  const usuario = await exigirSesion();
+  const permitidas = tablasPara(usuario.rol === 'administrador');
+  const opciones = permitidas.map((t) => ({ valor: t, etiqueta: ETIQUETA_TABLA[t] }));
+
   const tablaParametro = texto(params, 'tabla') ?? '';
-  const tabla = esTablaPapelera(tablaParametro) ? tablaParametro : 'clientes';
+  const tabla = permitidas.find((t) => t === tablaParametro) ?? 'clientes';
 
   const { busqueda, desde, hasta } = comunes(params);
   const registros = await listarBorrados(tabla, { busqueda, desde, hasta });
@@ -88,7 +103,7 @@ export default async function PaginaPapelera({
 
       <Tarjeta>
         <BarraFiltros
-          fijos={<SelectorFiltro nombre="tabla" etiqueta="Catálogo" opciones={OPCIONES_TABLA} textoTodos="Clientes" />}
+          fijos={<SelectorFiltro nombre="tabla" etiqueta="Catálogo" opciones={opciones} textoTodos="Clientes" />}
           busqueda={<CampoBusqueda placeholder="Nombre" />}
           fecha={<RangoFechas etiqueta="Fecha de borrado" />}
         />

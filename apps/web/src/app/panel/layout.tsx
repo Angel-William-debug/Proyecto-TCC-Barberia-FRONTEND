@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { listarAlertas, listarNotificaciones, MODO_DEMO, usuarioActual } from '@barber-shop/api';
 import { usaElPortal } from '@barber-shop/tipos';
-import { Boton, EstadoVacio, Tarjeta } from '@barber-shop/ui';
+import { Boton, BotonIcono, EstadoVacio, Tarjeta } from '@barber-shop/ui';
 
 import { AvisoDemo } from '@/componentes/armazon/aviso-demo';
 import { BotonSalir } from '@/componentes/armazon/boton-salir';
@@ -123,10 +123,19 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
       aviso={MODO_DEMO ? <AvisoDemo /> : undefined}
       acciones={
         <>
-          <BusquedaGlobal />
+          {/* Busca clientes, servicios, productos y barberos: el barbero no
+              tiene ninguno de esos modulos y siempre obtenia «sin resultados». */}
+          {entradas.some((e) => ['clientes', 'servicios', 'inventario', 'profesionales'].includes(e.modulo)) && (
+            <BusquedaGlobal />
+          )}
           {tieneBandeja && (
             <CampanaAlertas cantidad={alertasSinResolver.length + recordatoriosCaidos.length} />
           )}
+          {/* El centro de ayuda (manual de usuario) es de todos los roles del
+              panel, así que va en el encabezado y no en un módulo del menú. */}
+          <Link href="/panel/ayuda" className="inline-flex">
+            <BotonIcono icono="circle-help" etiqueta="Centro de ayuda" variante="terciario" />
+          </Link>
           <SelectorTema />
           <BotonSalir />
         </>

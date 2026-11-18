@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import {
+  exigirSesion,
   listarCategoriasProducto,
   listarCategoriasServicio,
   listarClientes,
@@ -13,6 +14,7 @@ import {
 import { Icono, plural, type NombreIcono } from '@barber-shop/ui';
 
 import { EncabezadoVista } from '@/componentes/armazon/encabezado-vista';
+import { rolPuedeEntrar } from '@/lib/navegacion';
 
 export const metadata = {
   title: 'Datos generales',
@@ -49,6 +51,7 @@ interface Catalogo {
 export default async function DatosGenerales() {
   // Todo en paralelo: son siete consultas independientes y encadenarlas
   // multiplicaria por siete la espera de una pantalla que solo cuenta filas.
+  const usuario = await exigirSesion();
   const [clientes, servicios, catServicio, profesionales, productos, catProducto, proveedores, metodos] =
     await Promise.all([
       // Solo hace falta el total, no las filas: `porPagina: 1` evita traer
@@ -59,8 +62,8 @@ export default async function DatosGenerales() {
       listarProfesionales(),
       listarProductosConNivel(),
       listarCategoriasProducto(),
-      listarProveedores(),
-      listarMetodosPago(),
+      listarProveedores().catch(() => []),
+      listarMetodosPago().catch(() => []),
     ]);
 
   const catalogos: Catalogo[] = [
@@ -138,7 +141,10 @@ export default async function DatosGenerales() {
       />
 
       <ul className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {catalogos.map((c) => (
+        {/* Solo las tarjetas que el rol puede abrir: a la recepcionista,
+            Proveedores y Métodos de pago la llevaban a «No tiene acceso» y
+            Proveedores contaba cero, porque la base no se los deja leer. */}
+        {catalogos.filter((c) => rolPuedeEntrar(usuario.rol, c.ruta)).map((c) => (
           <li key={c.nombre}>
             <Link
               href={c.ruta}

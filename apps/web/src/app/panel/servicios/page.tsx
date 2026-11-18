@@ -1,4 +1,10 @@
-import { listarCategoriasServicio, listarProductosConNivel, listarServicios } from '@barber-shop/api';
+import {
+  exigirSesion,
+  listarCategoriasServicio,
+  listarProductosConNivel,
+  listarServicios,
+} from '@barber-shop/api';
+import { puedeModificar } from '@barber-shop/tipos';
 import {
   BarraFiltros,
   CampoBusqueda,
@@ -50,11 +56,16 @@ export default async function PaginaServicios({
   const params = await searchParams;
   const filtro = { ...comunes(params), categoria: texto(params, 'categoria') };
 
-  const [servicios, categorias, productos] = await Promise.all([
+  const [usuario, servicios, categorias, productos] = await Promise.all([
+    exigirSesion(),
     listarServicios(filtro),
     listarCategoriasServicio().catch(() => []),
     listarProductosConNivel().catch(() => []),
   ]);
+
+  // La recepcionista consulta el catálogo para agendar, pero solo el
+  // administrador lo modifica (RLS). Ver `SOLO_LECTURA_POR_ROL`.
+  const editable = puedeModificar(usuario.rol, 'servicios');
 
   const nombreCategoria = new Map(categorias.map((c) => [c.id_categoria, c.nombre]));
   const productosActivos = productos
@@ -72,7 +83,7 @@ export default async function PaginaServicios({
       <EncabezadoVista
         titulo="Servicios"
         descripcion={`${plural(servicios.length, 'servicio', 'servicios')} en el catálogo`}
-        accion={<FormularioServicio categorias={categorias} />}
+        accion={editable ? <FormularioServicio categorias={categorias} /> : undefined}
       />
 
       <Tarjeta>
@@ -167,9 +178,14 @@ export default async function PaginaServicios({
                         idServicio={s.id_servicio}
                         nombreServicio={s.nombre}
                         productos={productosActivos}
+                        soloLectura={!editable}
                       />
-                      <FormularioServicio servicio={s} categorias={categorias} />
-                      <BotonBorrar tabla="servicios" id={s.id_servicio} nombre={s.nombre} />
+                      {editable && (
+                        <>
+                          <FormularioServicio servicio={s} categorias={categorias} />
+                          <BotonBorrar tabla="servicios" id={s.id_servicio} nombre={s.nombre} />
+                        </>
+                      )}
                     </div>
                   </Td>
                 </Tr>
@@ -185,7 +201,7 @@ export default async function PaginaServicios({
         <TarjetaEncabezado
           titulo="Categorías de servicio"
           descripcion="Agrupan el catálogo en la reserva y en los reportes"
-          accion={<FormularioCategoriaServicio />}
+          accion={editable ? <FormularioCategoriaServicio /> : undefined}
         />
         <Tabla titulo="Categorías de servicio">
           <TablaEncabezado>
@@ -210,10 +226,12 @@ export default async function PaginaServicios({
                   <Td className="text-secundario" etiqueta="Descripción">{c.descripcion ?? '—'}</Td>
                   <Td numerico etiqueta="Servicios">{serviciosPorCategoria.get(c.id_categoria) ?? 0}</Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <FormularioCategoriaServicio categoria={c} />
-                      <BotonBorrar tabla="categorias_servicio" id={c.id_categoria} nombre={c.nombre} />
-                    </div>
+                    {editable && (
+                      <div className="flex justify-end gap-1">
+                        <FormularioCategoriaServicio categoria={c} />
+                        <BotonBorrar tabla="categorias_servicio" id={c.id_categoria} nombre={c.nombre} />
+                      </div>
+                    )}
                   </Td>
                 </Tr>
               ))

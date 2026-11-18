@@ -44,10 +44,13 @@ export function PanelReceta({
   idServicio,
   nombreServicio,
   productos,
+  soloLectura = false,
 }: {
   idServicio: number;
   nombreServicio: string;
   productos: ProductoParaReceta[];
+  /** La recepcionista consulta la receta pero no la cambia (RLS). */
+  soloLectura?: boolean;
 }) {
   const [abierto, setAbierto] = useState(false);
   const [lineas, setLineas] = useState<RecetaLinea[]>([]);
@@ -140,7 +143,11 @@ export function PanelReceta({
                 <EstadoVacio
                   icono="box"
                   titulo={!huboCarga && ocupado ? 'Cargando…' : 'Sin productos en la receta'}
-                  descripcion="Agregue los productos que este servicio consume habitualmente."
+                  descripcion={
+                    soloLectura
+                      ? 'Este servicio no tiene insumos cargados.'
+                      : 'Agregue los productos que este servicio consume habitualmente.'
+                  }
                 />
               </TdCompleta>
             ) : (
@@ -156,14 +163,16 @@ export function PanelReceta({
                     {l.unidad_uso ?? '—'}
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    <BotonIcono
-                      icono="trash-2"
-                      etiqueta={`Quitar ${l.nombre_producto} de la receta`}
-                      variante="terciario"
-                      tamano="sm"
-                      onClick={() => quitar(l.id_servicio_producto, l.nombre_producto)}
-                      disabled={ocupado}
-                    />
+                    {!soloLectura && (
+                      <BotonIcono
+                        icono="trash-2"
+                        etiqueta={`Quitar ${l.nombre_producto} de la receta`}
+                        variante="terciario"
+                        tamano="sm"
+                        onClick={() => quitar(l.id_servicio_producto, l.nombre_producto)}
+                        disabled={ocupado}
+                      />
+                    )}
                   </Td>
                 </Tr>
               ))
@@ -171,6 +180,7 @@ export function PanelReceta({
           </TablaCuerpo>
         </Tabla>
 
+        {!soloLectura && (
         <div className="mt-6">
           <GrupoCampos titulo="Agregar producto">
             <FilaCampos>
@@ -209,6 +219,7 @@ export function PanelReceta({
             </Boton>
           </GrupoCampos>
         </div>
+        )}
       </PanelLateral>
     </>
   );

@@ -87,11 +87,14 @@ export default async function PaginaCompras({
     await Promise.all([
       listarPedidos({ ...base, proveedor: texto(params, 'proveedor') }),
       listarProveedores(),
-      listarProveedores({
-        busqueda: texto(params, 'prov_q'),
-        desde: fecha(params, 'prov_desde'),
-        hasta: fecha(params, 'prov_hasta'),
-      }),
+      listarProveedores(
+        {
+          busqueda: texto(params, 'prov_q'),
+          desde: fecha(params, 'prov_desde'),
+          hasta: fecha(params, 'prov_hasta'),
+        },
+        { incluirInactivos: true },
+      ),
       listarProductosConNivel({}),
       listarPagosProveedor({
         busqueda: texto(params, 'pago_q'),
@@ -260,7 +263,14 @@ export default async function PaginaCompras({
             ) : (
               pagProveedores.filas.map((p) => (
                 <Tr key={p.id_proveedor} interactiva>
-                  <Td className="font-medium" etiqueta="Proveedor">{p.nombre}</Td>
+                  <Td className="font-medium" etiqueta="Proveedor">
+                    {p.nombre}
+                    {!p.estado && (
+                      <span className="text-cuerpo-sm text-terciario block font-normal">
+                        Inactivo: no se ofrece al crear una orden
+                      </span>
+                    )}
+                  </Td>
                   <Td className="font-mono" etiqueta="Teléfono">{p.telefono ?? '—'}</Td>
                   <Td className="text-secundario" etiqueta="Correo">{p.email ?? '—'}</Td>
                   <Td className="text-secundario" etiqueta="Dirección">{p.direccion ?? '—'}</Td>

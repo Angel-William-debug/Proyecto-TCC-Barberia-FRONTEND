@@ -97,6 +97,31 @@ export const MODULOS_POR_ROL: Record<NombreRol, readonly Modulo[]> = {
   cliente: [],
 };
 
+/**
+ * Modulos que un rol ve pero no puede modificar.
+ *
+ * Refleja las mismas politicas RLS que `MODULOS_POR_ROL`: la recepcionista lee
+ * el catalogo de servicios y de barberos -los necesita para agendar- pero solo
+ * el administrador los escribe; el barbero lee la agenda y sus comisiones,
+ * pero no agenda, no cierra turnos ni liquida.
+ *
+ * Hasta el 18/11/2026 las pantallas mostraban los mismos botones a todos y la
+ * base rechazaba la operacion -o, en un UPDATE filtrado por RLS, no cambiaba
+ * nada y no avisaba-. Se detecto al preparar el manual de usuario: un manual
+ * no deberia tener que decir «ese boton no lo toque».
+ */
+export const SOLO_LECTURA_POR_ROL: Record<NombreRol, readonly Modulo[]> = {
+  administrador: [],
+  recepcionista: ['servicios', 'profesionales'],
+  profesional: ['agenda', 'comisiones'],
+  cliente: [],
+};
+
+/** Si el rol puede crear, editar o borrar en el modulo (ademas de verlo). */
+export function puedeModificar(rol: NombreRol, modulo: Modulo): boolean {
+  return MODULOS_POR_ROL[rol].includes(modulo) && !SOLO_LECTURA_POR_ROL[rol].includes(modulo);
+}
+
 /** Un rol usa el panel del mostrador, o usa el portal. Nunca los dos. */
 export function usaElPortal(rol: NombreRol): boolean {
   return rol === 'cliente';

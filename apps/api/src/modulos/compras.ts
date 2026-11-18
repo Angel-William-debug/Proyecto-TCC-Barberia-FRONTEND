@@ -23,13 +23,23 @@ import { actualizar, crear, rechazarSiEsDemo } from '../compartido/escritura';
 import { uno } from '../compartido/relaciones';
 import { usuarioActual } from './sesion';
 
-export async function listarProveedores(filtro: FiltroTabla = {}): Promise<Proveedor[]> {
+/**
+ * Proveedores vigentes. Por omision solo los activos, que son los que se
+ * ofrecen al crear una orden. La tabla de Proveedores pide tambien los
+ * inactivos (`incluirInactivos`): hasta el 18/11/2026 un proveedor
+ * desactivado desaparecia de la lista y no habia forma de reactivarlo.
+ */
+export async function listarProveedores(
+  filtro: FiltroTabla = {},
+  { incluirInactivos = false }: { incluirInactivos?: boolean } = {},
+): Promise<Proveedor[]> {
   // El marcador de la busqueda promete nombre, correo o telefono; antes la
   // consulta real solo miraba el nombre. Se filtra en memoria por los tres,
   // igual que en el modo demostracion, mas la fecha de alta.
   const filtrar = (filas: Proveedor[]) =>
     filas.filter(
       (p) =>
+        (incluirInactivos || p.estado) &&
         coincideTexto([p.nombre, p.email, p.telefono], filtro.busqueda) &&
         entreFechas(p.created_at, filtro.desde, filtro.hasta),
     );
@@ -42,7 +52,6 @@ export async function listarProveedores(filtro: FiltroTabla = {}): Promise<Prove
     .from('proveedores')
     .select('*')
     .eq('deleted', false)
-    .eq('estado', true)
     .order('nombre');
 
   if (error) throw traducirError(error);

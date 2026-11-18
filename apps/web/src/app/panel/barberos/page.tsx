@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
-import { listarProfesionales } from '@barber-shop/api';
+import { exigirSesion, listarProfesionales } from '@barber-shop/api';
+import { puedeModificar } from '@barber-shop/tipos';
 import {
   BarraFiltros,
   CampoBusqueda,
@@ -63,7 +64,12 @@ export default async function PaginaBarberos({
   const params = await searchParams;
   const filtro = { ...comunes(params), tipo: texto(params, 'tipo') };
 
-  const barberos = await listarProfesionales(filtro);
+  const [usuario, barberos] = await Promise.all([exigirSesion(), listarProfesionales(filtro)]);
+
+  // La recepcionista ve el equipo para agendar, pero solo el administrador lo
+  // modifica, y el perfil (agenda y comisiones del barbero) es del
+  // administrador: la base no le deja leer comisiones ajenas a nadie mas.
+  const editable = puedeModificar(usuario.rol, 'profesionales');
 
   const pagBarberos = paginarFilas(barberos, params);
 
@@ -76,7 +82,7 @@ export default async function PaginaBarberos({
           'barbero activo',
           'barberos activos',
         )}`}
-        accion={<FormularioBarbero />}
+        accion={editable ? <FormularioBarbero /> : undefined}
       />
 
       <Tarjeta>
@@ -154,11 +160,15 @@ export default async function PaginaBarberos({
                   </Td>
                   <Td etiqueta="Acciones" className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Link href={`/panel/barberos/${b.id_profesional}`} className="inline-flex">
-                        <BotonIcono icono="eye" etiqueta={`Ver el perfil de ${b.nombre}`} variante="terciario" tamano="sm" />
-                      </Link>
-                      <FormularioBarbero barbero={b} />
-                      <BotonBorrar tabla="profesionales" id={b.id_profesional} nombre={b.nombre} />
+                      {editable && (
+                        <>
+                          <Link href={`/panel/barberos/${b.id_profesional}`} className="inline-flex">
+                            <BotonIcono icono="eye" etiqueta={`Ver el perfil de ${b.nombre}`} variante="terciario" tamano="sm" />
+                          </Link>
+                          <FormularioBarbero barbero={b} />
+                          <BotonBorrar tabla="profesionales" id={b.id_profesional} nombre={b.nombre} />
+                        </>
+                      )}
                     </div>
                   </Td>
                 </Tr>

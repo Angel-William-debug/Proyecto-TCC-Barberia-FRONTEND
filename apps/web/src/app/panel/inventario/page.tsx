@@ -1,4 +1,5 @@
 import {
+  exigirSesion,
   listarAlertas,
   listarCategoriasProducto,
   listarMovimientos,
@@ -80,7 +81,8 @@ export default async function PaginaInventario({
   const params = await searchParams;
   const base = comunes(params);
 
-  const [productos, movimientos, categorias, alertas] = await Promise.all([
+  const [usuario, productos, movimientos, categorias, alertas] = await Promise.all([
+    exigirSesion(),
     listarProductosConNivel({ busqueda: base.busqueda, niveles: lista(params, 'nivel') }),
     listarMovimientos({
       busqueda: texto(params, 'mov_q'),
@@ -91,6 +93,7 @@ export default async function PaginaInventario({
     listarCategoriasProducto().catch(() => []),
     listarAlertas().catch(() => []),
   ]);
+  const esAdministrador = usuario.rol === 'administrador';
 
   const criticos = productos.filter(
     (p) => p.nivel === 'sin_stock' || p.nivel === 'critico',
@@ -230,7 +233,9 @@ export default async function PaginaInventario({
         <TarjetaEncabezado
           titulo="Categorías de producto"
           descripcion="Agrupan el catálogo en el formulario del producto"
-          accion={<FormularioCategoriaProducto />}
+          // Las categorias son catalogo: las escribe solo el administrador
+          // (RLS). La recepcionista las ve, porque las elige al cargar un producto.
+          accion={esAdministrador ? <FormularioCategoriaProducto /> : undefined}
         />
         <Tabla titulo="Categorías de producto">
           <TablaEncabezado>
@@ -245,7 +250,11 @@ export default async function PaginaInventario({
                 <EstadoVacio
                   icono="tag"
                   titulo="Sin categorías"
-                  descripcion="Cree la primera para poder cargar productos."
+                  descripcion={
+                    esAdministrador
+                      ? 'Cree la primera para poder cargar productos.'
+                      : 'Las categorías las carga el administrador.'
+                  }
                 />
               </TdCompleta>
             ) : (
@@ -255,10 +264,12 @@ export default async function PaginaInventario({
                   <Td className="text-secundario" etiqueta="Descripción">{c.descripcion ?? '—'}</Td>
                   <Td numerico etiqueta="Productos">{productosPorCategoria.get(c.id_categoria_p) ?? 0}</Td>
                   <Td etiqueta="Acciones" className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <FormularioCategoriaProducto categoria={c} />
-                      <BotonBorrar tabla="categorias_producto" id={c.id_categoria_p} nombre={c.nombre} />
-                    </div>
+                    {esAdministrador && (
+                      <div className="flex justify-end gap-1">
+                        <FormularioCategoriaProducto categoria={c} />
+                        <BotonBorrar tabla="categorias_producto" id={c.id_categoria_p} nombre={c.nombre} />
+                      </div>
+                    )}
                   </Td>
                 </Tr>
               ))

@@ -47,7 +47,14 @@ type Modo = 'ver' | 'reprogramar' | 'cancelar';
 
 const fmtDia = new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_HORARIA });
 
-export function PanelDetalleCita({ cita }: { cita: CitaCompleta }) {
+export function PanelDetalleCita({
+  cita,
+  soloLectura = false,
+}: {
+  cita: CitaCompleta;
+  /** El barbero consulta la agenda pero no cambia turnos (RLS). Ver `SOLO_LECTURA_POR_ROL`. */
+  soloLectura?: boolean;
+}) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [modo, setModo] = useState<Modo>('ver');
@@ -55,7 +62,7 @@ export function PanelDetalleCita({ cita }: { cita: CitaCompleta }) {
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [ocupado, iniciar] = useTransition();
 
-  const vigente = cita.estado === 'pendiente' || cita.estado === 'confirmado';
+  const vigente = !soloLectura && (cita.estado === 'pendiente' || cita.estado === 'confirmado');
   const yaPaso = new Date(cita.fecha_hora).getTime() < Date.now();
 
   function cerrar() {
@@ -134,7 +141,7 @@ export function PanelDetalleCita({ cita }: { cita: CitaCompleta }) {
                   Reprogramar
                 </Boton>
               )}
-              {cita.estado === 'pendiente' && (
+              {!soloLectura && cita.estado === 'pendiente' && (
                 <Boton
                   variante="primario"
                   cargando={ocupado}
