@@ -400,6 +400,7 @@ Lo que hace usted mismo no genera aviso.
 - **Descargar en PDF** el historial y los comprobantes.
 - Ver el **horario de atención** de la barbería, en «Mi perfil».
 - Elegir cualquier fecha futura al reservar.
+- Descargar este manual en PDF, desde «Ayuda».
 
 ## En las dos
 
@@ -408,6 +409,7 @@ Lo que hace usted mismo no genera aviso.
 - Recomendaciones «Para usted».
 - Editar sus datos.
 - El recordatorio por correo.
+- Esta ayuda: en la web, «Ayuda» en el menú; en la app, el botón «Ayuda» de «Perfil», o «¿Necesita ayuda?» en la pantalla de ingreso.
 
 ## Cerrar sesión
 
